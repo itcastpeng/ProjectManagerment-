@@ -14,7 +14,7 @@ import json
 # cerf  token验证 用户展示模块
 @csrf_exempt
 @account.is_token(models.userprofile)
-def action(request):
+def demand(request):
     response = Response.ResponseObj()
     if request.method == "GET":
         forms_obj = SelectForm(request.GET)
@@ -34,7 +34,7 @@ def action(request):
             q = conditionCom(request, field_dict)
 
             print('q -->', q)
-            objs = models.action.objects.select_related('project').filter(project__company_id=company_id).filter(q).order_by(order)
+            objs = models.demand.objects.select_related('project').filter(project__company_id=company_id).filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -61,13 +61,13 @@ def action(request):
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     'oper_user__username': oper_user_username,
                 })
-            #  查询成功 返回200 状态码
-            response.code = 200
-            response.msg = '查询成功'
-            response.data = {
-                'ret_data': ret_data,
-                'data_count': count,
-            }
+                #  查询成功 返回200 状态码
+                response.code = 200
+                response.msg = '查询成功'
+                response.data = {
+                    'ret_data': ret_data,
+                    'data_count': count,
+                }
         else:
             response.code = 402
             response.msg = "请求异常"
@@ -79,7 +79,7 @@ def action(request):
 #  csrf  token验证
 @csrf_exempt
 @account.is_token(models.userprofile)
-def action_oper(request, oper_type, o_id):
+def demand_oper(request, oper_type, o_id):
     response = Response.ResponseObj()
     if request.method == "POST":
         if oper_type == "add":
