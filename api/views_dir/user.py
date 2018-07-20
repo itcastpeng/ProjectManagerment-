@@ -21,7 +21,6 @@ def user(request):
         if forms_obj.is_valid():
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
-            company_id = forms_obj.cleaned_data['company_id']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
             field_dict = {
@@ -30,10 +29,13 @@ def user(request):
                 'create_date': '',
                 'oper_user__username': '__contains',
             }
+            role_id = forms_obj.cleaned_data.get('role_id')
+            if role_id == 2:  # 管理员角色
+                field_dict['company_id'] = ''
             q = conditionCom(request, field_dict)
 
             print('q -->', q)
-            objs = models.userprofile.objects.select_related('role', 'company').filter(company_id=company_id).filter(q).order_by(order)
+            objs = models.userprofile.objects.select_related('role', 'company').filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -90,7 +92,7 @@ def user_oper(request, oper_type, o_id):
                 'oper_user_id': request.GET.get('user_id'),
                 'username': request.POST.get('username'),
                 'role_id': request.POST.get('role_id'),
-                'company_id': request.POST.get('company_id'),
+                'company_id': request.GET.get('company_id'),
                 'password': request.POST.get('password'),
             }
             #  创建 form验证 实例（参数默认转成字典）
@@ -112,7 +114,8 @@ def user_oper(request, oper_type, o_id):
 
         elif oper_type == "delete":
             # 删除 ID
-            objs = models.userprofile.objects.filter(id=o_id)
+            company_id = request.GET.get('company_id')
+            objs = models.userprofile.objects.filter(id=o_id, company_id=company_id)
             if objs:
                 objs.delete()
                 response.code = 200
@@ -126,7 +129,7 @@ def user_oper(request, oper_type, o_id):
                 'o_id': o_id,
                 'username': request.POST.get('username'),
                 'role_id': request.POST.get('role_id'),
-                'company_id': request.POST.get('company_id')
+                'company_id': request.GET.get('company_id')
             }
 
             forms_obj = UpdateForm(form_data)
@@ -164,10 +167,16 @@ def user_oper(request, oper_type, o_id):
                 response.msg = json.loads(forms_obj.errors.as_json())
         elif oper_type == "update_status":
             status = request.POST.get('status')
+            company_id = request.GET.get('company_id')
             print('status -->', status)
-            models.userprofile.objects.filter(id=o_id).update(status=status)
-            response.code = 200
-            response.msg = "状态修改成功"
+            objs = models.userprofile.objects.filter(id=o_id, company_id=company_id)
+            if objs:
+                objs.update(status=status)
+                response.code = 200
+                response.msg = "状态修改成功"
+            else:
+                response.code = 301
+                response.msg = "用户ID不存在"
 
     else:
         response.code = 402

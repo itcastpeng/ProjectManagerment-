@@ -33,7 +33,7 @@ class userprofile(models.Model):
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
 
     role = models.ForeignKey('role', verbose_name='所属角色')
-    company = models.ForeignKey('company', verbose_name='所属公司')
+    company = models.ForeignKey('company', verbose_name='所属公司', null=True, blank=True)      # 超级管理员没有所属公司
     set_avator = models.CharField(verbose_name='头像', default='http://api.zhugeyingxiao.com/statics/imgs/setAvator.jpg', max_length=128)
 
 
@@ -58,15 +58,26 @@ class action(models.Model):
 # 产品需求表
 class demand(models.Model):
     action = models.ForeignKey('action', verbose_name='所属功能')
+    project = models.ForeignKey('project', verbose_name="所属产品项目")
     name = models.CharField(verbose_name="需求名称", max_length=128)
     remark = models.TextField(verbose_name="需求描述", max_length=128)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    create_user = models.ForeignKey('userprofile', verbose_name='创建需求的用户')
+    complete_date = models.DateTimeField(verbose_name="预计完成时间", null=True, blank=True)
+    oper_user = models.ForeignKey('userprofile', verbose_name="创建需求的用户")
 
     status_choices = (
         (1, '开发中'),
         (2, '已完成'),
     )
+    status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
+
+    urgency_level_choices = (
+        (1, "普通"),
+        (2, "紧急"),
+        (3, "很紧急"),
+        (4, "非常紧急"),
+    )
+    urgency_level = models.SmallIntegerField(verbose_name="紧急程度", default=1, choices=urgency_level_choices)
 
 
 # 需求进展表

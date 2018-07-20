@@ -21,7 +21,7 @@ def project(request):
         if forms_obj.is_valid():
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
-            company_id = forms_obj.cleaned_data['company_id']
+            role_id = forms_obj.cleaned_data['role_id']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
             user_id = request.GET.get('user_id')
@@ -29,12 +29,17 @@ def project(request):
                 'id': '',
                 'name': '__contains',
                 'create_date': '',
+                'company_id': '',
                 'oper_user__username': '__contains',
             }
+            if role_id == 2:  # 管理员角色
+                field_dict['company_id'] = ''
+
             q = conditionCom(request, field_dict)
 
+            #  将查询出来的数据 加入列表
             print('q -->', q)
-            objs = models.project.objects.select_related('company').filter(company_id=company_id).filter(q).order_by(order)
+            objs = models.project.objects.select_related('company').filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -52,7 +57,6 @@ def project(request):
                 else:
                     oper_user_username = ''
                 # print('oper_user_username -->', oper_user_username)
-                #  将查询出来的数据 加入列表
 
                 # 项目负责人列表
                 principal_objs = obj.principal.values('username', 'id')

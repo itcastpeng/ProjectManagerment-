@@ -7,8 +7,9 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import time
 import datetime
 from publicFunc.condition_com import conditionCom
-from api.forms.user import AddForm, UpdateForm, SelectForm
+from api.forms.action import AddForm, UpdateForm, SelectForm
 import json
+from django.db.models import Q
 
 
 # cerf  token验证 用户展示模块
@@ -22,6 +23,7 @@ def action(request):
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             company_id = forms_obj.cleaned_data['company_id']
+            role_id = forms_obj.cleaned_data['role_id']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
             field_dict = {
@@ -31,10 +33,13 @@ def action(request):
                 'oper_user__username': '__contains',
                 'project_id': '',
             }
+
             q = conditionCom(request, field_dict)
+            if role_id == 2:  # 管理员角色
+                q.add(Q(**{'project__company_id': company_id}), Q.AND)
 
             print('q -->', q)
-            objs = models.action.objects.select_related('project').filter(project__company_id=company_id).filter(q).order_by(order)
+            objs = models.action.objects.select_related('project').filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:

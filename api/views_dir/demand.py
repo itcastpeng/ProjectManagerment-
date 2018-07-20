@@ -7,34 +7,51 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import time
 import datetime
 from publicFunc.condition_com import conditionCom
-from api.forms.user import AddForm, UpdateForm, SelectForm
+from api.forms.demand import AddForm, UpdateForm, SelectForm
 import json
+from django.db.models import Q
 
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
 @account.is_token(models.userprofile)
 def demand(request):
+    user_id = request.GET.get('user_id')
     response = Response.ResponseObj()
     if request.method == "GET":
         forms_obj = SelectForm(request.GET)
         if forms_obj.is_valid():
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
-            company_id = forms_obj.cleaned_data['company_id']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
+            role_id = forms_obj.cleaned_data['role_id']
+            company_id = forms_obj.cleaned_data['company_id']
             field_dict = {
                 'id': '',
                 'name': '__contains',
                 'create_date': '',
                 'oper_user__username': '__contains',
-                'project_id': '',
             }
             q = conditionCom(request, field_dict)
 
+            if role_id == 2:  # 管理员角色
+                q.add(Q(**{'project__company_id': company_id}), Q.AND)
+
+            elif role_id in [3, 4]:  # 3 -->项目负责人/产品经理  4 --> 开发负责人
+                project_objs = models.project.objects.all()
+                project_id_list = []
+                for project_obj in project_objs:
+                    if role_id == 3:
+                        if project_obj.principal.filter(id=user_id):    # 如果该项目的负责人有当前人
+                            project_id_list.append(project_obj.id)
+                    elif role_id == 4:
+                        if project_obj.developer.filter(id=user_id):    # 如果该项目的开发人有当前人
+                            project_id_list.append(project_obj.id)
+                q.add(Q(**{'project_id__in': project_id_list}), Q.AND)
+
             print('q -->', q)
-            objs = models.demand.objects.select_related('project').filter(project__company_id=company_id).filter(q).order_by(order)
+            objs = models.demand.objects.select_related('action', 'project').filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -51,14 +68,27 @@ def demand(request):
                     oper_user_username = obj.oper_user.username
                 else:
                     oper_user_username = ''
+
                 # print('oper_user_username -->', oper_user_username)
                 #  将查询出来的数据 加入列表
+                complete_date = ''
+                if obj.complete_date:
+                    complete_date = obj.create_date.strftime('%y-%m-%d %H:%M')
                 ret_data.append({
                     'id': obj.id,
                     'name': obj.name,
-                    'project__name': obj.project.name,
+                    'remark': obj.remark,
+                    'action__name': obj.action.name,
+                    'action_id': obj.action_id,
                     'project_id': obj.project_id,
-                    'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'status': obj.status,
+                    'status_text': obj.get_status_display(),
+                    'urgency_level': obj.urgency_level,
+                    'urgency_level_text': obj.get_urgency_level_display(),
+                    'project_name': obj.project.name,
+                    'project__name_action__name': "%s - %s" % (obj.project.name, obj.action.name),
+                    'create_date': obj.create_date.strftime('%y-%m-%d %H:%M'),
+                    'complete_date': complete_date,
                     'oper_user__username': oper_user_username,
                 })
                 #  查询成功 返回200 状态码

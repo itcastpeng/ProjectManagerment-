@@ -129,6 +129,13 @@ class SelectForm(forms.Form):
         }
     )
 
+    role_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "角色ID不能为空"
+        }
+    )
+
     def clean_current_page(self):
         if 'current_page' not in self.data:
             current_page = 1

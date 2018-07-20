@@ -39,6 +39,7 @@ def login(request):
             'token': token,
             'user_id': userprofile_obj.id,
             'set_avator': userprofile_obj.set_avator,
+            'role_id': userprofile_obj.role_id,
             'company_id': userprofile_obj.company_id
         }
 

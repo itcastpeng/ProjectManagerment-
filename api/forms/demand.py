@@ -14,57 +14,31 @@ class AddForm(forms.Form):
         }
     )
 
-    username = forms.CharField(
+    name = forms.CharField(
         required=True,
         error_messages={
-            'required': "用户名不能为空"
+            'required': "功能名称不能为空"
         }
     )
-    password = forms.CharField(
+    project_id = forms.IntegerField(
         required=True,
         error_messages={
             'required': "密码不能为空"
         }
     )
 
-    role_id = forms.IntegerField(
-        required=True,
-        error_messages={
-            'required': "角色名称不能为空"
-        }
-    )
-
-    company_id = forms.IntegerField(
-        required=True,
-        error_messages={
-            'required': "公司ID不能为空"
-        }
-    )
-
-    token = forms.IntegerField(
-        required=False
-    )
-
     # 查询名称是否存在
     def clean_name(self):
-        username = self.data['username']
-        company_id = self.data['company_id']
-        objs = models.userprofile.objects.filter(
-            username=username,
-            company_id=company_id,
+        name = self.data['name']
+        project_id = self.data['project_id']
+        objs = models.action.objects.filter(
+            name=name,
+            project_id=project_id,
         )
         if objs:
-            self.add_error('username', '用户名已存在')
+            self.add_error('name', '功能名称已存在')
         else:
-            return username
-
-    def clean_password(self):
-        password = self.data['password']
-        return account.str_encrypt(password)
-
-    def clean_token(self):
-        password = self.data['password']
-        return account.get_token(password + str(int(time.time()) * 1000))
+            return name
 
 
 # 更新
@@ -76,42 +50,34 @@ class UpdateForm(forms.Form):
         }
     )
 
-    username = forms.CharField(
+    name = forms.CharField(
         required=True,
         error_messages={
-            'required': "用户名不能为空"
+            'required': "功能名称不能为空"
         }
     )
-
-    role_id = forms.IntegerField(
+    project_id = forms.IntegerField(
         required=True,
         error_messages={
-            'required': "角色名称不能为空"
-        }
-    )
-
-    company_id = forms.IntegerField(
-        required=True,
-        error_messages={
-            'required': "公司ID不能为空"
+            'required': "密码不能为空"
         }
     )
 
     # 判断名称是否存在
-    def clean_username(self):
+    def clean_name(self):
         o_id = self.data['o_id']
-        username = self.data['username']
-        company_id = self.data['company_id']
-        objs = models.userprofile.objects.filter(
-            username=username,
-            company_id=company_id
+        name = self.data['name']
+        project_id = self.data['project_id']
+        objs = models.action.objects.filter(
+            name=name,
+            project_id=project_id
         ).exclude(
-            id=o_id
+            id=o_id,
         )
         if objs:
-            self.add_error('username', '用户名已存在')
+            self.add_error('name', '功能名称已存在')
         else:
-            return username
+            return name
 
 
 # 判断是否是数字
@@ -129,7 +95,6 @@ class SelectForm(forms.Form):
             'required': "页显示数量类型错误"
         }
     )
-
     company_id = forms.IntegerField(
         required=True,
         error_messages={

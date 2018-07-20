@@ -1,7 +1,7 @@
 
 from django.conf.urls import url
 
-from api.views_dir import login, company, role, user, project, action
+from api.views_dir import login, company, role, user, project, action, demand, img_upload
 
 
 urlpatterns = [
@@ -19,12 +19,21 @@ urlpatterns = [
     url(r'^user/(?P<oper_type>\w+)/(?P<o_id>\d+)', user.user_oper),
     url(r'^user', user.user),
 
-    # 产品管理
+    # 项目/产品管理
     url(r'^project/(?P<oper_type>\w+)/(?P<o_id>\d+)', project.project_oper),
     url(r'^project', project.project),
 
     # 功能管理
     url(r'^action/(?P<oper_type>\w+)/(?P<o_id>\d+)', action.action_oper),
     url(r'^action', action.action),
+
+    # 需求管理
+    url(r'^demand/(?P<oper_type>\w+)/(?P<o_id>\d+)', demand.demand_oper),
+    url(r'^demand', demand.demand),
+
+
+    url(r'^img_upload$', img_upload.img_upload),
+    url(r'^img_merge$', img_upload.img_merge),
+
 
 ]
