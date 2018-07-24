@@ -115,9 +115,15 @@ def demand_oper(request, oper_type, o_id):
         if oper_type == "add":
             form_data = {
                 'oper_user_id': request.GET.get('user_id'),
-                'name': request.POST.get('name'),
                 'project_id': request.POST.get('project_id'),
+                'action_id': request.POST.get('action_id'),
+                'name': request.POST.get('name'),
+                'remark': request.POST.get('remark'),
+                'complete_date': request.POST.get('complete_date'),
+                'img_list': request.POST.get('img_list'),
+                'urgency_level': request.POST.get('urgency_level')
             }
+            print('form_data -->', form_data)
             #  创建 form验证 实例（参数默认转成字典）
             forms_obj = AddForm(form_data)
             if forms_obj.is_valid():
@@ -125,7 +131,7 @@ def demand_oper(request, oper_type, o_id):
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
                 print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
-                models.action.objects.create(**forms_obj.cleaned_data)
+                models.demand.objects.create(**forms_obj.cleaned_data)
                 response.code = 200
                 response.msg = "添加成功"
             else:

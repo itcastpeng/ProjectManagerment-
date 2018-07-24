@@ -14,16 +14,49 @@ class AddForm(forms.Form):
         }
     )
 
-    name = forms.CharField(
+    project_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "项目名称不能为空"
+        }
+    )
+
+    action_id = forms.IntegerField(
         required=True,
         error_messages={
             'required': "功能名称不能为空"
         }
     )
-    project_id = forms.IntegerField(
+
+    name = forms.CharField(
         required=True,
         error_messages={
-            'required': "密码不能为空"
+            'required': "需求名称不能为空"
+        }
+    )
+
+    remark = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "需求描述不能为空"
+        }
+    )
+
+    complete_date = forms.DateTimeField(
+        required=True,
+        error_messages={
+            'required': "预计完成时间不能为空"
+        }
+    )
+
+    img_list = forms.CharField(
+        required=False
+    )
+
+    urgency_level = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "请选择紧急程度"
         }
     )
 
@@ -31,9 +64,11 @@ class AddForm(forms.Form):
     def clean_name(self):
         name = self.data['name']
         project_id = self.data['project_id']
-        objs = models.action.objects.filter(
+        action_id = self.data['action_id']
+        objs = models.demand.objects.filter(
             name=name,
             project_id=project_id,
+            action_id=action_id
         )
         if objs:
             self.add_error('name', '功能名称已存在')

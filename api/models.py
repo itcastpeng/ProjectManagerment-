@@ -61,6 +61,7 @@ class demand(models.Model):
     project = models.ForeignKey('project', verbose_name="所属产品项目")
     name = models.CharField(verbose_name="需求名称", max_length=128)
     remark = models.TextField(verbose_name="需求描述", max_length=128)
+    img_list = models.TextField(verbose_name="需求图片", max_length=128)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     complete_date = models.DateTimeField(verbose_name="预计完成时间", null=True, blank=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建需求的用户")
