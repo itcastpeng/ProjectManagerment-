@@ -67,8 +67,11 @@ class demand(models.Model):
     oper_user = models.ForeignKey('userprofile', verbose_name="创建需求的用户")
 
     status_choices = (
-        (1, '开发中'),
-        (2, '已完成'),
+        (1, '审核中'),
+        (2, '开发中'),
+        (3, '测试中'),
+        (4, '已完成'),
+        (10, '已关闭'),
     )
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
 

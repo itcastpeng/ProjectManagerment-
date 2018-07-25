@@ -141,22 +141,22 @@ def demand_oper(request, oper_type, o_id):
                 # print(forms_obj.errors.as_json())
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        elif oper_type == "delete":
-            # 删除 ID
-            # 如果产品需求表中有数据，则不允许删除
-            demand_objs = models.demand.objects.filter(action_id=o_id)
-            if not demand_objs:
-                objs = models.action.objects.filter(id=o_id)
-                if objs:
-                    objs.delete()
-                    response.code = 200
-                    response.msg = "删除成功"
-                else:
-                    response.code = 302
-                    response.msg = '删除ID不存在'
-            else:
-                response.code = 304
-                response.msg = '含有子级数据,请先删除或转移子级数据'
+        # elif oper_type == "delete":
+        #     # 删除 ID
+        #     # 如果需求进展中有数据，则不允许删除
+        #     progress_objs = models.progress.objects.filter(demand_id=o_id)
+        #     if not progress_objs:
+        #         objs = models.demand.objects.filter(id=o_id)
+        #         if objs:
+        #             objs.delete()
+        #             response.code = 200
+        #             response.msg = "删除成功"
+        #         else:
+        #             response.code = 302
+        #             response.msg = '删除ID不存在'
+        #     else:
+        #         response.code = 304
+        #         response.msg = '含有子级数据,请先删除或转移子级数据'
         elif oper_type == "update":
             # 获取需要修改的信息
             form_data = {
