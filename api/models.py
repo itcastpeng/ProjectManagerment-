@@ -15,6 +15,16 @@ class role(models.Model):
     name = models.CharField(verbose_name="角色名称", max_length=128)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建用户", related_name='role_user')
+    permissions = models.ManyToManyField('permissions', verbose_name="拥有权限")
+
+
+# 权限表
+class permissions(models.Model):
+    name = models.CharField(verbose_name="权限名称", max_length=128)
+    title = models.CharField(verbose_name="权限标题", max_length=128)
+    pid = models.ForeignKey('self', verbose_name="父级权限", null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    oper_user = models.ForeignKey('userprofile', verbose_name="创建用户", related_name='permissions_user')
 
 
 # 用户表
@@ -60,18 +70,21 @@ class demand(models.Model):
     action = models.ForeignKey('action', verbose_name='所属功能')
     project = models.ForeignKey('project', verbose_name="所属产品项目")
     name = models.CharField(verbose_name="需求名称", max_length=128)
-    remark = models.TextField(verbose_name="需求描述", max_length=128)
-    img_list = models.TextField(verbose_name="需求图片", max_length=128)
+    remark = models.TextField(verbose_name="需求描述")
+    img_list = models.TextField(verbose_name="需求图片", null=True, blank=True)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     complete_date = models.DateTimeField(verbose_name="预计完成时间", null=True, blank=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建需求的用户")
+    developer = models.ManyToManyField('userprofile', verbose_name='开发人员', related_name='demand_developer_userprofile')
 
     status_choices = (
-        (1, '审核中'),
-        (2, '开发中'),
-        (3, '测试中'),
-        (4, '已完成'),
-        (10, '已关闭'),
+        (1, '等待审核'),
+        (2, '等待评估'),
+        (3, '等待开发'),
+        (4, '等待测试'),
+        (5, '待上线'),
+        (10, '上线成功'),
+        (11, '关闭需求'),
     )
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
 
@@ -87,6 +100,7 @@ class demand(models.Model):
 # 需求进展表
 class progress(models.Model):
     demand = models.ForeignKey('demand', verbose_name="需求名称")
-    description = models.TextField(verbose_name="进展描述")
+    remark = models.TextField(verbose_name="备注信息", null=True, blank=True)
+    img_list = models.TextField(verbose_name="进展图片", null=True, blank=True)    # 测试结果中需要用到
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     create_user = models.ForeignKey('userprofile', verbose_name='创建需求日志的用户')

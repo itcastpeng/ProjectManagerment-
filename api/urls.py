@@ -1,7 +1,7 @@
 
 from django.conf.urls import url
 
-from api.views_dir import login, company, role, user, project, action, demand, img_upload
+from api.views_dir import login, company, role, user, project, action, demand, img_upload, permissions
 
 
 urlpatterns = [
@@ -10,6 +10,10 @@ urlpatterns = [
     # 公司管理
     url(r'^company/(?P<oper_type>\w+)/(?P<o_id>\d+)', company.company_oper),
     url(r'^company', company.company),
+
+    # 权限管理
+    url(r'^permissions/(?P<oper_type>\w+)/(?P<o_id>\d+)', permissions.permissions_oper),
+    url(r'^permissions', permissions.permissions),
 
     # 角色管理
     url(r'^role/(?P<oper_type>\w+)/(?P<o_id>\d+)', role.role_oper),

@@ -10,7 +10,7 @@ class AddForm(forms.Form):
     name = forms.CharField(
         required=True,
         error_messages={
-            'required': "角色名称不能为空"
+            'required': "公司名称不能为空"
         }
     )
     oper_user_id = forms.IntegerField(
@@ -20,21 +20,14 @@ class AddForm(forms.Form):
         }
     )
 
-    permissionsList = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "选择权限不能为空"
-        }
-    )
-
     # 查询名称是否存在
     def clean_name(self):
         name = self.data['name']
-        objs = models.role.objects.filter(
+        objs = models.company.objects.filter(
             name=name,
         )
         if objs:
-            self.add_error('name', '角色名称已存在')
+            self.add_error('name', '公司名称已存在')
         else:
             return name
 
@@ -44,13 +37,13 @@ class UpdateForm(forms.Form):
     name = forms.CharField(
         required=True,
         error_messages={
-            'required': '角色名称不能为空'
+            'required': '公司名称不能为空'
         }
     )
     o_id = forms.IntegerField(
         required=True,
         error_messages={
-            'required': '角色id不能为空'
+            'required': '公司id不能为空'
         }
     )
 
@@ -58,11 +51,11 @@ class UpdateForm(forms.Form):
     def clean_name(self):
         o_id = self.data['o_id']
         name = self.data['name']
-        objs = models.role.objects.filter(
+        objs = models.company.objects.filter(
             name=name,
         ).exclude(id=o_id)
         if objs:
-            self.add_error('name', '角色名称已存在')
+            self.add_error('name', '公司名称已存在')
         else:
             return name
 

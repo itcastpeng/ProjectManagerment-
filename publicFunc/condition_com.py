@@ -15,9 +15,15 @@ def conditionCom(request, field_dict):
             if v == '__contains':
                 # 模糊查询
                 q.add(Q(**{k + '__contains': value}), Q.AND)
-            elif value == '__in':
+            elif v == '__in':
                 # 模糊查询
                 q.add(Q(**{k + '__in': value}), Q.AND)
+            elif v == '__isnull':
+                # 是否为空
+                flag = False
+                if value == '1':
+                    flag = True
+                q.add(Q(**{k + '__isnull': flag}), Q.AND)
             else:
                 q.add(Q(**{k: value}), Q.AND)
 

@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import time
 import datetime
 from publicFunc.condition_com import conditionCom
-from api.forms.demand import AddForm, UpdateForm, SelectForm
+from api.forms.demand import AddForm, UpdateForm, SelectForm, ShenHeForm
 import json
 from django.db.models import Q
 
@@ -81,23 +81,24 @@ def demand(request):
                     'action__name': obj.action.name,
                     'action_id': obj.action_id,
                     'project_id': obj.project_id,
+                    'project_name': obj.project.name,
                     'status': obj.status,
+                    'img_list': obj.img_list,
                     'status_text': obj.get_status_display(),
                     'urgency_level': obj.urgency_level,
                     'urgency_level_text': obj.get_urgency_level_display(),
-                    'project_name': obj.project.name,
                     'project__name_action__name': "%s - %s" % (obj.project.name, obj.action.name),
                     'create_date': obj.create_date.strftime('%y-%m-%d %H:%M'),
                     'complete_date': complete_date,
                     'oper_user__username': oper_user_username,
                 })
-                #  查询成功 返回200 状态码
-                response.code = 200
-                response.msg = '查询成功'
-                response.data = {
-                    'ret_data': ret_data,
-                    'data_count': count,
-                }
+            #  查询成功 返回200 状态码
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {
+                'ret_data': ret_data,
+                'data_count': count,
+            }
         else:
             response.code = 402
             response.msg = "请求异常"
@@ -119,7 +120,7 @@ def demand_oper(request, oper_type, o_id):
                 'action_id': request.POST.get('action_id'),
                 'name': request.POST.get('name'),
                 'remark': request.POST.get('remark'),
-                'complete_date': request.POST.get('complete_date'),
+                # 'complete_date': request.POST.get('complete_date'),
                 'img_list': request.POST.get('img_list'),
                 'urgency_level': request.POST.get('urgency_level')
             }
@@ -131,7 +132,13 @@ def demand_oper(request, oper_type, o_id):
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
                 print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
-                models.demand.objects.create(**forms_obj.cleaned_data)
+                obj = models.demand.objects.create(**forms_obj.cleaned_data)
+
+                models.progress.objects.create(
+                    demand=obj,
+                    description="创建需求",
+                    create_user_id=forms_obj.cleaned_data.get('oper_user_id')
+                )
                 response.code = 200
                 response.msg = "添加成功"
             else:
@@ -141,29 +148,32 @@ def demand_oper(request, oper_type, o_id):
                 # print(forms_obj.errors.as_json())
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        # elif oper_type == "delete":
-        #     # 删除 ID
-        #     # 如果需求进展中有数据，则不允许删除
-        #     progress_objs = models.progress.objects.filter(demand_id=o_id)
-        #     if not progress_objs:
-        #         objs = models.demand.objects.filter(id=o_id)
-        #         if objs:
-        #             objs.delete()
-        #             response.code = 200
-        #             response.msg = "删除成功"
-        #         else:
-        #             response.code = 302
-        #             response.msg = '删除ID不存在'
-        #     else:
-        #         response.code = 304
-        #         response.msg = '含有子级数据,请先删除或转移子级数据'
+        elif oper_type == "delete":
+            # 删除 ID
+            objs = models.demand.objects.filter(id=o_id)
+            if objs:
+                obj = objs[0]
+                if obj.status == 1:
+                    objs.delete()
+                    response.code = 200
+                    response.msg = "删除成功"
+                else:
+                    response.code = 300
+                    response.msg = "该任务已不能删除"
+            else:
+                response.code = 302
+                response.msg = '删除ID不存在'
+
         elif oper_type == "update":
             # 获取需要修改的信息
             form_data = {
                 'o_id': o_id,
-                'oper_user_id': request.GET.get('user_id'),
-                'name': request.POST.get('name'),
                 'project_id': request.POST.get('project_id'),
+                'action_id': request.POST.get('action_id'),
+                'name': request.POST.get('name'),
+                'remark': request.POST.get('remark'),
+                'img_list': request.POST.get('img_list'),
+                'urgency_level': request.POST.get('urgency_level')
             }
 
             forms_obj = UpdateForm(form_data)
@@ -173,15 +183,23 @@ def demand_oper(request, oper_type, o_id):
                 o_id = forms_obj.cleaned_data['o_id']
                 name = forms_obj.cleaned_data['name']
                 project_id = forms_obj.cleaned_data['project_id']
+                action_id = forms_obj.cleaned_data['action_id']
+                remark = forms_obj.cleaned_data['remark']
+                img_list = forms_obj.cleaned_data['img_list']
+                urgency_level = forms_obj.cleaned_data['urgency_level']
                 #  查询数据库  用户id
-                objs = models.action.objects.filter(
+                objs = models.demand.objects.filter(
                     id=o_id
                 )
                 #  更新 数据
                 if objs:
                     objs.update(
                         name=name,
-                        project_id=project_id
+                        project_id=project_id,
+                        action_id=action_id,
+                        remark=remark,
+                        img_list=img_list,
+                        urgency_level=urgency_level
                     )
 
                     response.code = 200
@@ -197,13 +215,71 @@ def demand_oper(request, oper_type, o_id):
                 # print(forms_obj.errors.as_json())
                 #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
-        elif oper_type == "update_status":
-            status = request.POST.get('status')
-            print('status -->', status)
-            models.userprofile.objects.filter(id=o_id).update(status=status)
-            response.code = 200
-            response.msg = "状态修改成功"
 
+        elif oper_type == "shenhe":
+            form_data = {
+                'o_id': o_id,
+                'oper_user_id': request.GET.get('user_id'),
+                'developerList': request.POST.get('developerList'),
+                'remark': request.POST.get('remark'),
+            }
+            print('form_data -->', form_data)
+            #  创建 form验证 实例（参数默认转成字典）
+            forms_obj = ShenHeForm(form_data)
+            if forms_obj.is_valid():
+                print("验证通过")
+                #  添加数据库
+                print('forms_obj.cleaned_data-->', forms_obj.cleaned_data)
+                o_id = forms_obj.cleaned_data.get('o_id')
+                oper_user_id = forms_obj.cleaned_data.get('oper_user_id')
+                developerList = forms_obj.cleaned_data.get('developerList')
+                objs = models.demand.objects.filter(id=o_id)
+                if objs:
+                    obj = objs[0]
+                    obj.developer = json.loads(developerList)
+                    models.progress.objects.create(
+                        demand=obj,
+                        description="创建需求",
+                        create_user_id=forms_obj.cleaned_data.get('oper_user_id')
+                    )
+
+                    response.code = 200
+                    response.msg = "审核成功"
+            else:
+                print("验证不通过")
+                # print(forms_obj.errors)
+                response.code = 301
+                # print(forms_obj.errors.as_json())
+                response.msg = json.loads(forms_obj.errors.as_json())
+        # elif oper_type == "update_status":
+        #     status = request.POST.get('status')
+        #     print('status -->', status)
+        #     models.userprofile.objects.filter(id=o_id).update(status=status)
+        #     response.code = 200
+        #     response.msg = "状态修改成功"
+
+        elif oper_type == "close":
+            # 删除 ID
+            objs = models.demand.objects.filter(id=o_id)
+            if objs:
+                objs.update(
+                    status=11
+                )
+                response.code = 200
+                response.msg = "需求关闭成功"
+
+                # obj = objs[0]
+                # if obj.status == 1:
+                #     obj.status = 11
+                #     objs.delete()
+                #     response.code = 200
+                #     response.msg = "删除成功"
+                # else:
+                #     response.code = 300
+                #     response.msg = "该任务已不能删除"
+            else:
+                response.code = 302
+                response.msg = '删除ID不存在'
     else:
         response.code = 402
         response.msg = "请求异常"

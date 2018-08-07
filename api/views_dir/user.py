@@ -66,13 +66,13 @@ def user(request):
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     'oper_user__username': oper_user_username,
                 })
-                #  查询成功 返回200 状态码
-                response.code = 200
-                response.msg = '查询成功'
-                response.data = {
-                    'ret_data': ret_data,
-                    'data_count': count,
-                }
+            #  查询成功 返回200 状态码
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {
+                'ret_data': ret_data,
+                'data_count': count,
+            }
         else:
             response.code = 402
             response.msg = "请求异常"

@@ -56,13 +56,13 @@ def role(request):
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     'oper_user__username': oper_user_username,
                 })
-                #  查询成功 返回200 状态码
-                response.code = 200
-                response.msg = '查询成功'
-                response.data = {
-                    'ret_data': ret_data,
-                    'data_count': count,
-                }
+            #  查询成功 返回200 状态码
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {
+                'ret_data': ret_data,
+                'data_count': count,
+            }
         else:
             response.code = 402
             response.msg = "请求异常"
@@ -82,6 +82,7 @@ def role_oper(request, oper_type, o_id):
                 'user_id': o_id,
                 'oper_user_id': request.GET.get('user_id'),
                 'name': request.POST.get('name'),
+                'permissionsList': request.POST.get('permissionsList'),
             }
             #  创建 form验证 实例（参数默认转成字典）
             forms_obj = AddForm(form_data)
@@ -90,7 +91,12 @@ def role_oper(request, oper_type, o_id):
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
                 # print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
-                models.role.objects.create(**forms_obj.cleaned_data)
+                obj = models.role.objects.create({
+                    'name': forms_obj.cleaned_data.get('name'),
+                    'oper_user_id': forms_obj.cleaned_data.get('oper_user_id'),
+                })
+
+                print('permissionsList -->', forms_obj.cleaned_data.get('permissionsList'))
                 response.code = 200
                 response.msg = "添加成功"
             else:
@@ -104,9 +110,14 @@ def role_oper(request, oper_type, o_id):
             # 删除 ID
             objs = models.role.objects.filter(id=o_id)
             if objs:
-                objs.delete()
-                response.code = 200
-                response.msg = "删除成功"
+                obj = objs[0]
+                if obj.userprofile_set.all().count() > 0:
+                    response.code = 304
+                    response.msg = '含有子级数据,请先删除或转移子级数据'
+                else:
+                    objs.delete()
+                    response.code = 200
+                    response.msg = "删除成功"
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
