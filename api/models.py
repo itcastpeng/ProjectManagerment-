@@ -100,6 +100,7 @@ class demand(models.Model):
 # 需求进展表
 class progress(models.Model):
     demand = models.ForeignKey('demand', verbose_name="需求名称")
+    description = models.TextField(verbose_name="描述", null=True, blank=True)
     remark = models.TextField(verbose_name="备注信息", null=True, blank=True)
     img_list = models.TextField(verbose_name="进展图片", null=True, blank=True)    # 测试结果中需要用到
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)

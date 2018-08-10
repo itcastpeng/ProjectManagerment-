@@ -207,7 +207,3 @@ class ShenHeForm(forms.Form):
     remark = forms.CharField(
         required=False
     )
-
-    img_list = forms.CharField(
-        required=False
-    )

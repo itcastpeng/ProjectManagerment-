@@ -32,6 +32,8 @@ def demand(request):
                 'name': '__contains',
                 'create_date': '',
                 'oper_user__username': '__contains',
+                'status': '',
+                'urgency_level': ''
             }
             q = conditionCom(request, field_dict)
 
@@ -73,7 +75,7 @@ def demand(request):
                 #  将查询出来的数据 加入列表
                 complete_date = ''
                 if obj.complete_date:
-                    complete_date = obj.create_date.strftime('%y-%m-%d %H:%M')
+                    complete_date = obj.complete_date.strftime('%y-%m-%d %H:%M')
                 ret_data.append({
                     'id': obj.id,
                     'name': obj.name,
@@ -98,6 +100,8 @@ def demand(request):
             response.data = {
                 'ret_data': ret_data,
                 'data_count': count,
+                'status_choices': models.demand.status_choices,
+                'urgency_level_choices': models.demand.urgency_level_choices
             }
         else:
             response.code = 402
@@ -159,7 +163,7 @@ def demand_oper(request, oper_type, o_id):
                     response.msg = "删除成功"
                 else:
                     response.code = 300
-                    response.msg = "该任务已不能删除"
+                    response.msg = "该需求已经不能删除，如需删除请联系项目负责人关闭需求"
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
@@ -202,6 +206,12 @@ def demand_oper(request, oper_type, o_id):
                         urgency_level=urgency_level
                     )
 
+                    models.progress.objects.create(
+                        demand=objs[0],
+                        description="修改需求",
+                        create_user_id=forms_obj.cleaned_data.get('oper_user_id')
+                    )
+
                     response.code = 200
                     response.msg = "修改成功"
                 else:
@@ -216,6 +226,7 @@ def demand_oper(request, oper_type, o_id):
                 #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
 
+        # 项目负责人审核需求，分配开发人员
         elif oper_type == "shenhe":
             form_data = {
                 'o_id': o_id,
@@ -233,14 +244,19 @@ def demand_oper(request, oper_type, o_id):
                 o_id = forms_obj.cleaned_data.get('o_id')
                 oper_user_id = forms_obj.cleaned_data.get('oper_user_id')
                 developerList = forms_obj.cleaned_data.get('developerList')
+                remark = forms_obj.cleaned_data.get('remark')
                 objs = models.demand.objects.filter(id=o_id)
                 if objs:
                     obj = objs[0]
+                    obj.status = 2
+                    obj.save()
                     obj.developer = json.loads(developerList)
+
                     models.progress.objects.create(
                         demand=obj,
-                        description="创建需求",
-                        create_user_id=forms_obj.cleaned_data.get('oper_user_id')
+                        remark=remark,
+                        description="审核需求,分配开发需求",
+                        create_user_id=oper_user_id
                     )
 
                     response.code = 200
@@ -251,37 +267,86 @@ def demand_oper(request, oper_type, o_id):
                 response.code = 301
                 # print(forms_obj.errors.as_json())
                 response.msg = json.loads(forms_obj.errors.as_json())
-        # elif oper_type == "update_status":
-        #     status = request.POST.get('status')
-        #     print('status -->', status)
-        #     models.userprofile.objects.filter(id=o_id).update(status=status)
-        #     response.code = 200
-        #     response.msg = "状态修改成功"
 
+        # 开发人员修改预计完成时间
+        elif oper_type == "update_complete_date":
+            complete_date = request.POST.get('complete_date')
+            oper_user_id = request.GET.get('user_id')
+            objs = models.demand.objects.filter(id=o_id)
+            objs.update(
+                complete_date=complete_date,
+                status=3
+            )
+
+            models.progress.objects.create(
+                demand=objs[0],
+                description="设置预计开发时间",
+                create_user_id=oper_user_id
+            )
+
+            response.code = 200
+            response.msg = "预计开发时间设置成功"
+            # 开发人员修改预计完成时间
+
+        elif oper_type == "yanchi_complete_date":
+            complete_date = request.POST.get('complete_date')
+            remark = request.POST.get('remark')
+            oper_user_id = request.GET.get('user_id')
+            objs = models.demand.objects.filter(id=o_id)
+            objs.update(complete_date=complete_date)
+
+            models.progress.objects.create(
+                demand=objs[0],
+                remark=remark,
+                description="延迟预计开发时间",
+                create_user_id=oper_user_id
+            )
+
+            response.code = 200
+            response.msg = "延迟开发时间设置成功"
+
+        # 关闭需求
         elif oper_type == "close":
-            # 删除 ID
+            oper_user_id = request.GET.get('user_id')
+            remark = request.POST.get('remark')
             objs = models.demand.objects.filter(id=o_id)
             if objs:
                 objs.update(
                     status=11
                 )
+                print('remark -->', remark)
+                print('oper_user_id -->', oper_user_id)
+
+                models.progress.objects.create(
+                    demand=objs[0],
+                    remark=remark,
+                    description="关闭需求",
+                    create_user_id=oper_user_id
+                )
+
                 response.code = 200
                 response.msg = "需求关闭成功"
-
-                # obj = objs[0]
-                # if obj.status == 1:
-                #     obj.status = 11
-                #     objs.delete()
-                #     response.code = 200
-                #     response.msg = "删除成功"
-                # else:
-                #     response.code = 300
-                #     response.msg = "该任务已不能删除"
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
     else:
-        response.code = 402
-        response.msg = "请求异常"
+        if oper_type == "detail":
+            result_data = []
+            objs = models.progress.objects.select_related('create_user').filter(demand_id=o_id)
+            for obj in objs:
+                result_data.append({
+                    'description': obj.description,
+                    'remark': obj.remark,
+                    'img_list': obj.img_list,
+                    'create_date': obj.create_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    'create_user__username': obj.create_user.username,
+                    'create_user_id': obj.create_user_id,
+                })
+            response.data = result_data
+            response.msg = "查询成功"
+            response.code = 200
+        else:
+            response.code = 402
+            response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
