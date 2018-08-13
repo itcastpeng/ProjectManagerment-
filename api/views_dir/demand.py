@@ -280,7 +280,7 @@ def demand_oper(request, oper_type, o_id):
 
             models.progress.objects.create(
                 demand=objs[0],
-                description="设置预计开发时间",
+                description="设置预计开发时间，预计 {complete_date} 开发完成".format(complete_date=complete_date),
                 create_user_id=oper_user_id
             )
 
@@ -288,6 +288,7 @@ def demand_oper(request, oper_type, o_id):
             response.msg = "预计开发时间设置成功"
             # 开发人员修改预计完成时间
 
+        # 延迟开发完成时间
         elif oper_type == "yanchi_complete_date":
             complete_date = request.POST.get('complete_date')
             remark = request.POST.get('remark')
@@ -298,12 +299,50 @@ def demand_oper(request, oper_type, o_id):
             models.progress.objects.create(
                 demand=objs[0],
                 remark=remark,
-                description="延迟预计开发时间",
+                description="延迟预计开发时间，预计 {complete_date} 开发完成".format(complete_date=complete_date),
                 create_user_id=oper_user_id
             )
 
             response.code = 200
             response.msg = "延迟开发时间设置成功"
+
+        # 开发人员开发完成后提交开发需求
+        elif oper_type == "tijiao_ceshi":
+            remark = request.POST.get('remark')
+            oper_user_id = request.GET.get('user_id')
+            objs = models.demand.objects.filter(id=o_id)
+            objs.update(
+                status=4
+            )
+
+            models.progress.objects.create(
+                demand=objs[0],
+                description="开发完成，提交进行测试",
+                create_user_id=oper_user_id,
+                remark=remark
+            )
+
+            response.code = 200
+            response.msg = "预计开发时间设置成功"
+
+        # 测试通过，需求交付
+        elif oper_type == "jiaofu":
+            remark = request.POST.get('remark')
+            oper_user_id = request.GET.get('user_id')
+            objs = models.demand.objects.filter(id=o_id)
+            objs.update(
+                status=6
+            )
+
+            models.progress.objects.create(
+                demand=objs[0],
+                description="测试完成，需求交付完成",
+                create_user_id=oper_user_id,
+                remark=remark
+            )
+
+            response.code = 200
+            response.msg = "预计开发时间设置成功"
 
         # 关闭需求
         elif oper_type == "close":

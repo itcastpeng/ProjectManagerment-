@@ -82,8 +82,9 @@ class demand(models.Model):
         (2, '等待评估'),
         (3, '等待开发'),
         (4, '等待测试'),
-        (5, '待上线'),
-        (10, '上线成功'),
+        # (5, '待上线'),
+        (6, '开发完成'),
+        # (10, '上线成功'),
         (11, '关闭需求'),
     )
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
