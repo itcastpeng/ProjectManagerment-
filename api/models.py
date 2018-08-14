@@ -32,7 +32,7 @@ class userprofile(models.Model):
     username = models.CharField(verbose_name="用户账号", max_length=128)
     password = models.CharField(verbose_name="用户密码", max_length=128)
     token = models.CharField(verbose_name="token值", max_length=128)
-    oper_user = models.ForeignKey('userprofile', verbose_name="创建用户", related_name='userprofile_self')
+    oper_user = models.ForeignKey('userprofile', verbose_name="创建用户", related_name='userprofile_self', null=True, blank=True)
 
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
