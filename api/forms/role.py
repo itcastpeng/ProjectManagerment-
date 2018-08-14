@@ -1,8 +1,7 @@
 from django import forms
 
 from api import models
-from publicFunc import account
-import datetime
+import json
 
 
 # 添加
@@ -38,6 +37,9 @@ class AddForm(forms.Form):
         else:
             return name
 
+    def clean_permissionsList(self):
+        permissionsList = self.data.get('permissionsList')
+        return json.loads(permissionsList)
 
 # 更新
 class UpdateForm(forms.Form):

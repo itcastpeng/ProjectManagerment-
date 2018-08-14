@@ -9,6 +9,7 @@ import datetime
 from publicFunc.condition_com import conditionCom
 from api.forms.role import AddForm, UpdateForm, SelectForm
 import json
+from api.views_dir.permissions import init_data
 
 
 # cerf  token验证 用户展示模块
@@ -43,6 +44,13 @@ def role(request):
             ret_data = []
 
             for obj in objs:
+                # 获取选中的id，然后组合成前端能用的数据
+                permissionsList = []
+                permissionsData = []
+                if obj.permissions:
+                    permissionsList = [i['id'] for i in obj.permissions.values('id')]
+                    permissionsData = init_data(selected_list=permissionsList)
+
                 #  如果有oper_user字段 等于本身名字
                 if obj.oper_user:
                     oper_user_username = obj.oper_user.username
@@ -55,6 +63,7 @@ def role(request):
                     'name': obj.name,
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     'oper_user__username': oper_user_username,
+                    'permissionsData': permissionsData
                 })
             #  查询成功 返回200 状态码
             response.code = 200
@@ -79,7 +88,6 @@ def role_oper(request, oper_type, o_id):
     if request.method == "POST":
         if oper_type == "add":
             form_data = {
-                'user_id': o_id,
                 'oper_user_id': request.GET.get('user_id'),
                 'name': request.POST.get('name'),
                 'permissionsList': request.POST.get('permissionsList'),
@@ -91,12 +99,18 @@ def role_oper(request, oper_type, o_id):
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
                 # print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
-                obj = models.role.objects.create({
+                print({
+                    'name': forms_obj.cleaned_data.get('name'),
+                    'oper_user_id': forms_obj.cleaned_data.get('oper_user_id'),
+                })
+                obj = models.role.objects.create(**{
                     'name': forms_obj.cleaned_data.get('name'),
                     'oper_user_id': forms_obj.cleaned_data.get('oper_user_id'),
                 })
 
-                print('permissionsList -->', forms_obj.cleaned_data.get('permissionsList'))
+                permissionsList = forms_obj.cleaned_data.get('permissionsList')
+                print('permissionsList -->', permissionsList)
+                obj.permissions = permissionsList
                 response.code = 200
                 response.msg = "添加成功"
             else:

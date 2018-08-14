@@ -11,6 +11,32 @@ from api.forms.company import AddForm, UpdateForm, SelectForm
 import json
 
 
+def init_data(pid=None, selected_list=None):
+    """
+    获取权限数据
+    :param pid:  权限父级id
+    :return:
+    """
+    result_data = []
+    objs = models.permissions.objects.filter(pid_id=pid)
+    for obj in objs:
+        current_data = {
+            'title': obj.title,
+            'expand': True,
+            'id': obj.id,
+            'checked': False
+        }
+        if selected_list and obj.id in selected_list:
+            current_data['checked'] = True
+        children_data = init_data(obj.id)
+        if children_data:
+            current_data['children'] = children_data
+        result_data.append(current_data)
+
+    print('result_data -->', result_data)
+    return result_data
+
+
 # cerf  token验证 用户展示模块
 @csrf_exempt
 @account.is_token(models.userprofile)
@@ -169,7 +195,14 @@ def permissions_oper(request, oper_type, o_id):
                 response.msg = json.loads(forms_obj.errors.as_json())
 
     else:
-        response.code = 402
-        response.msg = "请求异常"
+        if oper_type == "get_tree_data":
+            response.code = 200
+            response.msg = "获取tree数据成功"
+            response.data = {
+                'ret_data': init_data()
+            }
+        else:
+            response.code = 402
+            response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
