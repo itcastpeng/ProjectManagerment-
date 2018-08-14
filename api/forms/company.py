@@ -10,19 +10,8 @@ class AddForm(forms.Form):
     name = forms.CharField(
         required=True,
         error_messages={
-            'required': "权限名称不能为空"
+            'required': "公司名称不能为空"
         }
-    )
-
-    title = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "权限标题不能为空"
-        }
-    )
-
-    pid_id = forms.IntegerField(
-        required=False
     )
 
     oper_user_id = forms.IntegerField(
@@ -35,7 +24,7 @@ class AddForm(forms.Form):
     # 查询名称是否存在
     def clean_name(self):
         name = self.data['name']
-        objs = models.permissions.objects.filter(
+        objs = models.company.objects.filter(
             name=name,
         )
         if objs:
@@ -49,19 +38,8 @@ class UpdateForm(forms.Form):
     name = forms.CharField(
         required=True,
         error_messages={
-            'required': "权限名称不能为空"
+            'required': "公司名称不能为空"
         }
-    )
-
-    title = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "权限标题不能为空"
-        }
-    )
-
-    pid_id = forms.IntegerField(
-        required=False
     )
 
     o_id = forms.IntegerField(
@@ -75,7 +53,7 @@ class UpdateForm(forms.Form):
     def clean_name(self):
         o_id = self.data['o_id']
         name = self.data['name']
-        objs = models.permissions.objects.filter(
+        objs = models.company.objects.filter(
             name=name,
         ).exclude(id=o_id)
         if objs:
