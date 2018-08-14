@@ -30,7 +30,7 @@ def user(request):
                 'oper_user__username': '__contains',
             }
             role_id = forms_obj.cleaned_data.get('role_id')
-            if role_id == 1:  # 超级管理员角色
+            if role_id != 1:  # 超级管理员角色
                 field_dict['company_id'] = ''
             q = conditionCom(request, field_dict)
 
