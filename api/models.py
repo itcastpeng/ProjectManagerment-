@@ -42,7 +42,7 @@ class userprofile(models.Model):
     )
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
 
-    role = models.ForeignKey('role', verbose_name='所属角色')
+    role = models.ForeignKey('role', verbose_name='所属角色', null=True, blank=True)
     company = models.ForeignKey('company', verbose_name='所属公司', null=True, blank=True)      # 超级管理员没有所属公司
     set_avator = models.CharField(verbose_name='头像', default='http://api.zhugeyingxiao.com/statics/imgs/setAvator.jpg', max_length=128)
 
