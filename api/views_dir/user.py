@@ -53,14 +53,24 @@ def user(request):
                 else:
                     oper_user_username = ''
                 # print('oper_user_username -->', oper_user_username)
+
+                # 如果有 company_id 则显示公司名称
+                company_name = ''
+                if obj.company:
+                    company_name = obj.company.name
+
+                role_name = ''
+                if obj.role:
+                    role_name = obj.role.name
+
                 #  将查询出来的数据 加入列表
                 ret_data.append({
                     'id': obj.id,
                     'username': obj.username,
                     'get_status_display': obj.get_status_display(),
                     'status': obj.status,
-                    'role_name': obj.role.name,
-                    'company_name': obj.company.name,
+                    'role_name': role_name,
+                    'company_name': company_name,
                     'role_id': obj.role_id,
                     'company_id': obj.company_id,
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
