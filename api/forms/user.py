@@ -161,6 +161,8 @@ class SelectForm(forms.Form):
     def clean_company_id(self):
         role_id = self.data.get('role_id')
         company_id = self.data.get('company_id')
+        print('role_id -->', role_id)
+        print('company_id -->', company_id)
         if role_id != 1 and not company_id:
             self.add_error('company_id', '公司id不能为空')
         else:
