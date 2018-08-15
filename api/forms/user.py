@@ -131,7 +131,7 @@ class SelectForm(forms.Form):
     )
 
     company_id = forms.IntegerField(
-        required=True,
+        required=False,
         error_messages={
             'required': "公司ID不能为空"
         }
@@ -157,3 +157,11 @@ class SelectForm(forms.Form):
         else:
             length = int(self.data['length'])
         return length
+
+    def clean_company_id(self):
+        role_id = self.data.get('role_id')
+        company_id = self.data.get('company_id')
+        if role_id != 1 and not company_id:
+            self.add_error('company_id', '公司id不能为空')
+        else:
+            return company_id
