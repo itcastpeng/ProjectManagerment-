@@ -63,7 +63,7 @@ def role(request):
                     'name': obj.name,
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     'oper_user__username': oper_user_username,
-                    'permissionsData': permissionsData
+                    'permissionsData': json.dumps(permissionsData)
                 })
             #  查询成功 返回200 状态码
             response.code = 200
@@ -140,6 +140,7 @@ def role_oper(request, oper_type, o_id):
             form_data = {
                 'o_id': o_id,
                 'name': request.POST.get('name'),
+                'permissionsList': request.POST.get('permissionsList'),
             }
 
             forms_obj = UpdateForm(form_data)
@@ -148,6 +149,7 @@ def role_oper(request, oper_type, o_id):
                 print(forms_obj.cleaned_data)
                 o_id = forms_obj.cleaned_data['o_id']
                 name = forms_obj.cleaned_data['name']
+                permissionsList = forms_obj.cleaned_data['permissionsList']
                 #  查询数据库  用户id
                 objs = models.role.objects.filter(
                     id=o_id
@@ -157,6 +159,8 @@ def role_oper(request, oper_type, o_id):
                     objs.update(
                         name=name
                     )
+
+                    objs[0].permissions = permissionsList
 
                     response.code = 200
                     response.msg = "修改成功"

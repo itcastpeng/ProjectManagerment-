@@ -56,6 +56,13 @@ class UpdateForm(forms.Form):
         }
     )
 
+    permissionsList = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "选择权限不能为空"
+        }
+    )
+
     # 判断名称是否存在
     def clean_name(self):
         o_id = self.data['o_id']
@@ -68,6 +75,9 @@ class UpdateForm(forms.Form):
         else:
             return name
 
+    def clean_permissionsList(self):
+        permissionsList = self.data.get('permissionsList')
+        return json.loads(permissionsList)
 
 # 判断是否是数字
 class SelectForm(forms.Form):

@@ -199,7 +199,7 @@ def permissions_oper(request, oper_type, o_id):
             response.code = 200
             response.msg = "获取tree数据成功"
             response.data = {
-                'ret_data': init_data()
+                'ret_data': json.dumps(init_data())
             }
         else:
             response.code = 402
