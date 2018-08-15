@@ -20,7 +20,6 @@
 ####   公共参数（登录后所有api都需要加的参数）
 
 ``` python
-?rand_str=RAND_STR&timestamp=TIME_STAMP&user_id=USER_ID
 请求方法：GET
 请求参数:
 参数名    是否必须    参数描述
