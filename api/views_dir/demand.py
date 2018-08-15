@@ -172,6 +172,7 @@ def demand_oper(request, oper_type, o_id):
             # 获取需要修改的信息
             form_data = {
                 'o_id': o_id,
+                'oper_user_id': request.GET.get('user_id'),
                 'project_id': request.POST.get('project_id'),
                 'action_id': request.POST.get('action_id'),
                 'name': request.POST.get('name'),

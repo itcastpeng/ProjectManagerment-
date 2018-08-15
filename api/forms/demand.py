@@ -78,6 +78,13 @@ class UpdateForm(forms.Form):
         }
     )
 
+    oper_user_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': '操作人不能为空'
+        }
+    )
+
     project_id = forms.IntegerField(
         required=True,
         error_messages={
