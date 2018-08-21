@@ -46,6 +46,8 @@ class userprofile(models.Model):
     company = models.ForeignKey('company', verbose_name='所属公司', null=True, blank=True)      # 超级管理员没有所属公司
     set_avator = models.CharField(verbose_name='头像', default='http://api.zhugeyingxiao.com/statics/imgs/setAvator.jpg', max_length=128)
 
+    userid = models.CharField(verbose_name="企业微信id", max_length=64, null=True, blank=True)
+
 
 # 产品项目表
 class project(models.Model):
