@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import time
 import datetime
 
+from publicFunc.workWeixin import workWeixinApi
 
 @csrf_exempt
 def login(request):

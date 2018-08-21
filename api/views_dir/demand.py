@@ -11,6 +11,8 @@ from api.forms.demand import AddForm, UpdateForm, SelectForm, ShenHeForm
 import json
 from django.db.models import Q
 
+from publicFunc.workWeixin import workWeixinApi
+
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
@@ -25,6 +27,7 @@ def demand(request):
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
+            status = request.GET.get('status')
             role_id = forms_obj.cleaned_data['role_id']
             company_id = forms_obj.cleaned_data['company_id']
             field_dict = {
@@ -53,7 +56,11 @@ def demand(request):
                 q.add(Q(**{'project_id__in': project_id_list}), Q.AND)
 
             print('q -->', q)
-            objs = models.demand.objects.select_related('action', 'project').filter(q).order_by(order)
+            if status:
+                objs = models.demand.objects.select_related('action', 'project').filter(q).order_by(order)
+            else:
+                objs = models.demand.objects.select_related('action', 'project').filter(q).exclude(status=11).order_by(order)
+
             count = objs.count()
 
             if length != 0:
@@ -76,6 +83,10 @@ def demand(request):
                 complete_date = ''
                 if obj.complete_date:
                     complete_date = obj.complete_date.strftime('%y-%m-%d %H:%M')
+
+                developer = ''
+                if obj.developer:
+                    developer = ','.join([i['username'] for i in obj.developer.values('username')])
                 ret_data.append({
                     'id': obj.id,
                     'name': obj.name,
@@ -86,6 +97,7 @@ def demand(request):
                     'project_name': obj.project.name,
                     'status': obj.status,
                     'img_list': obj.img_list,
+                    'developer': developer,
                     'status_text': obj.get_status_display(),
                     'urgency_level': obj.urgency_level,
                     'urgency_level_text': obj.get_urgency_level_display(),
@@ -115,6 +127,7 @@ def demand(request):
 @csrf_exempt
 @account.is_token(models.userprofile)
 def demand_oper(request, oper_type, o_id):
+    work_weixin_api_obj = workWeixinApi.WorkWeixinApi()
     response = Response.ResponseObj()
     if request.method == "POST":
         if oper_type == "add":
@@ -137,6 +150,14 @@ def demand_oper(request, oper_type, o_id):
                 #  添加数据库
                 print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
                 obj = models.demand.objects.create(**forms_obj.cleaned_data)
+
+                project_id = forms_obj.cleaned_data.get('project_id')
+                project_obj = models.project.objects.get(id=project_id)
+                userID = "|".join([i['userid'] for i in project_obj.principal.values('userid')])
+                msg = "您的项目 {project_name} 有新的需求等待审核，请及时处理".format(
+                    project_name=project_obj.name
+                )
+                work_weixin_api_obj.message_send(userID, msg)
 
                 models.progress.objects.create(
                     demand=obj,
@@ -163,7 +184,7 @@ def demand_oper(request, oper_type, o_id):
                     response.msg = "删除成功"
                 else:
                     response.code = 300
-                    response.msg = "该需求已经不能删除，如需删除请联系项目负责人关闭需求"
+                    response.msg = "该需求不能删除，如需删除请联系项目负责人关闭需求"
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
@@ -207,6 +228,13 @@ def demand_oper(request, oper_type, o_id):
                         urgency_level=urgency_level
                     )
 
+                    project_obj = models.project.objects.get(id=project_id)
+                    userID = "|".join([i['userid'] for i in project_obj.principal.values('userid')])
+                    msg = "您的项目 {project_name} 有需求被修改，等待审核中，请及时处理".format(
+                        project_name=project_obj.name
+                    )
+                    work_weixin_api_obj.message_send(userID, msg)
+
                     models.progress.objects.create(
                         demand=objs[0],
                         description="修改需求",
@@ -246,12 +274,19 @@ def demand_oper(request, oper_type, o_id):
                 oper_user_id = forms_obj.cleaned_data.get('oper_user_id')
                 developerList = forms_obj.cleaned_data.get('developerList')
                 remark = forms_obj.cleaned_data.get('remark')
-                objs = models.demand.objects.filter(id=o_id)
+                objs = models.demand.objects.select_related('project').filter(id=o_id)
                 if objs:
                     obj = objs[0]
                     obj.status = 2
                     obj.save()
                     obj.developer = json.loads(developerList)
+
+                    user_obj = models.userprofile.objects.filter(id__in=json.loads(developerList))
+                    userID = "|".join([i['userid'] for i in user_obj.values('userid')])
+                    msg = "项目 {project_name} 有新的需求等待开发，请及时处理".format(
+                        project_name=obj.project.name
+                    )
+                    work_weixin_api_obj.message_send(userID, msg)
 
                     models.progress.objects.create(
                         demand=obj,
@@ -285,6 +320,15 @@ def demand_oper(request, oper_type, o_id):
                 create_user_id=oper_user_id
             )
 
+            userID = objs[0].oper_user.userid
+            msg = "您提交的需求 {id}-{name} 开发工程师已经估算开发时间，预计开发完成时间: {new_date}".format(
+                id=objs[0].id,
+                name=objs[0].name,
+                new_date=complete_date
+            )
+            print('userID -->', userID)
+            work_weixin_api_obj.message_send(userID, msg)
+
             response.code = 200
             response.msg = "预计开发时间设置成功"
             # 开发人员修改预计完成时间
@@ -294,15 +338,29 @@ def demand_oper(request, oper_type, o_id):
             complete_date = request.POST.get('complete_date')
             remark = request.POST.get('remark')
             oper_user_id = request.GET.get('user_id')
-            objs = models.demand.objects.filter(id=o_id)
+            objs = models.demand.objects.select_related('oper_user').filter(id=o_id)
+            old_complete_date = objs[0].complete_date
             objs.update(complete_date=complete_date)
 
             models.progress.objects.create(
                 demand=objs[0],
                 remark=remark,
-                description="延迟预计开发时间，预计 {complete_date} 开发完成".format(complete_date=complete_date),
+                description="延迟预计开发时间，原预计开发时间: {old_date}，新预计开发时间: {complete_date}".format(
+                    old_date=old_complete_date,
+                    complete_date=complete_date
+                ),
                 create_user_id=oper_user_id
             )
+
+            userID = objs[0].oper_user.userid
+            msg = "您提交的需求 {id}-{name} 需要延期处理，原预计开发完成时间: {old_date}，新预计开发完成时间: {new_date}".format(
+                id=objs[0].id,
+                name=objs[0].name,
+                old_date=old_complete_date,
+                new_date=complete_date
+            )
+            print('userID -->', userID)
+            work_weixin_api_obj.message_send(userID, msg)
 
             response.code = 200
             response.msg = "延迟开发时间设置成功"
@@ -311,7 +369,7 @@ def demand_oper(request, oper_type, o_id):
         elif oper_type == "tijiao_ceshi":
             remark = request.POST.get('remark')
             oper_user_id = request.GET.get('user_id')
-            objs = models.demand.objects.filter(id=o_id)
+            objs = models.demand.objects.select_related('oper_user').filter(id=o_id)
             objs.update(
                 status=4
             )
@@ -323,8 +381,14 @@ def demand_oper(request, oper_type, o_id):
                 remark=remark
             )
 
+            userID = objs[0].oper_user.userid
+            msg = "您提交的需求 {id}-{name} 已开发完成，请进行测试".format(
+                id=objs[0].id,
+                name=objs[0].name
+            )
+            work_weixin_api_obj.message_send(userID, msg)
             response.code = 200
-            response.msg = "预计开发时间设置成功"
+            response.msg = "提交成功"
 
         # 测试通过，需求交付
         elif oper_type == "jiaofu":
@@ -341,6 +405,15 @@ def demand_oper(request, oper_type, o_id):
                 create_user_id=oper_user_id,
                 remark=remark
             )
+
+            project_obj = models.project.objects.get(id=objs[0].project_id)
+            userID = "|".join([i['userid'] for i in project_obj.principal.values('userid')])
+
+            msg = "需求 {id}-{name} 已测试完成，可进行上线操作，请及时处理".format(
+                id=objs[0].id,
+                name=objs[0].name
+            )
+            work_weixin_api_obj.message_send(userID, msg)
 
             response.code = 200
             response.msg = "预计开发时间设置成功"
