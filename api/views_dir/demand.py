@@ -37,7 +37,7 @@ def demand(request):
             }
             q = conditionCom(request, field_dict)
 
-            if role_id == 2:  # 管理员角色
+            if role_id !=1:  # 非超级管理员角色都只能看自己公司的
                 q.add(Q(**{'project__company_id': company_id}), Q.AND)
 
             elif role_id in [3, 4]:  # 3 -->项目负责人/产品经理  4 --> 开发负责人

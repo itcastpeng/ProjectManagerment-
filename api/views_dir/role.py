@@ -177,7 +177,21 @@ def role_oper(request, oper_type, o_id):
                 response.msg = json.loads(forms_obj.errors.as_json())
 
     else:
-        response.code = 402
-        response.msg = "请求异常"
+        # 获取角色对应的权限
+        if oper_type == "get_rules":
+            objs = models.role.objects.filter(id=o_id)
+            if objs:
+                obj = objs[0]
+                rules_list = [i['name'] for i in obj.permissions.values('name')]
+                print('dataList -->', rules_list)
+                response.data = {
+                    'rules_list': rules_list
+                }
+
+                response.code = 200
+                response.msg = "查询成功"
+        else:
+            response.code = 402
+            response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
