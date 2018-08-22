@@ -40,20 +40,21 @@ def demand(request):
             }
             q = conditionCom(request, field_dict)
 
-            if role_id !=1:  # 非超级管理员角色都只能看自己公司的
+            if role_id == 2:    # 管理员角色只能看自己公司的
                 q.add(Q(**{'project__company_id': company_id}), Q.AND)
 
-            elif role_id in [3, 4]:  # 3 -->项目负责人/产品经理  4 --> 开发负责人
+            elif role_id == 3:  # 项目负责人/产品经理角色
                 project_objs = models.project.objects.all()
                 project_id_list = []
                 for project_obj in project_objs:
-                    if role_id == 3:
-                        if project_obj.principal.filter(id=user_id):    # 如果该项目的负责人有当前人
-                            project_id_list.append(project_obj.id)
-                    elif role_id == 4:
-                        if project_obj.developer.filter(id=user_id):    # 如果该项目的开发人有当前人
-                            project_id_list.append(project_obj.id)
+                    if project_obj.principal.filter(id=user_id):    # 如果该项目的负责人有当前人
+                        project_id_list.append(project_obj.id)
                 q.add(Q(**{'project_id__in': project_id_list}), Q.AND)
+
+            elif role_id == 4:  # 开发角色
+                demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=user_id).values('demand_id')]
+                print('demand_id_list -->', demand_id_list)
+                q.add(Q(**{'id__in': demand_id_list}), Q.AND)
 
             print('q -->', q)
             if status:
@@ -84,9 +85,7 @@ def demand(request):
                 if obj.complete_date:
                     complete_date = obj.complete_date.strftime('%y-%m-%d %H:%M')
 
-                developer = ''
-                if obj.developer:
-                    developer = ','.join([i['username'] for i in obj.developer.values('username')])
+                developer = ",".join([i['developer__username'] for i in obj.demand_to_userprofile_set.values('developer__username')])
                 ret_data.append({
                     'id': obj.id,
                     'name': obj.name,

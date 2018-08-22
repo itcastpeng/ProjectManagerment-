@@ -77,7 +77,7 @@ class demand(models.Model):
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     complete_date = models.DateTimeField(verbose_name="预计完成时间", null=True, blank=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建需求的用户")
-    developer = models.ManyToManyField('userprofile', verbose_name='开发人员', related_name='demand_developer_userprofile')
+    # developer = models.ManyToManyField('userprofile', verbose_name='开发人员', related_name='demand_developer_userprofile')
 
     status_choices = (
         (1, '等待审核'),
@@ -98,6 +98,12 @@ class demand(models.Model):
         (4, "非常紧急"),
     )
     urgency_level = models.SmallIntegerField(verbose_name="紧急程度", default=1, choices=urgency_level_choices)
+
+
+# 产品需求表和用户管理第三张表
+class demand_to_userprofile(models.Model):
+    developer = models.ForeignKey('userprofile', verbose_name="开发人员表")
+    demand = models.ForeignKey('demand', verbose_name='需求表')
 
 
 # 需求进展表
