@@ -278,7 +278,13 @@ def demand_oper(request, oper_type, o_id):
                     obj = objs[0]
                     obj.status = 2
                     obj.save()
-                    obj.developer = json.loads(developerList)
+
+                    query = []
+                    for developer in json.loads(developerList):
+                        query.append(
+                            models.demand_to_userprofile(developer_id=developer, demand_id=obj.id)
+                        )
+                    models.demand_to_userprofile.objects.bulk_create(query)
 
                     user_obj = models.userprofile.objects.filter(id__in=json.loads(developerList))
                     userID = "|".join([i['userid'] for i in user_obj.values('userid')])
