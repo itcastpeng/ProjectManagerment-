@@ -36,7 +36,8 @@ def demand(request):
                 'create_date': '',
                 'oper_user__username': '__contains',
                 'status': '',
-                'urgency_level': ''
+                'urgency_level': '',
+                'project_id': ''
             }
             q = conditionCom(request, field_dict)
 

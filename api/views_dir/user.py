@@ -9,6 +9,7 @@ import datetime
 from publicFunc.condition_com import conditionCom
 from api.forms.user import AddForm, UpdateForm, SelectForm
 import json
+from django.db.models import Q
 
 
 # cerf  token验证 用户展示模块
@@ -33,6 +34,11 @@ def user(request):
             if role_id != 1:  # 超级管理员角色
                 field_dict['company_id'] = ''
             q = conditionCom(request, field_dict)
+
+            get_role_id = request.GET.get('get_role_id')
+            if get_role_id:
+                q.add(Q(**{'role_id': get_role_id}), Q.AND)
+
 
             print('q -->', q)
             objs = models.userprofile.objects.select_related('role', 'company').filter(q).order_by(order)
