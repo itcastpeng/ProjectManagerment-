@@ -132,21 +132,23 @@ def switch_zhugeleida():
     headers = {
         'Accept': 'application/json',
     }
-    post_data = {
-        'username': 'saltapi',
-        'password': 'saltapi@2018',
-        'eauth': 'pam',
+    post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
+
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    token = ret.json()['return'][0]['token']
+
+    url = 'https://192.168.10.110:8001/'
+    headers = {
+        'Accept': 'application/json',
+        'X-Auth-Token': token,
     }
 
-    ret = requests.post(url, post_data, headers=headers)
-    print('ret.json() -->', ret.json())
-
-
-    # url = 'https://192.168.10.110:8001/'
-    #
-    #
-    # headers = {
-    #     'Accept': 'application/json',
-    #     'X-Auth-Token': 'application/json',
-    # }
-    # ret = requests.get(url, headers=headers)
+    post_data = {
+        'client': 'local',
+        'tgt': 'zhuanfaji',
+        'fun': 'state.sls',
+        # 'arg': 'zhugeleida_prod',
+        'arg': 'zhugeleida_dev',
+    }
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    print(ret.json())
