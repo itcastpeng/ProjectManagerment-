@@ -51,6 +51,13 @@ class userprofile(models.Model):
 
 # 产品项目表
 class project(models.Model):
+    status_choices = (
+        (1, '正式环境'),
+        (2, '灰度环境'),
+    )
+    status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
+    is_switch = models.BooleanField(verbose_name="是否允许切换环境", default=False)
+
     name = models.CharField(verbose_name="项目名称", max_length=128)
     company = models.ForeignKey('company', verbose_name='所属公司')
     principal = models.ManyToManyField('userprofile', verbose_name='负责人', related_name='principal_userprofile')

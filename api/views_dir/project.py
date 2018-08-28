@@ -79,7 +79,10 @@ def project(request):
                     'company_name': obj.company.name,
                     'company_id': obj.company_id,
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'status': obj.status,
+                    'get_status_display': obj.get_status_display(),
                     'oper_user__username': oper_user_username,
+                    'is_switch': obj.is_switch,
                 })
             #  查询成功 返回200 状态码
             response.code = 200
@@ -188,6 +191,18 @@ def project_oper(request, oper_type, o_id):
                 # print(forms_obj.errors.as_json())
                 #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
+
+        elif oper_type == 'update_is_switch':
+            is_switch = request.POST.get('is_switch')
+            print('is_switch -->', is_switch, type(is_switch))
+            if is_switch == "true":
+                is_switch = True
+            else:
+                is_switch = False
+            models.project.objects.filter(id=o_id).update(is_switch=is_switch)
+
+            response.code = 200
+            response.msg = '切换成功'
 
     else:
         response.code = 402

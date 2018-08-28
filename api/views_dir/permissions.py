@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import time
 import datetime
 from publicFunc.condition_com import conditionCom
-from api.forms.company import AddForm, UpdateForm, SelectForm
+from api.forms.permissions import AddForm, UpdateForm, SelectForm
 import json
 
 
@@ -113,7 +113,6 @@ def permissions_oper(request, oper_type, o_id):
     if request.method == "POST":
         if oper_type == "add":
             form_data = {
-                'user_id': o_id,
                 'oper_user_id': request.GET.get('user_id'),
                 'name': request.POST.get('name'),
                 'title': request.POST.get('title'),
@@ -125,7 +124,7 @@ def permissions_oper(request, oper_type, o_id):
                 print("验证通过")
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
-                # print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
+                print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
                 models.permissions.objects.create(**forms_obj.cleaned_data)
                 response.code = 200
                 response.msg = "添加成功"
