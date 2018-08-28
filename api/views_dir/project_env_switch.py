@@ -113,7 +113,15 @@ def project_env_switch_oper(request, oper_type, o_id):
             if objs:
                 obj = objs[0]
                 if obj.id == 1:
-                    switch_zhugeleida()
+                    if obj.status == 1:
+                        arg = 'zhugeleida_dev'
+                        status = 2
+                    else:
+                        arg = 'zhugeleida_prod'
+                        status = 1
+                    switch_zhugeleida(arg)
+                    obj.status = status
+                    obj.save()
 
                 response.code = 200
                 response.msg = "添加成功"
@@ -126,7 +134,7 @@ def project_env_switch_oper(request, oper_type, o_id):
 
 
 # 诸葛雷达切换正式和灰度环境
-def switch_zhugeleida():
+def switch_zhugeleida(arg):
     # 先登录获取token
     url = 'https://192.168.10.110:8001/login'
     headers = {
@@ -142,13 +150,10 @@ def switch_zhugeleida():
         'Accept': 'application/json',
         'X-Auth-Token': token,
     }
-
     post_data = {
         'client': 'local',
         'tgt': 'zhuanfaji',
         'fun': 'state.sls',
-        # 'arg': 'zhugeleida_prod',
-        'arg': 'zhugeleida_dev',
+        'arg': arg,
     }
     ret = requests.post(url, post_data, headers=headers, verify=False)
-    print(ret.json())
