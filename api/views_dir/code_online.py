@@ -118,6 +118,7 @@ def code_online_oper(request, oper_type, o_id):
                 response.code = 200
                 response.msg = "任务异步执行中"
         elif oper_type == "search_jobid":
+            print('o_id -->', o_id)
             response.data = salt_api_search_jobid(o_id)
             response.code = 200
             response.msg = "查询成功"
@@ -176,7 +177,7 @@ def salt_api_search_jobid(jobid):
     print('login_ret  -->', ret.json())
     token = ret.json()['return'][0]['token']
 
-    url = 'https://192.168.10.110:8001/jobs/' + jobid
+    url = 'https://192.168.10.110:8001/jobs/{}'.format(jobid)
     print('url -->', url)
     headers = {
         'Accept': 'application/json',
