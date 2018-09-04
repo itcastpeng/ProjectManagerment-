@@ -144,17 +144,15 @@ def switch_zhugeleida(pid, code_env):
         'X-Auth-Token': token,
     }
 
-    arg = ''
     print(pid, type(pid), code_env, type(code_env))
     if pid == 1 and code_env == 1:  # 诸葛雷达前端代码
-        arg = 'zhugeleida_code_online'
 
-    post_data = {
-        'client': 'local',
-        'tgt': 'zhuanfaji',
-        'fun': 'state.sls',
-        'arg': arg,
-    }
+        post_data = {
+            'client': 'local',
+            'tgt': 'huidu-web-03',
+            'fun': 'state.sls',
+            'arg': 'zhugeleida_code_online',
+        }
     print('post_data -->', post_data)
     ret = requests.post(url, post_data, headers=headers, verify=False)
     print('zhixing  -->', ret.json())
