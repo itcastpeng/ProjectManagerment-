@@ -135,6 +135,7 @@ def switch_zhugeleida(pid, code_env):
     post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
 
     ret = requests.post(url, post_data, headers=headers, verify=False)
+    print('login_ret  -->', ret.json())
     token = ret.json()['return'][0]['token']
 
     url = 'https://192.168.10.110:8001/'
@@ -154,3 +155,4 @@ def switch_zhugeleida(pid, code_env):
         'arg': arg,
     }
     ret = requests.post(url, post_data, headers=headers, verify=False)
+    print('zhixing  -->', ret.json())
