@@ -101,7 +101,7 @@ class WorkWeixinApi(object):
 if __name__ == '__main__':
     workWeixinDataPath = './workweixin.json'
     obj = WorkWeixinApi()
-    # obj.gettoken()
-    # obj.user_simplelist()
-    content = '测试'
-    obj.message_send('ZhangCong', content)
+    obj.gettoken()
+    obj.user_simplelist()
+    # content = '测试'
+    # obj.message_send('ZhangCong', content)

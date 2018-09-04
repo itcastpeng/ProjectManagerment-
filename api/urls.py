@@ -1,7 +1,8 @@
 
 from django.conf.urls import url
 
-from api.views_dir import login, company, role, user, project, action, demand, img_upload, permissions, project_env_switch
+from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
+    permissions, project_env_switch, code_online
 
 
 urlpatterns = [
@@ -42,6 +43,10 @@ urlpatterns = [
     # 项目环境切换管理
     url(r'^project_env_switch/(?P<oper_type>\w+)/(?P<o_id>\d+)', project_env_switch.project_env_switch_oper),
     url(r'^project_env_switch$', project_env_switch.project_env_switch),
+
+    # 项目代码上线
+    url(r'^code_online/(?P<oper_type>\w+)/(?P<o_id>\d+)', code_online.code_online_oper),
+    url(r'^code_online', code_online.code_online),
 
 
 ]
