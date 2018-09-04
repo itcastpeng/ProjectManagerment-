@@ -114,10 +114,13 @@ def code_online_oper(request, oper_type, o_id):
             objs = models.project.objects.filter(id=o_id, is_switch=True)
             if objs:
                 print(objs[0].id, int(code_env))
-                response.data = switch_zhugeleida(objs[0].id, int(code_env))
+                response.data = salt_api_zhugeleida_code_online(objs[0].id, int(code_env))
                 response.code = 200
-                response.msg = "添加成功"
-
+                response.msg = "任务异步执行中"
+        elif oper_type == "search_jobid":
+            response.data = salt_api_search_jobid(o_id)
+            response.code = 200
+            response.msg = "查询成功"
     else:
         response.code = 402
         response.msg = "请求异常"
@@ -125,8 +128,8 @@ def code_online_oper(request, oper_type, o_id):
     return JsonResponse(response.__dict__)
 
 
-# 诸葛雷达切换正式和灰度环境
-def switch_zhugeleida(pid, code_env):
+# 通过 salt 执行代码上线
+def salt_api_zhugeleida_code_online(pid, code_env):
     # 先登录获取token
     url = 'https://192.168.10.110:8001/login'
     headers = {
@@ -154,6 +157,31 @@ def switch_zhugeleida(pid, code_env):
             'arg': 'zhugeleida_code_online',
         }
     print('post_data -->', post_data)
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    print('zhixing  -->', ret.json())
+    # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
+    return ret.json()
+
+
+# 通过jobid查询任务状态
+def salt_api_search_jobid(jobid):
+    # 先登录获取token
+    url = 'https://192.168.10.110:8001/login'
+    headers = {
+        'Accept': 'application/json',
+    }
+    post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
+
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    print('login_ret  -->', ret.json())
+    token = ret.json()['return'][0]['token']
+
+    url = 'https://192.168.10.110:8001/jobs/' + jobid
+    headers = {
+        'Accept': 'application/json',
+        'X-Auth-Token': token,
+    }
+
     ret = requests.post(url, post_data, headers=headers, verify=False)
     print('zhixing  -->', ret.json())
     # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
