@@ -184,14 +184,14 @@ def salt_api_search_jobid(jobid):
         'X-Auth-Token': token,
     }
 
-    # post_data = {
-    #     'client': 'local_async',
-    #     'tgt': 'huidu-web-03',
-    #     'fun': 'state.sls',
-    #     'arg': 'zhugeleida_code_online',
-    # }
+    post_data = {
+        'client': 'local',
+        'tgt': 'huidu-web-03',
+        'fun': 'saltutil.find_job',
+        'arg': jobid
+    }
 
-    ret = requests.post(url, headers=headers, verify=False)
+    ret = requests.post(url, data=post_data, headers=headers, verify=False)
     print(ret.text)
     # print('zhixing  -->', ret.json())
     # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
