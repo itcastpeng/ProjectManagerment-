@@ -185,6 +185,7 @@ def salt_api_search_jobid(jobid):
     }
 
     ret = requests.post(url, post_data, headers=headers, verify=False)
-    print('zhixing  -->', ret.json())
+    print(ret.text)
+    # print('zhixing  -->', ret.json())
     # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
     return ret.json()
