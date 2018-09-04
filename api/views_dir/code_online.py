@@ -148,7 +148,7 @@ def switch_zhugeleida(pid, code_env):
     if pid == 1 and code_env == 1:  # 诸葛雷达前端代码
 
         post_data = {
-            'client': 'local',
+            'client': 'local_async',
             'tgt': 'huidu-web-03',
             'fun': 'state.sls',
             'arg': 'zhugeleida_code_online',
