@@ -154,5 +154,6 @@ def switch_zhugeleida(pid, code_env):
         'fun': 'state.sls',
         'arg': arg,
     }
+    print('post_data -->', post_data)
     ret = requests.post(url, post_data, headers=headers, verify=False)
     print('zhixing  -->', ret.json())
