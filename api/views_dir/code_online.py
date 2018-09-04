@@ -177,7 +177,7 @@ def salt_api_search_jobid(jobid):
     print('login_ret  -->', ret.json())
     token = ret.json()['return'][0]['token']
 
-    url = 'https://192.168.10.110:8001/jobs/{}'.format(jobid)
+    url = 'https://192.168.10.110:8001/'
     print('url -->', url)
     headers = {
         'Accept': 'application/json',
