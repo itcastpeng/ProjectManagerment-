@@ -114,7 +114,7 @@ def code_online_oper(request, oper_type, o_id):
             objs = models.project.objects.filter(id=o_id, is_switch=True)
             if objs:
                 print(objs[0].id, int(code_env))
-                # switch_zhugeleida(objs[0].id, code_env)
+                switch_zhugeleida(objs[0].id, code_env)
                 response.code = 200
                 response.msg = "添加成功"
 
