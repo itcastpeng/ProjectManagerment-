@@ -114,7 +114,7 @@ def code_online_oper(request, oper_type, o_id):
             objs = models.project.objects.filter(id=o_id, is_switch=True)
             if objs:
                 print(objs[0].id, int(code_env))
-                switch_zhugeleida(objs[0].id, int(code_env))
+                response.data = switch_zhugeleida(objs[0].id, int(code_env))
                 response.code = 200
                 response.msg = "添加成功"
 
@@ -156,3 +156,5 @@ def switch_zhugeleida(pid, code_env):
     print('post_data -->', post_data)
     ret = requests.post(url, post_data, headers=headers, verify=False)
     print('zhixing  -->', ret.json())
+    # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
+    return ret.json()
