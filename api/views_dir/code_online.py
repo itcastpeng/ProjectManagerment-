@@ -145,6 +145,7 @@ def switch_zhugeleida(pid, code_env):
     }
 
     arg = ''
+    print(pid, type(pid), code_env, type(code_env))
     if pid == 1 and code_env == 1:  # 诸葛雷达前端代码
         arg = 'zhugeleida_code_online'
 
