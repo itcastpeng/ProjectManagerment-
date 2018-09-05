@@ -184,11 +184,18 @@ def salt_api_search_jobid(jobid):
         'X-Auth-Token': token,
     }
 
+    # post_data = {
+    #     'client': 'local',
+    #     'tgt': 'huidu-web-03',
+    #     'fun': 'saltutil.find_job',
+    #     'arg': jobid
+    # }
+
     post_data = {
-        'client': 'local',
+        'client': 'runner',
         'tgt': 'huidu-web-03',
-        'fun': 'saltutil.find_job',
-        'arg': jobid
+        'fun': 'jobs.lookup_jid',
+        'jid': jobid
     }
 
     ret = requests.post(url, data=post_data, headers=headers, verify=False)
