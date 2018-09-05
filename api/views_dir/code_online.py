@@ -119,7 +119,11 @@ def code_online_oper(request, oper_type, o_id):
                 response.msg = "任务异步执行中"
         elif oper_type == "search_jobid":
             print('o_id -->', o_id)
-            response.data = salt_api_search_jobid(o_id)
+            result = salt_api_search_jobid(o_id)
+            if result[0] == {}:
+                response.data = False
+            else:
+                response.data = True
             response.code = 200
             response.msg = "查询成功"
     else:
