@@ -169,6 +169,13 @@ def salt_api_zhugeleida_code_online(pid, code_env):
                 'fun': 'state.sls',
                 'arg': 'zhugeleida_code_online_zhugeleidaAdmin',
             }
+        elif code_env == 3:  # 雷达API代码上线（后端）
+            post_data = {
+                'client': 'local_async',
+                'tgt': 'huidu-web-03',
+                'fun': 'state.sls',
+                'arg': 'zhugeleida_code_online_zhugeleidaApi',
+            }
 
     print('post_data -->', post_data)
     ret = requests.post(url, post_data, headers=headers, verify=False)
