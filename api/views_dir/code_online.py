@@ -154,14 +154,22 @@ def salt_api_zhugeleida_code_online(pid, code_env):
     }
 
     print(pid, type(pid), code_env, type(code_env))
-    if pid == 1 and code_env == 1:  # 诸葛雷达前端代码
+    if pid == 1:    # 雷达项目
+        if code_env == 1:  # 雷达AI代码上线（前端）
+            post_data = {
+                'client': 'local_async',
+                'tgt': 'huidu-web-03',
+                'fun': 'state.sls',
+                'arg': 'zhugeleida_code_online_zhugeLeida',
+            }
+        elif code_env == 2:     # 雷达后台代码上线（前端）
+            post_data = {
+                'client': 'local_async',
+                'tgt': 'huidu-web-03',
+                'fun': 'state.sls',
+                'arg': 'zhugeleida_code_online_zhugeleidaAdmin',
+            }
 
-        post_data = {
-            'client': 'local_async',
-            'tgt': 'huidu-web-03',
-            'fun': 'state.sls',
-            'arg': 'zhugeleida_code_online',
-        }
     print('post_data -->', post_data)
     ret = requests.post(url, post_data, headers=headers, verify=False)
     print('zhixing  -->', ret.json())
