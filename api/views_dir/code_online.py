@@ -121,7 +121,7 @@ def code_online_oper(request, oper_type, o_id):
             print('o_id -->', o_id)
             result = salt_api_search_jobid(o_id)
             print(result, type(result))
-            if result[0] == {}:
+            if result['return'][0] == {}:
                 response.data = False
             else:
                 response.data = True
