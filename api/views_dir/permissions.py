@@ -28,7 +28,7 @@ def init_data(pid=None, selected_list=None):
         }
         if selected_list and obj.id in selected_list:
             current_data['checked'] = True
-        children_data = init_data(obj.id)
+        children_data = init_data(obj.id, selected_list)
         if children_data:
             current_data['children'] = children_data
         result_data.append(current_data)
