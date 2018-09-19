@@ -31,6 +31,7 @@ def updatePassword(request, oper_type, o_id):
                             response.code = 200
                             response.msg = "修改成功"
                         else:
+                            response.code = 301
                             response.msg = '原始密码错误,请重新输入！'
                     else:
                         print("验证不通过")
