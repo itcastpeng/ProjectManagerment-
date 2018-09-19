@@ -39,6 +39,7 @@ urlpatterns = [
 
     url(r'^img_upload$', img_upload.img_upload),
     url(r'^img_merge$', img_upload.img_merge),
+    url(r'^ueditor_img_upload$', img_upload.ueditor_image_upload),
 
     # 项目环境切换管理
     url(r'^project_env_switch/(?P<oper_type>\w+)/(?P<o_id>\d+)', project_env_switch.project_env_switch_oper),

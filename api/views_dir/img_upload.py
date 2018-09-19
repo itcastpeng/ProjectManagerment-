@@ -2,11 +2,12 @@ import os
 from django import forms
 from publicFunc import Response
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import base64
 from api import models
 from publicFunc import account
+import time
 
 
 # 添加企业的产品
@@ -149,3 +150,64 @@ def img_merge(request):
         response.data = json.loads(forms_obj.errors.as_json())
 
     return JsonResponse(response.__dict__)
+
+
+# 图片上传
+@csrf_exempt
+def ueditor_image_upload(request):
+
+    # action为config 从服务器返回配置
+    # https://github.com/bffor/python-ueditor
+    # http://127.0.0.1:8001/zhugeleida/public/ueditor_img_upload?action=config
+    if request.GET.get('action') == 'config':
+        '''
+        为uploadimage 上传图片 对图片进行处理
+        config.json 配置文件 详细设置参考：http://fex.baidu.com/ueditor/#server-deploy
+        '''
+
+        # f = open('config.json', encoding='utf-8')
+        # data = f.read()
+        # f.close()
+        # temp = json.loads(data)
+        # callbackname = request.GET.get('callback')
+        # # 防止XSS 过滤  callbackname只需要字母数字下划线
+        # pattern = re.compile('\w+', re.U)
+        # matchObj = re.findall(pattern, callbackname, flags=0)
+        # callbacks = matchObj[0] + '(' + json.dumps(temp) + ')'
+        # return HttpResponse(callbacks)
+        from api.views_dir.UEditorUploadConfig import UEditorUploadSettings
+        if "callback" not in request.GET:
+            return JsonResponse(UEditorUploadSettings)
+        else:
+            return_str = "{0}({1})".format(request.GET["callback"], json.dumps(UEditorUploadSettings, ensure_ascii=False))
+            print('====')
+            print('return_str -->', return_str)
+            return HttpResponse(return_str)
+    elif request.GET.get('action') == 'uploadimage':
+        img = request.FILES.get('upfile')
+        name = request.FILES.get('upfile').name
+
+        print('------request.FILES-------->>',request.FILES.get,img,name)
+
+        allow_suffix = ['jpg', 'png', 'jpeg', 'gif', 'bmp']
+        # file_suffix = name.split(".")[-1]
+        file_suffix = name.split(".")[-1]
+
+        if file_suffix not in allow_suffix:
+            return {"state": 'error', "name": name, "url": "", "size": "", "type": file_suffix}
+
+        # 上传文件路径
+        dir_name = os.path.join('statics', 'imgs')
+
+        file_name = str(int(time.time() * 1000)) + "." + file_suffix
+
+        filenameurl = os.path.join(dir_name, file_name)
+        print('filenameurl -->', filenameurl)
+        with open(filenameurl, 'wb+') as destination:
+            for chunk in img.chunks():
+                destination.write(chunk)
+        data = {"state": 'SUCCESS', "url": '/' + filenameurl, "title": file_name, "original": name, "type": file_suffix}
+
+        print('-------data-------->>',data)
+
+        return JsonResponse(data)
