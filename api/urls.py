@@ -2,11 +2,14 @@
 from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
-    permissions, project_env_switch, code_online
+    permissions, project_env_switch, code_online, updatePwd
 
 
 urlpatterns = [
     url(r'^login$', login.login),
+
+    # 修改密码
+    url(r'^updatePassword/(?P<oper_type>\w+)/(?P<o_id>\d+)', updatePwd.updatePassword),
 
     # 公司管理
     url(r'^company/(?P<oper_type>\w+)/(?P<o_id>\d+)', company.company_oper),
