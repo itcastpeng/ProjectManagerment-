@@ -24,15 +24,19 @@ def updatePassword(request, oper_type, o_id):
                 if userObjs:
                     if forms_obj.is_valid():
                         oldPwd = forms_obj.cleaned_data.get('oldPwd')
-                        md5OldPwd = account.str_encrypt(oldPwd)
-                        if md5OldPwd == userObjs[0].password:
-                            md5NewPwd = account.str_encrypt(forms_obj.cleaned_data.get('newPwd'))
-                            userObjs.update(password=md5NewPwd)
-                            response.code = 200
-                            response.msg = "修改成功"
+                        if oldPwd != forms_obj.cleaned_data.get('newPwd'):
+                            md5OldPwd = account.str_encrypt(oldPwd)
+                            if md5OldPwd == userObjs[0].password:
+                                md5NewPwd = account.str_encrypt(forms_obj.cleaned_data.get('newPwd'))
+                                userObjs.update(password=md5NewPwd)
+                                response.code = 200
+                                response.msg = "修改成功"
+                            else:
+                                response.code = 402
+                                response.msg = '原始密码错误,请重新输入！'
                         else:
                             response.code = 402
-                            response.msg = '原始密码错误,请重新输入！'
+                            response.msg = '两次输入密码一样！'
                     else:
                         print("验证不通过")
                         # print(forms_obj.errors)
