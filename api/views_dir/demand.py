@@ -42,6 +42,9 @@ def demand(request):
                 'project_id': ''
             }
             q = conditionCom(request, field_dict)
+            if developer_id:
+                demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=developer_id).values('demand_id')]
+                q.add(Q(**{'id__in': demand_id_list}), Q.AND)
             if role_id == 2:    # 管理员角色只能看自己公司的
                 q.add(Q(**{'project__company_id': company_id}), Q.AND)
 
@@ -55,8 +58,6 @@ def demand(request):
 
             elif role_id == 4:  # 开发角色
                 demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=user_id).values('demand_id')]
-                if developer_id:
-                    demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=developer_id).values('demand_id')]
                 print('demand_id_list -->', demand_id_list)
                 q.add(Q(**{'id__in': demand_id_list}), Q.AND)
 
