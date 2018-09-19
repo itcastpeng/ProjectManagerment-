@@ -24,6 +24,7 @@ def demand(request):
         print('request.GET -->', request.GET)
         forms_obj = SelectForm(request.GET)
         if forms_obj.is_valid():
+            developer_id = request.GET.get('developer_id')
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
@@ -41,7 +42,6 @@ def demand(request):
                 'project_id': ''
             }
             q = conditionCom(request, field_dict)
-
             if role_id == 2:    # 管理员角色只能看自己公司的
                 q.add(Q(**{'project__company_id': company_id}), Q.AND)
 
@@ -55,6 +55,8 @@ def demand(request):
 
             elif role_id == 4:  # 开发角色
                 demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=user_id).values('demand_id')]
+                if developer_id:
+                    demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=developer_id).values('demand_id')]
                 print('demand_id_list -->', demand_id_list)
                 q.add(Q(**{'id__in': demand_id_list}), Q.AND)
 
@@ -62,7 +64,7 @@ def demand(request):
             if status:
                 objs = models.demand.objects.select_related('action', 'project').filter(q).order_by(order)
             else:
-                objs = models.demand.objects.select_related('action', 'project').filter(q).exclude(status=11).order_by(order)
+                objs = models.demand.objects.select_related('action', 'project', 'project__company').filter(q).exclude(status=11).order_by(order)
 
             count = objs.count()
 
