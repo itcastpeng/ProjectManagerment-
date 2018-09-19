@@ -24,7 +24,7 @@ def demand(request):
         print('request.GET -->', request.GET)
         forms_obj = SelectForm(request.GET)
         if forms_obj.is_valid():
-            company_id = request.GET.get('company_id')
+            developer_id = request.GET.get('developer_id')
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
@@ -55,8 +55,8 @@ def demand(request):
 
             elif role_id == 4:  # 开发角色
                 demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=user_id).values('demand_id')]
-                if company_id:
-                    demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=company_id).values('demand_id')]
+                if developer_id:
+                    demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=developer_id).values('demand_id')]
                 print('demand_id_list -->', demand_id_list)
                 q.add(Q(**{'id__in': demand_id_list}), Q.AND)
 
