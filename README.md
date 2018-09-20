@@ -30,6 +30,7 @@ user_id     是        当前登录用户ID
 ```
 
 ### 角色管理
+
 #### 查询
 ```
 http请求方式: GET
@@ -102,7 +103,6 @@ permissionsList                     yes              角色具备权限列表的
 
 ```
 
-
 #### 删除
 ```
 http请求方式: POST
@@ -116,3 +116,158 @@ http请求url: http://192.168.10.240:8801/api/role/delete/角色ID        # 将�
 }
 
 ```
+
+### 测试用例
+
+#### 测试用例 分组 添加：
+``` 
+http请求： POST
+http请求url：http://127.0.0.1:8000/api/testCaseGroupOper/add/0?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+groupName           POST                是                 分组名称
+parensGroupName     POST                否                 父级分组ID
+talkProject         POST                是                 归属项目
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "添加成功",
+    "data": {}
+}
+```
+
+#### 测试用例 分组 修改：
+``` 
+http请求： POST
+http请求url：http://127.0.0.1:8000/api/testCaseGroupOper/update/6?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+groupName           POST                是                 分组名称
+parensGroupName     POST                否                 父级分组ID
+talkProject         POST                是                 归属项目
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "修改成功",
+    "data": {}
+}
+```
+
+#### 测试用例 分组 删除：
+``` 
+http请求： GET
+http请求url：http://127.0.0.1:8000/api/testCaseGroupOper/delete/40?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+o_id                URL                 是                 要删除的分组ID
+groupName           POST                是                 分组名称
+parensGroupName     POST                否                 父级分组ID
+talkProject         POST                是                 归属项目
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "删除成功",
+    "data": {}
+}
+```
+
+#### 测试用例 分组 查询：
+``` 
+http请求： GET
+http请求url：http://127.0.0.1:8000/api/testCaseGroupOper/delete/40?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+o_id                URL                 是                 要删除的分组ID
+groupName           POST                是                 分组名称
+parensGroupName     POST                否                 父级分组ID
+talkProject         POST                是                 归属项目
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "查询成功",
+    "data": {
+        "ret_data": [
+            {
+                "id": 1,                        ID
+                "groupName": "第一个分组",       分组名称
+                "parensGroupName_id": "",       父级为空 为顶级
+                "parensGroupName": "",          父级名字
+                "operUser": "赵欣鹏",            操作人
+                "operUser_id": 10,              操作人ID
+                "talkProject_id": 1,            项目ID
+                "talkProject": "诸葛雷达"        项目名字
+            },      
+            {
+                "id": 2,                        ID
+                "groupName": "第一个分组",        分组名称  
+                "parensGroupName_id": 1,        父级ID
+                "parensGroupName": "第一个分组",  父级名字
+                "operUser": "赵欣鹏",            操作人
+                "operUser_id": 10,              操作人ID
+                "talkProject_id": 1,            项目ID
+                "talkProject": "诸葛雷达"        项目名称
+            }
+        ],
+        "data_count": 2                         总数       
+    }
+}
+```
+
+#### 测试用例 详情 添加：
+``` 
+http请求： POST
+http请求url：http://127.0.0.1:8000/api/testCaseGroupOper/delete/40?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+url                   POST                是                 url
+ownershipGroup_id     POST                是                 父级分组ID
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "添加成功",
+    "data": {}
+}
+```
+
+#### 测试用例 详情 修改：
+``` 
+http请求： POST
+http请求url：http://127.0.0.1:8000/api/testCaseDetaileOper/update/1?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+url                   POST                是                 url
+ownershipGroup_id     POST                是                 父级分组ID
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "修改成功",
+    "data": {}
+}
+```
+
+#### 测试用例 详情 删除：
+``` 
+http请求： GET
+http请求url：http://127.0.0.1:8000/api/testCaseDetaileOper/update/1?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+o_id                GET                 是                  要删除的详情ID
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "删除成功",
+    "data": {}
+}
+```
+
+#### 测试用例 分组查询全部公司名 
+```http://127.0.0.1:8000/api/testCaseGroupOper/selectTalkName/0?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644```
+
+#### 测试用例 分组查询全部分组父级
+```http://127.0.0.1:8000/api/testCaseGroupOper/superGroupName/0?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644 ```
+
+
+
+
+
+
+

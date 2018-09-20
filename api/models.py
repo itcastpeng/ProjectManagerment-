@@ -121,3 +121,18 @@ class progress(models.Model):
     img_list = models.TextField(verbose_name="进展图片", null=True, blank=True)    # 测试结果中需要用到
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     create_user = models.ForeignKey('userprofile', verbose_name='创建需求日志的用户')
+
+# 测试用例接口分组
+class caseInterfaceGrouping(models.Model):
+    talkProject = models.ForeignKey(to='project', verbose_name="所属产品项目", null=True, blank=True)
+    operUser = models.ForeignKey(to='userprofile', verbose_name="创建用户", null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    parensGroupName = models.ForeignKey(to='self', verbose_name='父级分组', null=True, blank=True)
+    groupName = models.CharField(verbose_name='分组名称', max_length=64)
+
+# 测试用例接口详情
+class caseInterfaceDetaile(models.Model):
+    url = models.CharField(verbose_name='url', max_length=128)
+    ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping', null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+

@@ -2,7 +2,7 @@
 from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
-    permissions, project_env_switch, code_online, updatePwd
+    permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile
 
 
 urlpatterns = [
@@ -52,5 +52,12 @@ urlpatterns = [
     url(r'^code_online/(?P<oper_type>\w+)/(?P<o_id>\d+)', code_online.code_online_oper),
     url(r'^code_online', code_online.code_online),
 
+    # 测试用例 接口分组
+    url(r'^testCaseGroupShow', caseInterfaceGrouping.testCaseGroupShow),
+    url(r'^testCaseGroupOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', caseInterfaceGrouping.testCaseGroupOper),
+
+    # 测试用例 接口详情
+    url(r'^testCaseDetaileShow', caseInterfaceDetaile.testCaseDetaileShow),
+    url(r'^testCaseDetaileOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', caseInterfaceDetaile.testCaseDetaileOper),
 
 ]
