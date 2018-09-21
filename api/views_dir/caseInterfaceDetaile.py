@@ -180,6 +180,12 @@ def testCaseDetaileOper(request, oper_type, o_id):
             number = 0
             json_data = []
             statusCode = 500
+            if int(o_id) > 0:  # 单独查询
+                objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
+                getRequest = objs[0].getRequestParameters
+                postRequest = objs[0].postRequestParameters
+                requestUrl = objs[0].url
+                requestType = objs[0].requestType
             if getRequest:
                 get = json.dumps(eval(getRequest))
                 for key, value in json.loads(get).items():
@@ -216,8 +222,8 @@ def testCaseDetaileOper(request, oper_type, o_id):
                         requestType=requestType,
                         caseName=formResult.get('caseName'),
                         userProfile_id=form_data.get('user_id'),
-                        getRequestParameters=canshu,
-                        postRequestParameters=data_list
+                        getRequestParameters=getRequest,
+                        postRequestParameters=postRequest
                     )
                     response.code = 200
                     response.msg = '添加成功'

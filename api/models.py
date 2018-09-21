@@ -143,8 +143,8 @@ class caseInterfaceDetaile(models.Model):
     requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, default=1)
     caseName = models.CharField(verbose_name='接口名称', max_length=64)
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
-    getRequestParameters = models.CharField(verbose_name='GET请求参数',max_length=128, null=True, blank=True)
-    postRequestParameters = models.CharField(verbose_name='POST请求参数',max_length=128, null=True, blank=True)
+    getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
+    postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
 
 
 # HOST 管理配置

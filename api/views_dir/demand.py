@@ -457,6 +457,10 @@ def demand_oper(request, oper_type, o_id):
     else:
         if oper_type == "detail":
             result_data = []
+            userObjs = models.demand_to_userprofile.objects.filter(demand_id=o_id)
+            otherData = []
+            for userObj in userObjs:
+                otherData.append(userObj.developer.username)
             objs = models.progress.objects.select_related('create_user').filter(demand_id=o_id)
             for obj in objs:
                 result_data.append({
@@ -467,7 +471,11 @@ def demand_oper(request, oper_type, o_id):
                     'create_user__username': obj.create_user.username,
                     'create_user_id': obj.create_user_id,
                 })
-            response.data = result_data
+
+            response.data = {
+                'result_data': result_data,
+                'kaifa_username': otherData
+                             }
             response.msg = "查询成功"
             response.code = 200
         else:
