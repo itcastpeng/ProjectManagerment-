@@ -121,3 +121,42 @@ class progress(models.Model):
     img_list = models.TextField(verbose_name="进展图片", null=True, blank=True)    # 测试结果中需要用到
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     create_user = models.ForeignKey('userprofile', verbose_name='创建需求日志的用户')
+
+# 测试用例接口分组
+class caseInterfaceGrouping(models.Model):
+    talkProject = models.ForeignKey(to='project', verbose_name="所属产品项目", null=True, blank=True)
+    operUser = models.ForeignKey(to='userprofile', verbose_name="创建用户", null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    parensGroupName = models.ForeignKey(to='self', verbose_name='父级分组', null=True, blank=True)
+    groupName = models.CharField(verbose_name='分组名称', max_length=64)
+
+# 测试用例接口详情
+class caseInterfaceDetaile(models.Model):
+    ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping',verbose_name='分组', null=True, blank=True)
+    hostManage = models.ForeignKey(to='configurationManagementHOST',verbose_name='host配置管理', null=True, blank=True)
+    url = models.CharField(verbose_name='url', max_length=128)
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    status_choices = (
+        (1,'GET'),
+        (2,'POST')
+    )
+    requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, default=1)
+    caseName = models.CharField(verbose_name='接口名称', max_length=64)
+    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
+    getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
+    postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
+
+
+# HOST 管理配置
+class configurationManagementHOST(models.Model):
+    hostName = models.CharField(verbose_name='host名字', max_length=128)
+    hostUrl = models.CharField(verbose_name='hostUrl', max_length=128)
+    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    status_choices = (
+        (1, '测试环境'),
+        (2, '正式环境')
+    )
+    describe = models.SmallIntegerField(verbose_name='描述', choices=status_choices, default=1)
+
+
