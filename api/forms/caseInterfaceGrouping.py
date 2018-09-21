@@ -37,13 +37,6 @@ class AddForm(forms.Form):
             self.add_error('talkProject_id', '无此项目')
         else:
             return talkProject_id
-    # def clean_parensGroupName(self):
-    #     parensGroupName_id = self.data.get('parensGroupName')
-    #     objs = models.caseInterfaceGrouping.objects.filter(id=parensGroupName_id)
-    #     if not objs:
-    #         self.add_error('parensGroupName', '无此父级分组')
-    #     else:
-    #         return parensGroupName_id
 # 更新
 class UpdateForm(forms.Form):
     o_id = forms.IntegerField(

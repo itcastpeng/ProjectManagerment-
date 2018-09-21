@@ -6,18 +6,37 @@ import json
 
 # 添加
 class AddForm(forms.Form):
-    url = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "url不能为空"
-        }
-    )
+    # url = forms.CharField(
+    #     required=True,
+    #     error_messages={
+    #         'required': "url不能为空"
+    #     }
+    # )
     ownershipGroup_id = forms.IntegerField(
         required=False,
         error_messages={
             'required': '父级分组名称类型错误'
         }
     )
+
+    hostManage_id = forms.IntegerField(
+            required=False,
+            error_messages={
+                'required': '域名类型错误'
+            }
+        )
+    requestType  = forms.IntegerField(
+            required=True,
+            error_messages={
+                'required': '请求类型不能为空'
+            }
+        )
+    caseName = forms.CharField(
+            required=True,
+            error_messages={
+                'required': '接口名称不能为空'
+            }
+        )
 
     def clean_ownershipGroup_id(self):
         ownershipGroup_id = self.data.get('ownershipGroup_id')
@@ -59,7 +78,7 @@ class UpdateForm(forms.Form):
         o_id = self.data.get('o_id')
         objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
         if not objs:
-            self.add_error('o_id', '要修改分组ID有误')
+            self.add_error('o_id', '要修改详情ID有误')
         else:
             return o_id
 

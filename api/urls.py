@@ -2,7 +2,8 @@
 from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
-    permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile
+    permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile, \
+    configurationManagementHOST
 
 
 urlpatterns = [
@@ -60,4 +61,7 @@ urlpatterns = [
     url(r'^testCaseDetaileShow', caseInterfaceDetaile.testCaseDetaileShow),
     url(r'^testCaseDetaileOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', caseInterfaceDetaile.testCaseDetaileOper),
 
+    # 测试用例 接口详情
+    url(r'^configurationHostShow', configurationManagementHOST.configurationHostShow),
+    url(r'^configurationHostOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', configurationManagementHOST.configurationHostOper),
 ]

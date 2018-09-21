@@ -213,20 +213,34 @@ talkProject         POST                是                 归属项目
 }
 ```
 
+
 #### 测试用例 详情 添加：
 ``` 
 http请求： POST
 http请求url：http://127.0.0.1:8000/api/testCaseGroupOper/delete/40?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
 参数   				请求方式		        是否必须            说明
 url                   POST                是                 url
-ownershipGroup_id     POST                是                 父级分组ID
-
+ownershipGroup_id     POST                是                 分组ID
+caseName              POST                是                 接口名称
+requestType           POST                是                 请求类型
+hostManage_id         POST                否                 域名
 返回说明 （正常时返回的json数据 示例）
 {
     "code": 200,
     "msg": "添加成功",
     "data": {}
 }
+
+发送   POST 请求
+requestType         GET                  是                 类型 GET or POST 
+requestUrl          GET                  是                 请求 URL
+getRequest          GET                  是                 客户 GET参数
+postRequest         GET                  是                 客户 POST参数
+
+add                 GET                  否                 如果是添加 加这个参数
+caseName
+hostManage_id
+ownershipGroup_id
 ```
 
 #### 测试用例 详情 修改：
@@ -235,7 +249,10 @@ http请求： POST
 http请求url：http://127.0.0.1:8000/api/testCaseDetaileOper/update/1?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
 参数   				请求方式		        是否必须            说明
 url                   POST                是                 url
-ownershipGroup_id     POST                是                 父级分组ID
+ownershipGroup_id     POST                是                 分组ID
+caseName              POST                是                 接口名称
+requestType           POST                是                 请求类型
+hostManage_id         POST                否                 域名
 
 返回说明 （正常时返回的json数据 示例）
 {
@@ -247,7 +264,7 @@ ownershipGroup_id     POST                是                 父级分组ID
 
 #### 测试用例 详情 删除：
 ``` 
-http请求： GET
+http请求： POST
 http请求url：http://127.0.0.1:8000/api/testCaseDetaileOper/update/1?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
 参数   				请求方式		        是否必须            说明
 o_id                GET                 是                  要删除的详情ID
@@ -259,11 +276,154 @@ o_id                GET                 是                  要删除的详情I
 }
 ```
 
+#### 测试用例 详情 查询：
+``` 
+http请求： GET
+http请求url： http://127.0.0.1:8000/api/testCaseDetaileShow?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644&beforeTaskId=3
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "查询成功",
+    "data": {
+        "ret_data": [
+            {
+                "id": 12,                                   
+                "ownershipGroup": "2号",                     
+                "url": "sadasd asdas dsad",
+                "create_date": "2018-09-20 20:13:53",
+                "user_id": 10,
+                "username": "赵欣鹏",
+                "requestType": "GET",
+                "jieKouName": "撒大声地按时"
+            }
+        ],
+        "data_count": 1
+    }
+}
+```
+
 #### 测试用例 分组查询全部公司名 
 ```http://127.0.0.1:8000/api/testCaseGroupOper/selectTalkName/0?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644```
 
 #### 测试用例 分组查询全部分组父级
 ```http://127.0.0.1:8000/api/testCaseGroupOper/superGroupName/0?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644 ```
+
+
+#### 测试用例 host管理配置 增加：
+``` 
+http请求： POST
+http请求url： http://127.0.0.1:8000/api/configurationHostOper/add/0?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+hostName            POST                是                 host别名
+hostUrl             POST                是                 hostURL
+describe            POST                是                 描述
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "添加成功",
+    "data": {}
+}
+```
+
+#### 测试用例 host管理配置 修改：
+``` 
+http请求： POST
+http请求url： http://127.0.0.1:8000/api/configurationHostOper/update/3?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+o_id                URL                 是                 要删除的hostID
+hostName            POST                是                 host别名
+hostUrl             POST                是                 hostURL
+describe            POST                是                 描述        
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "修改成功",
+    "data": {}
+}
+```
+
+#### 测试用例 host管理配置 删除：
+``` 
+http请求： POST
+http请求url： http://127.0.0.1:8000/api/configurationHostOper/delete/2?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+o_id                URL                 是                 要删除的hostID
+hostName            POST                是                 host别名
+hostUrl             POST                是                 hostURL
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "删除成功",
+    "data": {}
+}
+```
+
+#### 测试用例 host管理配置 查询：
+``` 
+http请求： GET
+http请求url： http://127.0.0.1:8000/api/configurationHostShow?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "查询成功",
+    "data": {
+        "ret_data": [
+            {
+                "id": 5,
+                "name": "111",
+                "url": "222",
+                "username": "张聪",
+                "user_id": 7,
+                "describe_id": 1,
+                "describe": "测试环境",
+                "create_date": "2018-09-20 20:10:58"
+            },
+            {
+                "id": 6,
+                "name": "111",
+                "url": "111",
+                "username": "张聪",
+                "user_id": 7,
+                "describe_id": 1,
+                "describe": "测试环境",
+                "create_date": "2018-09-20 20:14:57"
+            },
+            {
+                "id": 7,
+                "name": "6565",
+                "url": "6+26+",
+                "username": "赵欣鹏",
+                "user_id": 10,
+                "describe_id": 1,
+                "describe": "测试环境",
+                "create_date": "2018-09-20 20:15:38"
+            },
+            {
+                "id": 8,
+                "name": "暗室逢灯",
+                "url": "阿萨德",
+                "username": "赵欣鹏",
+                "user_id": 10,
+                "describe_id": 2,
+                "describe": "正式环境",
+                "create_date": "2018-09-20 20:47:18"
+            }
+        ],
+        "data_count": 4
+    }
+}
+```
+
+
+
+
+
+
 
 
 

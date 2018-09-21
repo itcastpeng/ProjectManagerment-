@@ -10,7 +10,7 @@ from api.views_dir.permissions import init_data
 import json
 import time
 import datetime
-
+from django.db.models import Q
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
@@ -18,12 +18,15 @@ import datetime
 def testCaseGroupShow(request):
     response = Response.ResponseObj()
     if request.method == "GET":
+        user_id = request.GET.get('user_id')
         forms_obj = SelectForm(request.GET)
         if forms_obj.is_valid():
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
-            # order = request.GET.get('order', '-create_date')
+            order = request.GET.get('order', '-create_date')
+            taskName = request.GET.get('taskName')
+            print('order-------> ',order)
             field_dict = {
                 'id': '',
                 'talkProject': '__contains',
@@ -33,7 +36,11 @@ def testCaseGroupShow(request):
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.caseInterfaceGrouping.objects.filter(q)
+            q.add(Q(operUser_id=user_id), Q.AND)
+            objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
+            if taskName:
+                q.add(Q(talkProject_id=taskName), Q.AND)
+                models.caseInterfaceGrouping.objects.filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -63,7 +70,8 @@ def testCaseGroupShow(request):
                     'operUser': obj.operUser.username,
                     'operUser_id':obj.operUser.id,
                     'talkProject_id':talkProject_id,
-                    'talkProject': talkName
+                    'talkProject': talkName,
+                    'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S')
                 })
             #  查询成功 返回200 状态码
             response.code = 200
@@ -96,7 +104,7 @@ def testCaseGroupOper(request, oper_type, o_id):
     }
     operUser_id = form_data.get('operUser_id')
     projectObjs = models.project.objects.filter(developer=operUser_id)
-    # print('form_data========>', form_data)
+    print('form_data========>', form_data)
     userObjs = models.caseInterfaceGrouping.objects
     if request.method == "POST":
         if oper_type == "add":
@@ -106,12 +114,17 @@ def testCaseGroupOper(request, oper_type, o_id):
                 print("验证通过")
                 if userObjs:
                     formResult = forms_obj.cleaned_data
-                    # if formResult.get('parensGroupName'):
-                    #     objs = models.caseInterfaceGrouping.objects.filter(id=formResult.get('parensGroupName'))
+                    parensGroupName = formResult.get('parensGroupName')
+                    if parensGroupName:
+                        objs = models.caseInterfaceGrouping.objects.filter(id=formResult.get('parensGroupName'))
+                        if not objs:
+                            response.code = 402
+                            response.msg = '无此父级分组'
+                            return JsonResponse(response.__dict__)
 
                     userObjs.create(
                         groupName=formResult.get('groupName'),
-                        parensGroupName_id=formResult.get('parensGroupName'),
+                        parensGroupName_id=parensGroupName,
                         operUser_id=formResult.get('operUser_id'),
                         talkProject_id=formResult.get('talkProject_id')
                     )
@@ -133,14 +146,20 @@ def testCaseGroupOper(request, oper_type, o_id):
                 formResult = forms_obj.cleaned_data
                 objs = userObjs.filter(id=formResult.get('o_id'))
                 if objs:
-                    objs.update(
-                        groupName=formResult.get('groupName'),
-                        parensGroupName_id=formResult.get('parensGroupName'),
-                        operUser_id=formResult.get('operUser_id'),
-                        talkProject_id=formResult.get('talkProject_id')
-                    )
-                    response.code = 200
-                    response.msg = "修改成功"
+                    # if formResult.get('parensGroupName') and o_id:
+                    if formResult.get('parensGroupName') and o_id and int(formResult.get('parensGroupName')) == int(o_id):
+                        print(formResult.get('parensGroupName'), o_id)
+                        response.code = 402
+                        response.msg = '不能关联自己！'
+                    else:
+                        objs.filter(id=o_id).update(
+                            groupName=formResult.get('groupName'),
+                            parensGroupName_id=formResult.get('parensGroupName'),
+                            operUser_id=formResult.get('operUser_id'),
+                            talkProject_id=formResult.get('talkProject_id')
+                        )
+                        response.code = 200
+                        response.msg = "修改成功"
                 else:
                     response.code = 303
                     response.msg = json.loads(forms_obj.errors.as_json())
@@ -153,8 +172,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                 #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-    else:
-        if oper_type == "delete":
+        elif oper_type == "delete":
             # 删除 ID
             objs = models.caseInterfaceGrouping.objects
 
@@ -170,14 +188,16 @@ def testCaseGroupOper(request, oper_type, o_id):
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
+    else:
+
 
         # 查询 当前登录人 全部项目
-        elif oper_type == 'selectTalkName':
+        if oper_type == 'selectTalkName':
             otherData = []
             for projectObj in projectObjs:
                 otherData.append({
                     'id': projectObj.id,
-                    'TalkName':projectObj.name
+                    'taskName':projectObj.name
                 })
             response.code = 200
             response.msg = '查询成功'
