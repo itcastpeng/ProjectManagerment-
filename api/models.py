@@ -134,7 +134,7 @@ class caseInterfaceGrouping(models.Model):
 class caseInterfaceDetaile(models.Model):
     ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping',verbose_name='分组', null=True, blank=True)
     hostManage = models.ForeignKey(to='configurationManagementHOST',verbose_name='host配置管理', null=True, blank=True)
-    url = models.CharField(verbose_name='url', max_length=128)
+    url = models.TextField(verbose_name='url', null=True, blank=True)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     status_choices = (
         (1,'GET'),

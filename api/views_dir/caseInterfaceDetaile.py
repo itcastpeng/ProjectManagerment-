@@ -9,10 +9,31 @@ from api.forms.caseInterfaceDetaile import AddForm, UpdateForm, SelectForm
 from api.views_dir.permissions import init_data
 import json
 import time
-import datetime, requests
+import datetime, requests, random
+from django.db.models import Q
+
+pcRequestHeader = [
+    'Mozilla/5.0 (Windows NT 5.1; rv:6.0.2) Gecko/20100101 Firefox/6.0.2',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.52 Safari/537.17',
+    'Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.16) Gecko/20101130 Firefox/3.5.16',
+    'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; .NET CLR 1.1.4322)',
+    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
+    'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.99 Safari/537.36',
+    'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)',
+    'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2)',
+    'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.13 (KHTML, like Gecko) Chrome/24.0.1290.1 Safari/537.13',
+    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)',
+    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36',
+    'Mozilla/5.0 (Windows; U; Windows NT 5.2; zh-CN; rv:1.9.0.19) Gecko/2010031422 Firefox/3.0.19 (.NET CLR 3.5.30729)',
+    'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0',
+    'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:2.0b13pre) Gecko/20110307 Firefox/4.0b13'
+]
 
 # 分组  树状图
-def testCaseGroupTree(talkProject_id, operUser_id, pid=None, selected_list=None):
+def testCaseGroupTree(talkProject_id, operUser_id, pid=None):
     result_data = []
     objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talkProject_id=talkProject_id).filter(parensGroupName_id=pid)
     for obj in objs:
@@ -22,16 +43,10 @@ def testCaseGroupTree(talkProject_id, operUser_id, pid=None, selected_list=None)
             'id': obj.id,
             'checked': False
         }
-        if selected_list and obj.id in selected_list:
-            current_data['checked'] = True
-        children_data = testCaseGroupTree(talkProject_id, operUser_id, obj.id, selected_list)
-        if children_data:
-            current_data['children'] = children_data
+        children_data = testCaseGroupTree(talkProject_id, operUser_id, obj.id)
+        current_data['children'] = children_data
         result_data.append(current_data)
-
     return result_data
-
-
 
 
 # cerf  token验证 用户展示模块
@@ -97,8 +112,6 @@ def testCaseDetaileShow(request):
 @account.is_token(models.userprofile)
 def testCaseDetaileOper(request, oper_type, o_id):
     response = Response.ResponseObj()
-    # print('request.GET--------> ',request.GET)
-    # print('request.POST=========> ', request.POST)
     form_data = {
         'o_id':o_id,
         'url': request.POST.get('url'),                   # url
@@ -170,75 +183,131 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.msg = '删除ID不存在'
 
         elif oper_type == 'sendTheRequest':
-            add = request.GET.get('add')
-            print(request.GET)
-            requestType = request.GET.get('requestType')
-            requestUrl = request.GET.get('requestUrl')
-            postRequest = request.GET.get('postRequest')
-            getRequest = request.GET.get('getRequest')
+            add = request.POST.get('add')
+            requestType = request.POST.get('requestType')
+            requestUrl = request.POST.get('requestUrl')
+            postRequest = request.POST.get('postRequest')
+            getRequest = request.POST.get('getRequest')
             canshu = ''
             number = 0
             json_data = []
-            statusCode = 500
             if int(o_id) > 0:  # 单独查询
                 objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
-                getRequest = objs[0].getRequestParameters
+                # getRequest = objs[0].getRequestParameters
                 postRequest = objs[0].postRequestParameters
                 requestUrl = objs[0].url
                 requestType = objs[0].requestType
-            if getRequest:
-                get = json.dumps(eval(getRequest))
-                for key, value in json.loads(get).items():
-                    number += 1
-                    if number > 1:
-                        canshu += '&' + key + '=' + value
+            if requestUrl:
+                if int(requestType) == 1:
+                    requestsURL = requestUrl
+                    headers = {'User-Agent': pcRequestHeader[random.randint(0, len(pcRequestHeader) - 1)], }
+                    if getRequest:
+                        for get in eval(getRequest):
+                            for key, value in get.items():
+                                number += 1
+                                if number > 1:
+                                    canshu += '&' + key + '=' + value
+                                else:
+                                    canshu += '?' + key + '=' +value
+                            requestsURL = requestUrl + canshu
+                    ret = requests.get(requestsURL, headers=headers)
+                    if 'www' in requestUrl:
+                        json_data = ret.content.decode(encoding='utf8')
                     else:
-                        canshu += '?' + key + '=' + value
-                requestsURL = requestUrl + canshu
-                ret = requests.get(requestsURL)
-                json_data = json.loads(ret.text)
-                statusCode = ret.status_code
+                        json_data = json.loads(ret.content)
 
-            data_list = {}
-            if postRequest:
-                post = json.dumps(eval(postRequest))
-                requestsURL = requestUrl
-                if getRequest:
-                    requestsURL = requestUrl + canshu
-                if requestType and int(requestType) == 2:
-                    for i, data in  json.loads(post).items():
-                        data_list[i] = data
-                    ret = requests.post(requestsURL, data=data_list)
-                    json_data = json.loads(ret.text)
-                    statusCode = ret.status_code
-            if add:
-                forms_obj = AddForm(form_data)
-                if forms_obj.is_valid():
-                    formResult = forms_obj.cleaned_data
-                    detaileObjs.create(
-                        url=requestUrl,
-                        ownershipGroup_id=formResult.get('ownershipGroup_id'),
-                        hostManage_id=formResult.get('hostManage_id'),
-                        requestType=requestType,
-                        caseName=formResult.get('caseName'),
-                        userProfile_id=form_data.get('user_id'),
-                        getRequestParameters=getRequest,
-                        postRequestParameters=postRequest
-                    )
-                    response.code = 200
-                    response.msg = '添加成功'
-                    response.data = {}
                 else:
-                    print("验证不通过")
-                    # print(forms_obj.errors)
-                    response.code = 301
-                    # print(forms_obj.errors.as_json())
-                    response.msg = json.loads(forms_obj.errors.as_json())
+                    data_list = {}
+                    requestsURL = requestUrl
+                    if postRequest:
+                        for post in eval(postRequest):
+                            if getRequest:
+                                requestsURL = requestUrl + canshu
+                            if requestType and int(requestType) == 2:
+                                for key, value in post.items():
+                                    data_list[key] = value
+                            ret = requests.post(requestsURL, data=data_list)
+                            json_data = json.loads(ret.text)
+                    else:
+                        response.code = 301
+                        response.msg = '如果是POST请求, 请输入POST参数！'
+                        response.data = ''
+                        return JsonResponse(response.__dict__)
+                if add:
+                    forms_obj = AddForm(form_data)
+                    if forms_obj.is_valid():
+                        formResult = forms_obj.cleaned_data
+                        hostManage_id = formResult.get('hostManage_id')
+                        ownershipGroup_id = formResult.get('ownershipGroup_id')
+                        hostObjs = models.configurationManagementHOST.objects.filter(id=hostManage_id)
+                        groupObjs = models.caseInterfaceGrouping.objects.filter(id=ownershipGroup_id)
+                        if not hostObjs or not groupObjs:
+                            response.data = ''
+                            response.code = 301
+                            if not hostObjs:
+                                response.msg = 'HOST错误！'
+                            if not groupObjs:
+                                response.msg = '分组错误！'
+                            return JsonResponse(response.__dict__)
+                        if add != 'add':
+                            if add.isdigit():
+                                urlObjs = detaileObjs.filter(id=add)
+                                if urlObjs:
+                                    urlObjs.update(
+                                        url=requestUrl,
+                                        requestType=requestType,
+                                        getRequestParameters=getRequest,
+                                        postRequestParameters=postRequest,
+                                        ownershipGroup_id=formResult.get('ownershipGroup_id'),
+                                        caseName=formResult.get('caseName'),
+                                        userProfile_id=form_data.get('user_id'),
+                                        hostManage_id=hostManage_id,
+                                    )
+                                    response.msg = '修改成功'
+                                else:
+                                    response.code = 301
+                                    response.msg = '要修改的URL错误'
+                                    response.data = ''
+                                    return JsonResponse(response.__dict__)
+                            else:
+                                response.code = 301
+                                response.msg = '修改的urlId请传INT类型！'
+                                response.data = ''
+                                return JsonResponse(response.__dict__)
+                        else:
+                            detaileObjs.create(
+                                url=requestUrl,
+                                requestType=requestType,
+                                getRequestParameters=getRequest,
+                                postRequestParameters=postRequest,
+                                ownershipGroup_id=formResult.get('ownershipGroup_id'),
+                                caseName=formResult.get('caseName'),
+                                userProfile_id=form_data.get('user_id'),
+                                hostManage_id=hostManage_id,
+                            )
+                            response.msg = '添加成功'
+                        response.code = 200
+                        response.data = {}
+                    else:
+                        print("验证不通过")
+                        # print(forms_obj.errors)
+                        response.code = 301
+                        # print(forms_obj.errors.as_json())
+                        response.msg = json.loads(forms_obj.errors.as_json())
+                else:
+                    response.code = 200
+                    response.msg = '请求成功'
+                    response.data = {
+                        'responseData': json_data,
+                    }
             else:
-                response.code = statusCode
-                response.msg = '请求成功'
-                response.data = {'requestResult': json_data}
+                response.code = 500
+                response.msg = '请输入URL！'
+                response.data = ''
+            return JsonResponse(response.__dict__)
+
     else:
+        # 获取 项目名称
         if oper_type == 'getTaskName':
             objs = models.project.objects.all()
             otherData = []
@@ -251,6 +320,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.msg = '查询成功'
             response.data = {'otherData':otherData}
 
+        # 获取 GET和POST 请求
         elif oper_type == 'getOrPostRequest':
             objs = models.caseInterfaceDetaile.status_choices
             otherData = []
@@ -263,16 +333,35 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.msg = '查询成功'
             response.data = {'otherData':otherData}
 
+        # 树状图
         elif oper_type == 'blockTree':
             beforeTaskId = request.GET.get('beforeTaskId')
             user_id = form_data.get('user_id')
-            groupobjs = models.caseInterfaceGrouping.objects.filter(operUser_id=user_id).filter(
-                talkProject_id=beforeTaskId).filter(parensGroupName__isnull=True)
-            selected_list = [i.id for i in groupobjs]
-            result = testCaseGroupTree(beforeTaskId, user_id, selected_list=selected_list)
+            result = testCaseGroupTree(beforeTaskId, user_id)
             response.code = 200
             response.msg = '查询成功'
             response.data = {'result': result}
+
+        # 查询 host 展示
+        elif oper_type == 'getHostYuMing':
+            formalOrTest = request.GET.get('formalOrTest')
+            q = Q()
+            objs = models.configurationManagementHOST.objects.filter(q)
+            if formalOrTest:
+                if formalOrTest == 1:
+                    q.add(Q(describe=1), Q.AND)
+                else:
+                    q.add(Q(describe=2), Q.AND)
+            otherData = []
+            for obj in objs:
+                otherData.append({
+                    'id':obj.id,
+                    'name':obj.hostName,
+                    'host':obj.hostUrl
+                })
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {'otherData': otherData}
 
         else:
             response.code = 402
@@ -280,3 +369,5 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
 
     return JsonResponse(response.__dict__)
+
+
