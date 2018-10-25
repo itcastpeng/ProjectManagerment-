@@ -104,6 +104,7 @@ def project(request):
 @account.is_token(models.userprofile)
 def project_oper(request, oper_type, o_id):
     response = Response.ResponseObj()
+    user_id = request.GET.get('user_id')
     if request.method == "POST":
         if oper_type == "add":
             form_data = {
@@ -205,7 +206,20 @@ def project_oper(request, oper_type, o_id):
             response.msg = '切换成功'
 
     else:
-        response.code = 402
-        response.msg = "请求异常"
+        if oper_type =='getTaskName':
+            objs = models.project.objects.filter(principal=user_id)
+            otherData = []
+            for obj in objs:
+                otherData.append({
+                    'id': obj.id,
+                    'name': obj.name
+                })
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {'otherData': otherData}
+
+        else:
+            response.code = 402
+            response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
