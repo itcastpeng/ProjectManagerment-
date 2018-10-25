@@ -40,7 +40,7 @@ def testCaseGroupShow(request):
             objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
             if taskName:
                 q.add(Q(talkProject_id=taskName), Q.AND)
-                models.caseInterfaceGrouping.objects.filter(q).order_by(order)
+                objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -87,6 +87,19 @@ def testCaseGroupShow(request):
     return JsonResponse(response.__dict__)
 
 
+def updateInitData(result_data, talkProject_id, pid=None, o_id=None):   # o_id 判断是否会关联自己 如果o_id 在 result_data里会return
+    objs = models.caseInterfaceGrouping.objects.filter(
+        talkProject_id=talkProject_id,
+        id=pid,
+    )
+    for obj in objs:
+        print('obj.id-----------> ',obj.id)
+        result_data.append(obj.id)
+        if o_id:
+            if int(o_id) == int(obj.id):
+                return result_data
+        parent = updateInitData(result_data, talkProject_id, pid=obj.parensGroupName_id, o_id=o_id)
+    return result_data
 
 
 #  增删改
@@ -99,8 +112,8 @@ def testCaseGroupOper(request, oper_type, o_id):
         'o_id':o_id,
         'operUser_id': request.GET.get('user_id'),                   # 操作人
         'groupName': request.POST.get('groupName'),                  # 分组名称
-        'parensGroupName': request.POST.get('parensGroupName'),     # 父级分组名称
-        'talkProject_id': request.POST.get('talkProject'),             # 归属项目
+        'parensGroupName': request.POST.get('parensGroupName'),      # 父级分组名称
+        'talkProject_id': request.POST.get('talkProject'),           # 归属项目
     }
     operUser_id = form_data.get('operUser_id')
     projectObjs = models.project.objects.filter(developer=operUser_id)
@@ -115,19 +128,22 @@ def testCaseGroupOper(request, oper_type, o_id):
                 if userObjs:
                     formResult = forms_obj.cleaned_data
                     parensGroupName = formResult.get('parensGroupName')
+                    level = 1
                     if parensGroupName:
+                        level = 2
                         objs = models.caseInterfaceGrouping.objects.filter(id=formResult.get('parensGroupName'))
                         if not objs:
                             response.code = 402
                             response.msg = '无此父级分组'
                             return JsonResponse(response.__dict__)
-
-                    userObjs.create(
+                    objs = models.caseInterfaceGrouping.objects
+                    objsId = objs.create(
                         groupName=formResult.get('groupName'),
                         parensGroupName_id=parensGroupName,
                         operUser_id=formResult.get('operUser_id'),
                         talkProject_id=formResult.get('talkProject_id')
                     )
+                    objs.filter(id=objsId.id).update(level=level)
                     response.code = 200
                     response.msg = "添加成功"
             else:
@@ -146,20 +162,27 @@ def testCaseGroupOper(request, oper_type, o_id):
                 formResult = forms_obj.cleaned_data
                 objs = userObjs.filter(id=formResult.get('o_id'))
                 if objs:
-                    # if formResult.get('parensGroupName') and o_id:
-                    if formResult.get('parensGroupName') and o_id and int(formResult.get('parensGroupName')) == int(o_id):
-                        print(formResult.get('parensGroupName'), o_id)
-                        response.code = 402
-                        response.msg = '不能关联自己！'
-                    else:
-                        objs.filter(id=o_id).update(
-                            groupName=formResult.get('groupName'),
-                            parensGroupName_id=formResult.get('parensGroupName'),
-                            operUser_id=formResult.get('operUser_id'),
-                            talkProject_id=formResult.get('talkProject_id')
-                        )
-                        response.code = 200
-                        response.msg = "修改成功"
+                    result_data = []
+                    talkProject_id = formResult.get('talkProject_id')
+                    if int(o_id) == int(formResult.get('parensGroupName')):
+                        response.code = 301
+                        response.msg = '不可关联自己'
+                        return JsonResponse(response.__dict__)
+                    parentObjs = userObjs.filter(id=formResult.get('parensGroupName'))
+                    parentData = updateInitData(result_data, talkProject_id, parentObjs[0].parensGroupName_id, o_id)
+                    if int(o_id) in parentData:
+                        response.code = 301
+                        response.msg = '不可关联自己'
+                        return JsonResponse(response.__dict__)
+
+                    objs.filter(id=o_id).update(
+                        groupName=formResult.get('groupName'),
+                        parensGroupName_id=formResult.get('parensGroupName'),
+                        operUser_id=formResult.get('operUser_id'),
+                        talkProject_id=formResult.get('talkProject_id')
+                    )
+                    response.code = 200
+                    response.msg = "修改成功"
                 else:
                     response.code = 303
                     response.msg = json.loads(forms_obj.errors.as_json())
@@ -205,10 +228,11 @@ def testCaseGroupOper(request, oper_type, o_id):
                 'otherData':otherData
             }
 
-        # 查询当前登录人 顶级分组
+        # 查询当前登录
         elif oper_type == 'superGroupName':
             talkIdList = [i['id'] for i in projectObjs.values('id')]
-            objs = models.caseInterfaceGrouping.objects.filter(talkProject_id__in=talkIdList).filter(parensGroupName__isnull=True)
+            print('talkIdList------> ',talkIdList)
+            objs = models.caseInterfaceGrouping.objects.filter(talkProject_id__in=talkIdList)
             data_list = []
             for obj in objs:
                 print(obj.groupName)

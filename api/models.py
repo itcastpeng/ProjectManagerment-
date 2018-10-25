@@ -129,6 +129,7 @@ class caseInterfaceGrouping(models.Model):
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     parensGroupName = models.ForeignKey(to='self', verbose_name='父级分组', null=True, blank=True)
     groupName = models.CharField(verbose_name='分组名称', max_length=64)
+    level = models.IntegerField(verbose_name='分类等级', default=1)
 
 # 测试用例接口详情
 class caseInterfaceDetaile(models.Model):
