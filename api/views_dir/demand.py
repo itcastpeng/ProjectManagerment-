@@ -9,7 +9,7 @@ import datetime
 from publicFunc.condition_com import conditionCom
 from api.forms.demand import AddForm, UpdateForm, SelectForm, ShenHeForm
 import json
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from publicFunc.workWeixin import workWeixinApi
 
@@ -478,6 +478,35 @@ def demand_oper(request, oper_type, o_id):
                              }
             response.msg = "查询成功"
             response.code = 200
+
+        # 定时刷新 判断需求创建时间 推送企业微信 及时完成开发
+        elif oper_type == 'pushMessageToWeChat':
+            userIdList = []
+            mS = time.strftime('%M')  # 当前分钟
+            now_datetime = (datetime.datetime.now() - datetime.timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S') # 条件创建时间 要大于一小时
+
+            q = Q()
+            q.add(Q(create_date__lte=now_datetime), Q.AND)
+            # q.add(Q(status=1) | Q(status=2) | Q(status=3), Q.AND)
+            q.add(Q(status=1) | Q(status=2), Q.AND)
+            objs = models.demand.objects.filter(q)   # 获取所有 需求
+            for obj in objs:
+                # if mS == datetime.date.strftime(obj.create_date, '%M'): # 当前分钟数 等于 创建分钟数 相当于 每隔一小时可进入一次
+                if obj.status == 1:  # 待审核 提醒
+                    userID = 'zhangcong'
+                    msg = '有待审核需求, 请尽快审核！'
+                    work_weixin_api_obj.message_send(userID, msg)
+                elif obj.status == 2: # 待评估 提醒
+                    # print('obj.id=============> ', obj.id)
+                    # userObjs = models.userprofile.objects.project_set()
+                    userObjs = obj.project.developer.all() # 获取该需求所有开发人
+                    for userObj in userObjs:
+                        userIdList.append(userObj.userid)
+            for userID in set(userIdList):
+                msg = '有待评估需求, 请尽快查看、开发！'
+                work_weixin_api_obj.message_send(userID, msg)
+            response.code = 200
+            response.msg = '查询成功'
         else:
             response.code = 402
             response.msg = "请求异常"

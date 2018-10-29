@@ -12,9 +12,12 @@ workWeixinDataPath = os.path.join(os.getcwd(), 'publicFunc', 'workWeixin', 'work
 class WorkWeixinApi(object):
 
     def __init__(self):
-        self.corpid = 'ww24123520340ba230'                                      # 企业ID
-        self.agentId = '1000002'                                                 # 应用 AgentId
-        self.corpSecret = 'mcbKC5PcuUKw28vFr7Qk5kpfe3pUuqPjX6Cz54H0FxE'    # 应用密钥
+        # self.corpid = 'ww24123520340ba230'                                      # 企业ID
+        self.corpid = 'wx81159f52aff62388'                                      # 企业ID  雷达
+        # self.agentId = '1000002'                                                 # 应用 AgentId
+        self.agentId = '1000005'                                                 # 应用 AgentId 雷达
+        # self.corpSecret = 'mcbKC5PcuUKw28vFr7Qk5kpfe3pUuqPjX6Cz54H0FxE'    # 应用密钥
+        self.corpSecret = 'dGWYuaTTLi6ojhPYG1_mqp9GCMTyLkl2uwmsNkjsSjw'    # 应用密钥 雷达
 
         self.token = {
             'access_token': '',

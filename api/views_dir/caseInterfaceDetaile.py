@@ -130,6 +130,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             if forms_obj.is_valid():
                 print("验证通过")
                 formResult = forms_obj.cleaned_data
+                print("formResult.get('url')=========> ", formResult.get('url'))
                 detaileObjs.create(
                     url=formResult.get('url'),
                     ownershipGroup_id=formResult.get('ownershipGroup_id'),
@@ -193,12 +194,11 @@ def testCaseDetaileOper(request, oper_type, o_id):
             json_data = []
             if int(o_id) > 0:  # 单独查询
                 objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
-                # getRequest = objs[0].getRequestParameters
                 postRequest = objs[0].postRequestParameters
                 requestUrl = objs[0].url
                 requestType = objs[0].requestType
             if requestUrl:
-                if int(requestType) == 1:
+                if requestType and int(requestType) == 1:
                     requestsURL = requestUrl
                     headers = {'User-Agent': pcRequestHeader[random.randint(0, len(pcRequestHeader) - 1)], }
                     if getRequest:
@@ -214,7 +214,11 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     if 'www' in requestUrl:
                         json_data = ret.content.decode(encoding='utf8')
                     else:
-                        json_data = json.loads(ret.content)
+                        # print(ret.content)
+                        try:
+                            json_data = json.loads(ret.content)
+                        except Exception:
+                            json_data = ret.content
 
                 else:
                     data_list = {}
@@ -305,7 +309,6 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.msg = '请输入URL！'
                 response.data = ''
             return JsonResponse(response.__dict__)
-
     else:
         # 获取 项目名称
         if oper_type == 'getTaskName':
@@ -333,7 +336,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.msg = '查询成功'
             response.data = {'otherData':otherData}
 
-        # 树状图
+        # 左侧展示 树状图
         elif oper_type == 'blockTree':
             beforeTaskId = request.GET.get('beforeTaskId')
             user_id = form_data.get('user_id')
@@ -367,7 +370,86 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.code = 402
             response.msg = "请求异常"
 
+    return JsonResponse(response.__dict__)
+
+# 启用测试用例
+@csrf_exempt
+@account.is_token(models.userprofile)
+def startTestCase(request):
+    response = Response.ResponseObj()
+    if request.method == 'POST':
+        user_id = request.GET.get('user_id')
+        talkProject_id = request.POST.get('talkProject_id')
+        if talkProject_id:
+            print('talkProject_id========> ',talkProject_id, user_id)
+            objs = models.caseInterfaceDetaile.objects.select_related(
+                'ownershipGroup__talkProject',
+                'ownershipGroup__operUser'
+            ).filter(
+                ownershipGroup__talkProject_id=talkProject_id,
+                ownershipGroup__operUser_id=user_id
+            ).order_by('create_date')               # 按时间正序排列
+            if objs:
+                for obj in objs:
+                    postRequest = obj.postRequestParameters
+                    requestUrl = obj.url
+                    requestType = obj.requestType
+                    print('obj.id--------------> ',obj.id)
+                    try:
+                        if requestType:
+                            if int(requestType) == 1:
+                                print('GET 请求')
+                                ret = requests.get(requestUrl)
+                                ret.encoding = 'utf8'
+                                json_data = json.loads(ret.text)
+                                if json_data:
+                                    if int(json_data.get('code')) != 200:
+                                        response.code = 301
+                                        response.msg = '当前返回状态码错误'
+                                        response.data = {
+                                            'code':json_data.get('code'),
+                                            'url':requestUrl,
+                                            'requestType':'GET'
+                                        }
+                                        return JsonResponse(response.__dict__)
+                            else:
+                                data_list = {}
+                                print('POST 请求')
+                                for post in eval(postRequest):
+                                    for key, value in post.items():
+                                        data_list[key] = value
+                                ret = requests.post(requestUrl, data=data_list)
+                                ret.encoding = 'utf8'
+                                json_data = json.loads(ret.text)
+                                if json_data:
+                                    if int(json_data.get('code')) != 200:
+                                        response.code = 301
+                                        response.msg = '当前返回状态码错误'
+                                        response.data = {
+                                            'code': json_data.get('code'),
+                                            'url': requestUrl,
+                                            'requestType': 'POST'
+                                        }
+                                        return JsonResponse(response.__dict__)
+                                continue
+                    except Exception as error:
+                        print('错误==!!!!!!!!=====-> ', error)
+                        response.code = 301
+                        response.msg = '内部错误'
+                        response.data = {'error':error}
+                response.code = 200
+                response.msg = '通过'
+            else:
+                response.code = 301
+                response.msg = '无测试用例可运行'
+        else:
+            response.code = 301
+            response.msg = '无项目ID'
+    else:
+        response.code = 402
+        response.msg = '请求异常'
 
     return JsonResponse(response.__dict__)
+
 
 

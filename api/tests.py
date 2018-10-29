@@ -31,12 +31,12 @@ import random
 # s.close()
 
 
-seed = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-sa = []
-for i in range(32):
-    sa.append(random.choice(seed))
-salt = ''.join(sa)
-print('salt------->',salt)
-
-import uuid
-str(uuid.uuid4()).replace('-', '')
+# seed = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# sa = []
+# for i in range(32):
+#     sa.append(random.choice(seed))
+# salt = ''.join(sa)
+# print('salt------->',salt)
+#
+# import uuid
+# str(uuid.uuid4()).replace('-', '')

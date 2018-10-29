@@ -37,7 +37,7 @@ def testCaseGroupShow(request):
             q = conditionCom(request, field_dict)
             print('q -->', q)
             q.add(Q(operUser_id=user_id), Q.AND)
-            objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
+            objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order).order_by('create_date')
             if taskName:
                 q.add(Q(talkProject_id=taskName), Q.AND)
                 objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
