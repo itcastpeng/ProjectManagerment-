@@ -59,6 +59,7 @@ urlpatterns = [
 
     # 测试用例 接口详情
     url(r'^testCaseDetaileShow', caseInterfaceDetaile.testCaseDetaileShow),
+    url(r'^startTestCase', caseInterfaceDetaile.startTestCase),
     url(r'^testCaseDetaileOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', caseInterfaceDetaile.testCaseDetaileOper),
 
     # 测试用例 接口详情
