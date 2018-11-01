@@ -54,15 +54,15 @@ urlpatterns = [
     url(r'^code_online', code_online.code_online),
 
     # 测试用例 接口分组
-    url(r'^testCaseGroupShow', caseInterfaceGrouping.testCaseGroupShow),
-    url(r'^testCaseGroupOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', caseInterfaceGrouping.testCaseGroupOper),
+    url(r'^testCaseGroup/(?P<oper_type>\w+)/(?P<o_id>\d+)$', caseInterfaceGrouping.testCaseGroupOper),
+    url(r'^testCaseGroup$', caseInterfaceGrouping.testCaseGroup),
 
     # 测试用例 接口详情
-    url(r'^testCaseDetaileShow', caseInterfaceDetaile.testCaseDetaileShow),
     url(r'^startTestCase', caseInterfaceDetaile.startTestCase),
-    url(r'^testCaseDetaileOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', caseInterfaceDetaile.testCaseDetaileOper),
+    url(r'^testCaseDetaile/(?P<oper_type>\w+)/(?P<o_id>\d+)$', caseInterfaceDetaile.testCaseDetaileOper),
+    url(r'^testCaseDetaile$', caseInterfaceDetaile.testCaseDetaile),
 
     # 测试用例 接口详情
-    url(r'^configurationHostShow', configurationManagementHOST.configurationHostShow),
-    url(r'^configurationHostOper/(?P<oper_type>\w+)/(?P<o_id>\d+)', configurationManagementHOST.configurationHostOper),
+    url(r'^configurationHost/(?P<oper_type>\w+)/(?P<o_id>\d+)$', configurationManagementHOST.configurationHostOper),
+    url(r'^configurationHost$', configurationManagementHOST.configurationHost),
 ]
