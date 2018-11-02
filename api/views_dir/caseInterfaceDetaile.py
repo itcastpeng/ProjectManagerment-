@@ -8,7 +8,7 @@ from publicFunc.condition_com import conditionCom
 from api.forms.caseInterfaceDetaile import AddForm, UpdateForm, SelectForm
 from api.views_dir.permissions import init_data
 import json
-import time
+import time, redis
 import datetime, requests, random
 from django.db.models import Q
 
@@ -201,13 +201,16 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         elif oper_type == 'sendTheRequest':
             add = request.POST.get('add')
-            requestType = request.POST.get('requestType')
-            requestUrl = request.POST.get('requestUrl')
-            postRequest = request.POST.get('postRequest')
-            getRequest = request.POST.get('getRequest')
+            requestType = request.POST.get('requestType')           # 请求类型
+            requestUrl = request.POST.get('requestUrl')             # 请求url
+            postRequest = request.POST.get('postRequest')           # post参数
+            getRequest = request.POST.get('getRequest')             # get参数
+            isAdd = 2
+            if request.POST.get('isAdd'):
+                isAdd = request.POST.get('isAdd')  # 是否为添加
             canshu = ''
             number = 0
-            json_data = []
+            json_data = {}
             if int(o_id) > 0:  # 单独查询
                 objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
                 postRequest = objs[0].postRequestParameters
@@ -227,14 +230,8 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                     canshu += '?' + key + '=' +value
                             requestsURL = requestUrl + canshu
                     ret = requests.get(requestsURL, headers=headers)
-                    if 'www' in requestUrl:
-                        json_data = ret.content.decode(encoding='utf8')
-                    else:
-                        # print(ret.content)
-                        try:
-                            json_data = json.loads(ret.content)
-                        except Exception:
-                            json_data = ret.content
+                    ret.encoding = 'utf8'
+                    json_data = json.loads(ret.text)
 
                 else:
                     data_list = {}
@@ -246,8 +243,9 @@ def testCaseDetaileOper(request, oper_type, o_id):
                             if requestType and int(requestType) == 2:
                                 for key, value in post.items():
                                     data_list[key] = value
-                            ret = requests.post(requestsURL, data=data_list)
-                            json_data = json.loads(ret.text)
+                        ret = requests.post(requestsURL, data=data_list)
+                        ret.encoding = 'utf8'
+                        json_data = json.loads(ret.text)
                     else:
                         response.code = 301
                         response.msg = '如果是POST请求, 请输入POST参数！'
@@ -282,6 +280,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                         caseName=formResult.get('caseName'),
                                         userProfile_id=form_data.get('user_id'),
                                         hostManage_id=hostManage_id,
+                                        isAdd=isAdd
                                     )
                                     response.msg = '修改成功'
                                 else:
@@ -295,19 +294,26 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                 response.data = ''
                                 return JsonResponse(response.__dict__)
                         else:
-                            detaileObjs.create(
-                                url=requestUrl,
-                                requestType=requestType,
-                                getRequestParameters=getRequest,
-                                postRequestParameters=postRequest,
-                                ownershipGroup_id=formResult.get('ownershipGroup_id'),
-                                caseName=formResult.get('caseName'),
-                                userProfile_id=form_data.get('user_id'),
-                                hostManage_id=hostManage_id,
-                            )
-                            response.msg = '添加成功'
-                        response.code = 200
-                        response.data = {}
+                            if json_data:
+                                if json_data.get('code') == 200:
+                                    print('---json_data----------> ',json_data, type(json_data))
+                                    detaileObjs.create(
+                                        url=requestUrl,
+                                        requestType=requestType,
+                                        getRequestParameters=getRequest,
+                                        postRequestParameters=postRequest,
+                                        ownershipGroup_id=formResult.get('ownershipGroup_id'),
+                                        caseName=formResult.get('caseName'),
+                                        userProfile_id=form_data.get('user_id'),
+                                        hostManage_id=hostManage_id,
+                                        isAdd=isAdd
+                                    )
+                                    response.msg = '添加成功'
+                                    response.code = 200
+                                    response.data = {}
+                                else:
+                                    response.code = 301
+                                    response.msg = json_data.get('msg')
                     else:
                         print("验证不通过")
                         # print(forms_obj.errors)
@@ -388,6 +394,9 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
     return JsonResponse(response.__dict__)
 
+
+rc = redis.Redis(host='127.0.0.1', port=6379,db=0)
+
 # 启用测试用例
 @csrf_exempt
 @account.is_token(models.userprofile)
@@ -397,7 +406,7 @@ def startTestCase(request):
         user_id = request.GET.get('user_id')
         talkProject_id = request.POST.get('talkProject_id')
         if talkProject_id:
-            print('talkProject_id========> ',talkProject_id, user_id)
+            # print('talkProject_id========> ',talkProject_id, user_id)
             objs = models.caseInterfaceDetaile.objects.select_related(
                 'ownershipGroup__talkProject',
                 'ownershipGroup__operUser'
@@ -406,11 +415,12 @@ def startTestCase(request):
                 ownershipGroup__operUser_id=user_id
             ).order_by('create_date')               # 按时间正序排列
             if objs:
+                flag = 0
                 for obj in objs:
                     postRequest = obj.postRequestParameters
                     requestUrl = obj.url
                     requestType = obj.requestType
-                    print('obj.id--------------> ',obj.id)
+                    # print('obj.id--------------> ',obj.id)
                     try:
                         if requestType:
                             if int(requestType) == 1:
@@ -425,7 +435,8 @@ def startTestCase(request):
                                         response.data = {
                                             'code':json_data.get('code'),
                                             'url':requestUrl,
-                                            'requestType':'GET'
+                                            'requestType':'GET',
+                                            'responseMsg':json_data.get('msg')
                                         }
                                         return JsonResponse(response.__dict__)
                             else:
@@ -434,9 +445,21 @@ def startTestCase(request):
                                 for post in eval(postRequest):
                                     for key, value in post.items():
                                         data_list[key] = value
+
+                                # if flag != 0:
+                                #     print('-------caseId-------> ', rc.get('caseId'))
+                                #     obj_id = rc.get('caseId').decode()
+                                #     print('obj_id=======> ',obj_id)
+
+                                requestUrl = requestUrl.replace(requestUrl.split('?')[0].split('/')[-1], str(flag))
+                                print('requestUrl0----------->',requestUrl)
                                 ret = requests.post(requestUrl, data=data_list)
                                 ret.encoding = 'utf8'
                                 json_data = json.loads(ret.text)
+                                if obj.isAdd == 1:   # 此处判断是否为添加
+                                    flag = json_data.get('data').get('testCase') # 创建获取ID
+                                    # obj_id = json_data.get('data').get('testCase') # 创建获取ID
+                                    # rc.set('caseId', obj_id)
                                 if json_data:
                                     if int(json_data.get('code')) != 200:
                                         response.code = 301
@@ -444,7 +467,8 @@ def startTestCase(request):
                                         response.data = {
                                             'code': json_data.get('code'),
                                             'url': requestUrl,
-                                            'requestType': 'POST'
+                                            'requestType': 'POST',
+                                            'responseMsg':json_data.get('msg')
                                         }
                                         return JsonResponse(response.__dict__)
                                 continue
@@ -455,6 +479,8 @@ def startTestCase(request):
                         response.data = {'error':error}
                 response.code = 200
                 response.msg = '通过'
+                # print('删除redis---------------------==============')
+                # rc.delete('caseId')
             else:
                 response.code = 301
                 response.msg = '无测试用例可运行'

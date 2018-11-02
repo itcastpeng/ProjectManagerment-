@@ -146,7 +146,7 @@ class caseInterfaceDetaile(models.Model):
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
     getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
     postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
-
+    isAdd = models.IntegerField(verbose_name='是否为添加', null=True, blank=True)
 
 # HOST 管理配置
 class configurationManagementHOST(models.Model):
