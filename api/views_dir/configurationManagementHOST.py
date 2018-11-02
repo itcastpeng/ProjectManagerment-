@@ -15,7 +15,7 @@ from django.db.models import Q
 # cerf  token验证 用户展示模块
 @csrf_exempt
 @account.is_token(models.userprofile)
-def configurationHostShow(request):
+def configurationHost(request):
     response = Response.ResponseObj()
     if request.method == "GET":
         user_id = request.GET.get('user_id')

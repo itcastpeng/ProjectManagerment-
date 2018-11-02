@@ -38,7 +38,7 @@ def testCaseGroupTree(talkProject_id, operUser_id, pid=None):
     objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talkProject_id=talkProject_id).filter(parensGroupName_id=pid)
     for obj in objs:
         current_data = {
-            'groupName': obj.groupName,
+            'title': obj.groupName,
             'expand': True,
             'id': obj.id,
             'checked': False
@@ -48,11 +48,19 @@ def testCaseGroupTree(talkProject_id, operUser_id, pid=None):
         result_data.append(current_data)
     return result_data
 
+# 查询当前分组 下所有详情数据
+def selectCaseDetailGroup(ownershipGroup_id, resultData):
+    groupObjs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=ownershipGroup_id)
+    if groupObjs:
+        for obj in groupObjs:
+            resultData.append(obj.id)
+            selectCaseDetailGroup(obj.id, resultData)
+    return resultData
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
 @account.is_token(models.userprofile)
-def testCaseDetaileShow(request):
+def testCaseDetaile(request):
     response = Response.ResponseObj()
     if request.method == "GET":
         forms_obj = SelectForm(request.GET)
@@ -64,16 +72,24 @@ def testCaseDetaileShow(request):
             beforeTaskId = request.GET.get('beforeTaskId')          # 最开始传来的项目ID
             user_id = request.GET.get('user_id')                    # 用户ID
             # caseName = request.GET.get('caseName')                  # 搜索条件
-            # ownershipGroup = request.GET.get('ownershipGroup')                  # 分组
+            ownershipGroup_id = request.GET.get('ownershipGroup_id')                  # 分组
             field_dict = {
                 'id': '',
-                'ownershipGroup': '__contains',
+                # 'ownershipGroup_id': '',
                 'url': '',
                 'caseName': '__contains',
             }
             q = conditionCom(request, field_dict)
+            # 如果选中分组 查询该分组下 所有详情
+            if ownershipGroup_id:
+                resultData = []
+                resultList = selectCaseDetailGroup(ownershipGroup_id, resultData)
+                resultList.append(ownershipGroup_id)
+                print('resultList-=======>', resultList)
+                q.add(Q(ownershipGroup_id__in=resultList), Q.AND)
+
             print('q -->', q)
-            objs = models.caseInterfaceDetaile.objects.filter(ownershipGroup__talkProject_id=beforeTaskId).filter(q).order_by(order)
+            objs =  models.caseInterfaceDetaile.objects.filter(ownershipGroup__talkProject_id=beforeTaskId).filter(q).order_by(order)
             count = objs.count()
             if length != 0:
                 start_line = (current_page - 1) * length
