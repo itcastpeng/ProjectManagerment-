@@ -26,8 +26,8 @@ app.conf.beat_schedule = {
 
 
 
-    'timeToRefreshZhgongDianCi':{
-        'task':'projectmanage_celery.tasks.timeToRefreshZhgongDianCi',
+    'pushMessageToWeChat':{
+        'task':'projectmanage_celery.tasks.pushMessageToWeChat',
         'schedule':30
     }
 

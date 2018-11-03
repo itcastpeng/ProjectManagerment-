@@ -39,6 +39,7 @@ urlpatterns = [
     # 需求管理
     url(r'^demand/(?P<oper_type>\w+)/(?P<o_id>\d+)', demand.demand_oper),
     url(r'^demand$', demand.demand),
+    url(r'^pushMessageToWeChat$', demand.pushMessageToWeChat), # 定时刷新 判断需求创建时间 推送企业微信 及时完成开发
 
 
     url(r'^img_upload$', img_upload.img_upload),

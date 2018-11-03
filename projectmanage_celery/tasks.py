@@ -10,8 +10,6 @@ import requests
 
 
 @app.task
-def timeToRefreshZhgongDianCi():
-    print('timeToRefreshZhgongDianCi')
-    # url = 'http://127.0.0.1:8000/xiong/article?user_id=1&timestamp=123&rand_str=7e0fc6b6833ebe0347ab6a5945d519ea'
-    # requests.get(url)
-
+def pushMessageToWeChat():
+    url = 'http://xmgl.zhugeyingxiao.com/api/pushMessageToWeChat'
+    requests.get(url)
