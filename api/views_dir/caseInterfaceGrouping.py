@@ -213,7 +213,6 @@ def testCaseGroupOper(request, oper_type, o_id):
                 response.msg = '删除ID不存在'
     else:
 
-
         # 查询 当前登录人 全部项目
         if oper_type == 'selectTalkName':
             otherData = []

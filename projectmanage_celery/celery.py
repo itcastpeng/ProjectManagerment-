@@ -10,8 +10,8 @@ from celery import Celery
 from celery.schedules import crontab
 
 app = Celery(
-    broker='redis://127.0.0.1:6379/0',
-    backend='redis://127.0.0.1:6379/0',
+    broker='redis://redis:6379/0',
+    backend='redis://redis:6379/0',
     include=['projectmanage_celery.tasks'],
 )
 
@@ -26,8 +26,8 @@ app.conf.beat_schedule = {
 
 
 
-    'timeToRefreshZhgongDianCi':{
-        'task':'projectmanage_celery.tasks.timeToRefreshZhgongDianCi',
+    'pushMessageToWeChat':{
+        'task':'projectmanage_celery.tasks.pushMessageToWeChat',
         'schedule':30
     }
 
