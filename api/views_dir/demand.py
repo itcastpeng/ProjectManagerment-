@@ -165,13 +165,14 @@ def demand_oper(request, oper_type, o_id):
                 )
                 work_weixin_api_obj.message_send(userID, msg)
 
-                models.progress.objects.create(
+                obj = models.progress.objects.create(
                     demand=obj,
                     description="创建需求",
                     create_user_id=forms_obj.cleaned_data.get('oper_user_id')
                 )
                 response.code = 200
                 response.msg = "添加成功"
+                response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
                 # print(forms_obj.errors)

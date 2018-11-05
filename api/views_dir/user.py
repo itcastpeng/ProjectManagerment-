@@ -118,7 +118,8 @@ def user_oper(request, oper_type, o_id):
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
                 # print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
-                models.userprofile.objects.create(**forms_obj.cleaned_data)
+                obj = models.userprofile.objects.create(**forms_obj.cleaned_data)
+                response.data = {'testCase': obj.id}
                 response.code = 200
                 response.msg = "添加成功"
             else:

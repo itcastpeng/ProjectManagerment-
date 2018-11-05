@@ -95,7 +95,7 @@ def configurationHostOper(request, oper_type, o_id):
                 now_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 if userObjs:
                     formResult = forms_obj.cleaned_data
-                    userObjs.create(
+                    obj = userObjs.create(
                         hostName=formResult.get('hostName'),
                         hostUrl=formResult.get('hostUrl'),
                         userProfile_id=form_data.get('user_id'),
@@ -104,6 +104,7 @@ def configurationHostOper(request, oper_type, o_id):
                     )
                     response.code = 200
                     response.msg = "添加成功"
+                    response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
                 # print(forms_obj.errors)

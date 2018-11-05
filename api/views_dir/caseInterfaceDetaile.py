@@ -147,7 +147,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 print("验证通过")
                 formResult = forms_obj.cleaned_data
                 print("formResult.get('url')=========> ", formResult.get('url'))
-                detaileObjs.create(
+                obj = detaileObjs.create(
                     url=formResult.get('url'),
                     ownershipGroup_id=formResult.get('ownershipGroup_id'),
                     hostManage_id=formResult.get('hostManage_id'),
@@ -157,6 +157,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 )
                 response.code = 200
                 response.msg = '添加成功'
+                response.data = {'testCase': obj.id}
 
             else:
                 print("验证不通过")

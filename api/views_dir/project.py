@@ -121,7 +121,7 @@ def project_oper(request, oper_type, o_id):
                 # print(forms_obj.cleaned_data)
                 #  添加数据库
                 print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
-                project_obj = models.project.objects.create(
+                obj = project_obj = models.project.objects.create(
                     name=forms_obj.cleaned_data['name'],
                     company_id=forms_obj.cleaned_data['company_id'],
                     oper_user_id=forms_obj.cleaned_data['oper_user_id']
@@ -130,6 +130,7 @@ def project_oper(request, oper_type, o_id):
                 project_obj.developer = json.loads(forms_obj.cleaned_data['developerList'])
                 response.code = 200
                 response.msg = "添加成功"
+                response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
                 # print(forms_obj.errors)

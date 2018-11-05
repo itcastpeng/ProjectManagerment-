@@ -137,7 +137,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                             response.msg = '无此父级分组'
                             return JsonResponse(response.__dict__)
                     objs = models.caseInterfaceGrouping.objects
-                    objsId = objs.create(
+                    obj = objsId = objs.create(
                         groupName=formResult.get('groupName'),
                         parensGroupName_id=parensGroupName,
                         operUser_id=formResult.get('operUser_id'),
@@ -146,6 +146,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                     objs.filter(id=objsId.id).update(level=level)
                     response.code = 200
                     response.msg = "添加成功"
+                    response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
                 # print(forms_obj.errors)
