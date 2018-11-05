@@ -245,7 +245,10 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                     data_list[key] = value
                         ret = requests.post(requestsURL, data=data_list)
                         ret.encoding = 'utf8'
-                        json_data = json.loads(ret.text)
+                        try:
+                            json_data = json.loads(ret.text)
+                        except Exception:
+                            json_data = ret.text
                     else:
                         response.code = 301
                         response.msg = '如果是POST请求, 请输入POST参数！'
