@@ -54,26 +54,33 @@ class UpdateForm(forms.Form):
         }
     )
 
-    url = forms.CharField(
+    caseName = forms.CharField(
         required=True,
         error_messages={
-            'required': "url不能为空"
-        }
-    )
-    ownershipGroup_id = forms.IntegerField(
-        required=False,
-        error_messages={
-            'required': '父级分组名称类型错误'
+            'required': "接口名称不能为空"
         }
     )
 
-    def clean_ownershipGroup_id(self):
-        ownershipGroup_id = self.data.get('ownershipGroup_id')
-        objs = models.caseInterfaceGrouping.objects.filter(id=ownershipGroup_id)
-        if not objs:
-            self.add_error('ownershipGroup_id', '无此分组')
-        else:
-            return ownershipGroup_id
+    # url = forms.CharField(
+    #     required=True,
+    #     error_messages={
+    #         'required': "url不能为空"
+    #     }
+    # )
+    # ownershipGroup_id = forms.IntegerField(
+    #     required=False,
+    #     error_messages={
+    #         'required': '父级分组名称类型错误'
+    #     }
+    # )
+
+    # def clean_ownershipGroup_id(self):
+    #     ownershipGroup_id = self.data.get('ownershipGroup_id')
+    #     objs = models.caseInterfaceGrouping.objects.filter(id=ownershipGroup_id)
+    #     if not objs:
+    #         self.add_error('ownershipGroup_id', '无此分组')
+    #     else:
+    #         return ownershipGroup_id
     def clean_o_id(self):
         o_id = self.data.get('o_id')
         objs = models.caseInterfaceDetaile.objects.filter(id=o_id)

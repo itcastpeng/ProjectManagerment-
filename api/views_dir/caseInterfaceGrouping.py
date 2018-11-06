@@ -25,22 +25,21 @@ def testCaseGroup(request):
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
-            taskName = request.GET.get('taskName')
+            # talkProject_id = request.GET.get('talkProject_id')
             print('order-------> ',order)
             field_dict = {
                 'id': '',
-                'talkProject': '__contains',
+                'talkProject_id': '',
                 'parensGroupName': '',
-                'operUser': '__contains',
+                'operUser_id': '',
                 'groupName': '__contains',
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
             q.add(Q(operUser_id=user_id), Q.AND)
+            # if talkProject_id:
+            #     q.add(Q(talkProject_id=talkProject_id), Q.AND)
             objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order).order_by('create_date')
-            if taskName:
-                q.add(Q(talkProject_id=taskName), Q.AND)
-                objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:
@@ -113,7 +112,7 @@ def testCaseGroupOper(request, oper_type, o_id):
         'operUser_id': request.GET.get('user_id'),                   # 操作人
         'groupName': request.POST.get('groupName'),                  # 分组名称
         'parensGroupName': request.POST.get('parensGroupName'),      # 父级分组名称
-        'talkProject_id': request.POST.get('talkProject'),           # 归属项目
+        'talkProject_id': request.POST.get('talkProject_id'),        # 归属项目
     }
     operUser_id = form_data.get('operUser_id')
     projectObjs = models.project.objects.filter(developer=operUser_id)
@@ -165,17 +164,17 @@ def testCaseGroupOper(request, oper_type, o_id):
                 if objs:
                     result_data = []
                     talkProject_id = formResult.get('talkProject_id')
-                    if int(o_id) == int(formResult.get('parensGroupName')):
-                        response.code = 301
-                        response.msg = '不可关联自己'
-                        return JsonResponse(response.__dict__)
-                    parentObjs = userObjs.filter(id=formResult.get('parensGroupName'))
-                    parentData = updateInitData(result_data, talkProject_id, parentObjs[0].parensGroupName_id, o_id)
-                    if int(o_id) in parentData:
-                        response.code = 301
-                        response.msg = '不可关联自己'
-                        return JsonResponse(response.__dict__)
-
+                    if formResult.get('parensGroupName'):
+                        if int(o_id) == int(formResult.get('parensGroupName')):
+                            response.code = 301
+                            response.msg = '不可关联自己'
+                            return JsonResponse(response.__dict__)
+                        parentObjs = userObjs.filter(id=formResult.get('parensGroupName'))
+                        parentData = updateInitData(result_data, talkProject_id, parentObjs[0].parensGroupName_id, o_id)
+                        if int(o_id) in parentData:
+                            response.code = 301
+                            response.msg = '不可关联自己'
+                            return JsonResponse(response.__dict__)
                     objs.filter(id=o_id).update(
                         groupName=formResult.get('groupName'),
                         parensGroupName_id=formResult.get('parensGroupName'),
