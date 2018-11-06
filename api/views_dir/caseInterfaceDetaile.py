@@ -175,8 +175,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 #  查询数据库  用户id
                 formResult = forms_obj.cleaned_data
                 detaileObjs.filter(id=o_id).update(
-                    url=formResult.get('url'),
-                    ownershipGroup_id=formResult.get('ownershipGroup_id')
+                    caseName=formResult.get('caseName')
                 )
                 response.code = 200
                 response.msg = "修改成功"
@@ -297,25 +296,31 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                 return JsonResponse(response.__dict__)
                         else:
                             if json_data:
-                                if json_data.get('code') == 200:
-                                    print('---json_data----------> ',json_data, type(json_data))
-                                    detaileObjs.create(
-                                        url=requestUrl,
-                                        requestType=requestType,
-                                        getRequestParameters=getRequest,
-                                        postRequestParameters=postRequest,
-                                        ownershipGroup_id=formResult.get('ownershipGroup_id'),
-                                        caseName=formResult.get('caseName'),
-                                        userProfile_id=form_data.get('user_id'),
-                                        hostManage_id=hostManage_id,
-                                        isAdd=request.POST.get('isAdd')
-                                    )
-                                    response.msg = '添加成功'
-                                    response.code = 200
-                                    response.data = {}
+                                if type(json_data) == dict:
+                                    print('json_data---------> ',json_data)
+                                    if json_data.get('code') == 200:
+                                        print('---json_data----------> ',json_data, type(json_data))
+                                        detaileObjs.create(
+                                            url=requestUrl,
+                                            requestType=requestType,
+                                            getRequestParameters=getRequest,
+                                            postRequestParameters=postRequest,
+                                            ownershipGroup_id=formResult.get('ownershipGroup_id'),
+                                            caseName=formResult.get('caseName'),
+                                            userProfile_id=form_data.get('user_id'),
+                                            hostManage_id=hostManage_id,
+                                            isAdd=request.POST.get('isAdd')
+                                        )
+                                        response.msg = '添加成功'
+                                        response.code = 200
+                                        response.data = {}
+                                    else:
+                                        response.code = 301
+                                        response.msg = json_data.get('msg')
                                 else:
                                     response.code = 301
-                                    response.msg = json_data.get('msg')
+                                    response.data = json_data
+                                    return JsonResponse(response.__dict__)
                     else:
                         print("验证不通过")
                         # print(forms_obj.errors)
