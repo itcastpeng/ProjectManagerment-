@@ -25,22 +25,21 @@ def testCaseGroup(request):
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
-            taskName = request.GET.get('taskName')
+            # talkProject_id = request.GET.get('talkProject_id')
             print('order-------> ',order)
             field_dict = {
                 'id': '',
-                'talkProject': '__contains',
+                'talkProject_id': '',
                 'parensGroupName': '',
-                'operUser': '__contains',
+                'operUser_id': '',
                 'groupName': '__contains',
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
             q.add(Q(operUser_id=user_id), Q.AND)
+            # if talkProject_id:
+            #     q.add(Q(talkProject_id=talkProject_id), Q.AND)
             objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order).order_by('create_date')
-            if taskName:
-                q.add(Q(talkProject_id=taskName), Q.AND)
-                objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order)
             count = objs.count()
 
             if length != 0:

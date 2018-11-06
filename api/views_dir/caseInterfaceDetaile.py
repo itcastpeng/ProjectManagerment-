@@ -100,6 +100,7 @@ def testCaseDetaile(request):
             for obj in objs:
                ret_data.append({
                    'id': obj.id,
+                   'ownershipGroup_id': obj.ownershipGroup_id,
                    'ownershipGroup': obj.ownershipGroup.groupName,
                    'url':obj.url,
                    'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
