@@ -450,12 +450,12 @@ def startTestCase(request):
                                         data_list[key] = value
                                 requestUrlLeft = requestUrl.split('?')[0]
                                 requestUrlRight = requestUrl.split('?')[1]
-                                requestUrl = requestUrl.replace(requestUrlLeft.split('/')[-1], str(flag)) + requestUrlRight
-                                # print('requestUrl0----------->',requestUrl)
+                                requestUrl = requestUrlLeft.replace(requestUrlLeft.split('/')[-1], str(flag)) + '?' + requestUrlRight
+                                print('requestUrl0----------->',requestUrl)
                                 ret = requests.post(requestUrl, data=data_list)
                                 ret.encoding = 'utf8'
                                 json_data = json.loads(ret.text)
-                                # print('json_data---> ',json_data)
+                                print('json_data---> ',json_data)
                                 if obj.isAdd == 1:   # 此处判断是否为添加
                                     flag = json_data.get('data').get('testCase') # 创建获取ID
                                 if json_data:
@@ -469,7 +469,7 @@ def startTestCase(request):
                                             'responseMsg':json_data.get('msg')
                                         }
                                         return JsonResponse(response.__dict__)
-                            continue
+                                continue
                     except Exception as error:
                         print('错误==!!!!!!!!=====-> ', error)
                         response.code = 301
