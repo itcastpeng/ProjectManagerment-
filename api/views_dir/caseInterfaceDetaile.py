@@ -426,7 +426,7 @@ def startTestCase(request):
                     try:
                         if requestType:
                             if int(requestType) == 1:
-                                print('requestUrl-----------> ',requestUrl)
+                                # print('requestUrl-----------> ',requestUrl)
                                 print('GET 请求')
                                 ret = requests.get(requestUrl)
                                 ret.encoding = 'utf8'
@@ -448,12 +448,14 @@ def startTestCase(request):
                                 for post in eval(postRequest):
                                     for key, value in post.items():
                                         data_list[key] = value
-                                requestUrl = requestUrl.replace(requestUrl.split('?')[0].split('/')[-1], str(flag))
-                                print('requestUrl0----------->',requestUrl)
+                                requestUrlLeft = requestUrl.split('?')[0]
+                                requestUrlRight = requestUrl.split('?')[1]
+                                requestUrl = requestUrl.replace(requestUrlLeft.split('/')[-1], str(flag)) + requestUrlRight
+                                # print('requestUrl0----------->',requestUrl)
                                 ret = requests.post(requestUrl, data=data_list)
                                 ret.encoding = 'utf8'
                                 json_data = json.loads(ret.text)
-                                print('json_data---> ',json_data)
+                                # print('json_data---> ',json_data)
                                 if obj.isAdd == 1:   # 此处判断是否为添加
                                     flag = json_data.get('data').get('testCase') # 创建获取ID
                                 if json_data:
