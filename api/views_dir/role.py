@@ -113,6 +113,7 @@ def role_oper(request, oper_type, o_id):
                 obj.permissions = permissionsList
                 response.code = 200
                 response.msg = "添加成功"
+                response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
                 # print(forms_obj.errors)
