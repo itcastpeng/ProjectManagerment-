@@ -206,9 +206,6 @@ def testCaseDetaileOper(request, oper_type, o_id):
             requestUrl = request.POST.get('requestUrl')             # 请求url
             postRequest = request.POST.get('postRequest')           # post参数
             getRequest = request.POST.get('getRequest')             # get参数
-            isAdd = 2
-            if request.POST.get('isAdd'):
-                isAdd = request.POST.get('isAdd')  # 是否为添加
             canshu = ''
             number = 0
             json_data = {}
@@ -284,7 +281,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                         caseName=formResult.get('caseName'),
                                         userProfile_id=form_data.get('user_id'),
                                         hostManage_id=hostManage_id,
-                                        isAdd=isAdd
+                                        isAdd=request.POST.get('isAdd')
                                     )
                                     response.msg = '修改成功'
                                 else:
@@ -310,7 +307,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                         caseName=formResult.get('caseName'),
                                         userProfile_id=form_data.get('user_id'),
                                         hostManage_id=hostManage_id,
-                                        isAdd=isAdd
+                                        isAdd=request.POST.get('isAdd')
                                     )
                                     response.msg = '添加成功'
                                     response.code = 200
@@ -416,18 +413,20 @@ def startTestCase(request):
                 'ownershipGroup__operUser'
             ).filter(
                 ownershipGroup__talkProject_id=talkProject_id,
-                ownershipGroup__operUser_id=user_id
+                # ownershipGroup__operUser_id=user_id
             ).order_by('create_date')               # 按时间正序排列
             if objs:
                 flag = 0
                 for obj in objs:
                     postRequest = obj.postRequestParameters
                     requestUrl = obj.url
+                    print('requestUrl===> ',requestUrl)
                     requestType = obj.requestType
                     # print('obj.id--------------> ',obj.id)
                     try:
                         if requestType:
                             if int(requestType) == 1:
+                                print('requestUrl-----------> ',requestUrl)
                                 print('GET 请求')
                                 ret = requests.get(requestUrl)
                                 ret.encoding = 'utf8'
@@ -449,21 +448,14 @@ def startTestCase(request):
                                 for post in eval(postRequest):
                                     for key, value in post.items():
                                         data_list[key] = value
-
-                                # if flag != 0:
-                                #     print('-------caseId-------> ', rc.get('caseId'))
-                                #     obj_id = rc.get('caseId').decode()
-                                #     print('obj_id=======> ',obj_id)
-
                                 requestUrl = requestUrl.replace(requestUrl.split('?')[0].split('/')[-1], str(flag))
                                 print('requestUrl0----------->',requestUrl)
                                 ret = requests.post(requestUrl, data=data_list)
                                 ret.encoding = 'utf8'
                                 json_data = json.loads(ret.text)
+                                print('json_data---> ',json_data)
                                 if obj.isAdd == 1:   # 此处判断是否为添加
                                     flag = json_data.get('data').get('testCase') # 创建获取ID
-                                    # obj_id = json_data.get('data').get('testCase') # 创建获取ID
-                                    # rc.set('caseId', obj_id)
                                 if json_data:
                                     if int(json_data.get('code')) != 200:
                                         response.code = 301
@@ -475,12 +467,13 @@ def startTestCase(request):
                                             'responseMsg':json_data.get('msg')
                                         }
                                         return JsonResponse(response.__dict__)
-                                continue
+                            continue
                     except Exception as error:
                         print('错误==!!!!!!!!=====-> ', error)
                         response.code = 301
                         response.msg = '内部错误'
                         response.data = {'error':error}
+                        return JsonResponse(response.__dict__)
                 response.code = 200
                 response.msg = '通过'
                 # print('删除redis---------------------==============')
