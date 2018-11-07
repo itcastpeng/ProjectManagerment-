@@ -32,9 +32,11 @@ def configurationHost(request):
                 'hostName': '__contains',
                 'hostUrl': '',
                 'userProfile_id': '__contains',
+                'talkProject_id':'',
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
+            print('user_id--------->',user_id)
             objs = models.configurationManagementHOST.objects.filter(q)
             count = objs.count()
 
@@ -82,7 +84,8 @@ def configurationHostOper(request, oper_type, o_id):
         'user_id': request.GET.get('user_id'),                   # 操作人
         'hostName': request.POST.get('hostName'),                   # 操作人
         'hostUrl': request.POST.get('hostUrl'),                  # 分组名称
-        'describe': request.POST.get('describe')
+        'describe': request.POST.get('describe'),
+        'talkProject_id': request.POST.get('talkProject_id')
     }
     print('form_data========>', form_data)
     userObjs = models.configurationManagementHOST.objects
@@ -101,6 +104,7 @@ def configurationHostOper(request, oper_type, o_id):
                         userProfile_id=form_data.get('user_id'),
                         create_date=now_date,
                         describe=formResult.get('describe'),
+                        talkProject_id=formResult.get('talkProject_id')
                     )
                     response.code = 200
                     response.msg = "添加成功"
@@ -124,6 +128,7 @@ def configurationHostOper(request, oper_type, o_id):
                         hostUrl=formResult.get('hostUrl'),
                         userProfile_id=form_data.get('user_id'),
                         describe=formResult.get('describe'),
+                        talkProject_id=formResult.get('talkProject_id')
                     )
                     response.code = 200
                     response.msg = '修改成功'

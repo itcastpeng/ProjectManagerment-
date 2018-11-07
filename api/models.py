@@ -159,5 +159,5 @@ class configurationManagementHOST(models.Model):
         (2, '正式环境')
     )
     describe = models.SmallIntegerField(verbose_name='描述', choices=status_choices, default=1)
-
+    talkProject = models.ForeignKey(to='project', verbose_name="所属产品项目", null=True, blank=True)
 

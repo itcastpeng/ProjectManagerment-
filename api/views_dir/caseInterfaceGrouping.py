@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from api import models
 from publicFunc import Response
 from publicFunc import account
@@ -6,10 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
 from api.forms.caseInterfaceGrouping import AddForm, UpdateForm, SelectForm
-from api.views_dir.permissions import init_data
 import json
-import time
-import datetime
 from django.db.models import Q
 
 # cerf  token验证 用户展示模块
@@ -25,7 +21,7 @@ def testCaseGroup(request):
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
-            # talkProject_id = request.GET.get('talkProject_id')
+            # taskName = request.GET.get('taskName')
             print('order-------> ',order)
             field_dict = {
                 'id': '',
@@ -36,9 +32,9 @@ def testCaseGroup(request):
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            q.add(Q(operUser_id=user_id), Q.AND)
-            # if talkProject_id:
-            #     q.add(Q(talkProject_id=talkProject_id), Q.AND)
+            # q.add(Q(operUser_id=user_id), Q.AND)
+            # if taskName:
+            #     q.add(Q(talkProject_id=taskName), Q.AND)
             objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order).order_by('create_date')
             count = objs.count()
 
@@ -85,8 +81,8 @@ def testCaseGroup(request):
             response.data = json.loads(forms_obj.errors.as_json())
     return JsonResponse(response.__dict__)
 
-
-def updateInitData(result_data, talkProject_id, pid=None, o_id=None):   # o_id 判断是否会关联自己 如果o_id 在 result_data里会return
+# o_id 判断是否会关联自己 如果o_id 在 result_data里会return
+def updateInitData(result_data, talkProject_id, pid=None, o_id=None):
     objs = models.caseInterfaceGrouping.objects.filter(
         talkProject_id=talkProject_id,
         id=pid,

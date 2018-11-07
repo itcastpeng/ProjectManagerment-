@@ -63,7 +63,7 @@ urlpatterns = [
     url(r'^testCaseDetaile/(?P<oper_type>\w+)/(?P<o_id>\d+)$', caseInterfaceDetaile.testCaseDetaileOper),
     url(r'^testCaseDetaile$', caseInterfaceDetaile.testCaseDetaile),
 
-    # 测试用例 接口详情
+    # 测试用例 host配置
     url(r'^configurationHost/(?P<oper_type>\w+)/(?P<o_id>\d+)$', configurationManagementHOST.configurationHostOper),
     url(r'^configurationHost$', configurationManagementHOST.configurationHost),
 ]
