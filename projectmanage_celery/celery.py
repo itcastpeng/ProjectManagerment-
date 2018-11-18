@@ -10,36 +10,27 @@ from celery import Celery
 from celery.schedules import crontab
 
 app = Celery(
-    # broker='redis://redis:6379/0',
-    broker='redis://127.0.0.1:6379/0',
-    # backend='redis://redis:6379/0',
-    backend='redis://127.0.0.1:6379/0',
+    broker='redis://redis:6379/0',
+    backend='redis://redis:6379/0',
     include=['projectmanage_celery.tasks'],
 
 )
 app.conf.enable_utc = False
 app.conf.timezone = "Asia/Shanghai"
-CELERYD_FORCE_EXECV = True    # 非常重要,有些情况下可以防止死锁
+CELERYD_FORCE_EXECV = True           # 非常重要,有些情况下可以防止死锁
 CELERYD_MAX_TASKS_PER_CHILD = 100    # 每个worker最多执行万100个任务就会被销毁，可防止内存泄露
 app.conf.beat_schedule = {
 
-
-# 每天九点 和 11点执行
+# 每天早上九点到十一点 每隔1小时执行一次
  'pushMessageToWeChat':{
         'task':'projectmanage_celery.tasks.pushMessageToWeChat',
-        # 'schedule':30                                # 秒
-        'schedule': crontab("*", '9,11', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
-        # 'schedule': crontab(hour=8, minute=30),  # 此处跟 linux 中 crontab 的格式一样
+        # 'schedule':30                                   # 单独设置  秒
+        # 'schedule': crontab(hour=8, minute=30),
+        'schedule': crontab("*", '9', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
     },
-
-
-
 }
-
-# Optional configuration, see the application user guide.
 app.conf.update(
     result_expires=3600,
-    # CELERY_TIMEZONE = 'Asia/Shanghai'
 )
 
 if __name__ == '__main__':
