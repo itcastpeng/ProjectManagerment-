@@ -26,7 +26,7 @@ app.conf.beat_schedule = {
         'task':'projectmanage_celery.tasks.pushMessageToWeChat',
         # 'schedule':30                                   # 单独设置  秒
         # 'schedule': crontab(hour=8, minute=30),
-        'schedule': crontab("*", '9-11/1', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
+        'schedule': crontab("*", '9', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
     },
 }
 app.conf.update(
