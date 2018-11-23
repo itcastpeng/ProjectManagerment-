@@ -88,6 +88,7 @@ class demand(models.Model):
 
     status_choices = (
         (1, '等待审核'),
+        (7, '提交BUG'),
         (2, '等待评估'),
         (3, '等待开发'),
         (4, '等待测试'),

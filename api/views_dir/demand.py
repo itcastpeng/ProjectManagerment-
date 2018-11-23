@@ -25,6 +25,7 @@ def demand(request):
         forms_obj = SelectForm(request.GET)
         if forms_obj.is_valid():
             developer_id = request.GET.get('developer_id')
+            demandUser = request.GET.get('demandUser')    # 提需求人筛选
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
@@ -45,9 +46,11 @@ def demand(request):
             if developer_id:
                 demand_id_list = [i['demand_id'] for i in models.demand_to_userprofile.objects.filter(developer_id=developer_id).values('demand_id')]
                 q.add(Q(**{'id__in': demand_id_list}), Q.AND)
+            if demandUser:
+                q.add(Q(**{'oper_user_id':demandUser}), Q.AND)
+
             if role_id == 2:    # 管理员角色只能看自己公司的
                 q.add(Q(**{'project__company_id': company_id}), Q.AND)
-
             elif role_id == 3:  # 项目负责人/产品经理角色
                 project_objs = models.project.objects.all()
                 project_id_list = []
@@ -110,6 +113,14 @@ def demand(request):
                     'complete_date': complete_date,
                     'oper_user__username': oper_user_username,
                 })
+            demand_user_list = []
+            userObjs = models.userprofile.objects.filter(status=1)
+            for i in userObjs:
+                demand_user_list.append({
+                    'user_id':i.id,
+                    'user_name':i.username,
+                })
+
             #  查询成功 返回200 状态码
             response.code = 200
             response.msg = '查询成功'
@@ -117,7 +128,9 @@ def demand(request):
                 'ret_data': ret_data,
                 'data_count': count,
                 'status_choices': models.demand.status_choices,
-                'urgency_level_choices': models.demand.urgency_level_choices
+                'urgency_level_choices': models.demand.urgency_level_choices,
+                'demand_user':demand_user_list,
+
             }
         else:
             response.code = 402
