@@ -11,6 +11,7 @@ from api.forms.role import AddForm, UpdateForm, SelectForm
 import json
 from api.views_dir.permissions import init_data
 import os
+import requests
 
 
 # cerf  token验证 用户展示模块
@@ -44,10 +45,14 @@ def switch_nginx_huidu_ip_oper(request, oper_type):
     response = Response.ResponseObj()
     if request.method == "POST":
         if oper_type == "update":
+            old_ip = json.loads(open(os.path.join(os.getcwd() + '/api/data/switch_nginx_huidu_ip.json')).read())['ip']
+
             if request.META.get('HTTP_X_FORWARDED_FOR'):
                 new_ip = request.META['HTTP_X_FORWARDED_FOR']
             else:
                 new_ip = request.META['REMOTE_ADDR']
+
+            switch_ip(old_ip, new_ip)
 
             data = {
                 "ip": new_ip
@@ -61,3 +66,56 @@ def switch_nginx_huidu_ip_oper(request, oper_type):
             response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
+
+
+def switch_ip(old_ip, new_ip):
+
+    url = 'https://192.168.10.110:8001/login'
+    headers = {
+        'Accept': 'application/json',
+    }
+    post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
+
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    token = ret.json()['return'][0]['token']
+
+    url = 'https://192.168.10.110:8001/'
+    headers = {
+        'Accept': 'application/json',
+        'X-Auth-Token': token,
+    }
+
+    # 更新配置文件中的ip
+    cmd = "salt 'saltServer' cmd.run 'sed -i \"s/{old_ip}/{new_ip}/g\" /data/salt/leida_nginx/dev/*'".format(
+        old_ip=old_ip,
+        new_ip=new_ip
+    )
+    post_data = {
+        'client': 'local',
+        'tgt': 'zhuanfaji',
+        'fun': 'cmd.run',
+        'arg': cmd,
+    }
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+
+    # 下发配置文件
+    cmd = "salt 'saltServer' cmd.run 'salt 'zhuanfaji' state.sls zhugeleida_dev'"
+    post_data = {
+        'client': 'local',
+        'tgt': 'zhuanfaji',
+        'fun': 'cmd.run',
+        'arg': cmd,
+    }
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+
+    # 重启nginx
+    cmd = "salt 'zhuanfaji' cmd.run '/data/application/nginx-1.10.3/sbin/nginx -s reload'"
+    post_data = {
+        'client': 'local',
+        'tgt': 'zhuanfaji',
+        'fun': 'cmd.run',
+        'arg': cmd,
+    }
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+
+    print(ret.text)
