@@ -68,7 +68,7 @@ urlpatterns = [
     url(r'^configurationHost$', configurationManagementHOST.configurationHost),
 
     # 更换nginx中的灰度ip
-    # url(r'^switch_nginx_huidu_ip/(?P<oper_type>\w+)/(?P<o_id>\d+)', switch_nginx_huidu_ip.switch_nginx_huidu_ip_oper),
+    url(r'^switch_nginx_huidu_ip/(?P<oper_type>\w+)', switch_nginx_huidu_ip.switch_nginx_huidu_ip_oper),
     url(r'^switch_nginx_huidu_ip', switch_nginx_huidu_ip.switch_nginx_huidu_ip),
 
     # # 灰度环境ip切换
