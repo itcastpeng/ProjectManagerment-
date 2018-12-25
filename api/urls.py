@@ -3,7 +3,7 @@ from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
     permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile, \
-    configurationManagementHOST, huidu_ip_switch
+    configurationManagementHOST, huidu_ip_switch, switch_nginx_huidu_ip
 
 
 urlpatterns = [
@@ -66,6 +66,10 @@ urlpatterns = [
     # 测试用例 host配置
     url(r'^configurationHost/(?P<oper_type>\w+)/(?P<o_id>\d+)$', configurationManagementHOST.configurationHostOper),
     url(r'^configurationHost$', configurationManagementHOST.configurationHost),
+
+    # 更换nginx中的灰度ip
+    # url(r'^switch_nginx_huidu_ip/(?P<oper_type>\w+)/(?P<o_id>\d+)', switch_nginx_huidu_ip.switch_nginx_huidu_ip_oper),
+    url(r'^switch_nginx_huidu_ip', switch_nginx_huidu_ip.switch_nginx_huidu_ip),
 
     # # 灰度环境ip切换
     # url(r'^huidu_ip_switch/(?P<oper_type>\w+)/(?P<o_id>\d+)', huidu_ip_switch.huidu_ip_switch_oper),
