@@ -92,7 +92,7 @@ def switch_ip(old_ip, new_ip):
     )
     post_data = {
         'client': 'local',
-        'tgt': 'zhuanfaji',
+        'tgt': 'saltServer',
         'fun': 'cmd.run',
         'arg': cmd,
     }
@@ -102,7 +102,7 @@ def switch_ip(old_ip, new_ip):
     cmd = "salt 'saltServer' cmd.run 'salt 'zhuanfaji' state.sls zhugeleida_dev'"
     post_data = {
         'client': 'local',
-        'tgt': 'zhuanfaji',
+        'tgt': 'saltServer',
         'fun': 'cmd.run',
         'arg': cmd,
     }
@@ -112,7 +112,7 @@ def switch_ip(old_ip, new_ip):
     cmd = "salt 'zhuanfaji' cmd.run '/data/application/nginx-1.10.3/sbin/nginx -s reload'"
     post_data = {
         'client': 'local',
-        'tgt': 'zhuanfaji',
+        'tgt': 'saltServer',
         'fun': 'cmd.run',
         'arg': cmd,
     }
