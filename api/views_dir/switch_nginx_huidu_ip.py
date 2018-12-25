@@ -69,7 +69,6 @@ def switch_nginx_huidu_ip_oper(request, oper_type):
 
 
 def switch_ip(old_ip, new_ip):
-
     url = 'https://192.168.10.110:8001/login'
     headers = {
         'Accept': 'application/json',
@@ -86,10 +85,11 @@ def switch_ip(old_ip, new_ip):
     }
 
     # 更新配置文件中的ip
-    cmd = "salt 'saltServer' cmd.run 'sed -i \"s/{old_ip}/{new_ip}/g\" /data/salt/leida_nginx/dev/*'".format(
+    cmd = "/usr/bin/salt 'saltServer' cmd.run 'sed -i \"s/{old_ip}/{new_ip}/g\" /data/salt/leida_nginx/dev/*'".format(
         old_ip=old_ip,
         new_ip=new_ip
     )
+    print('cmd -->', cmd)
     post_data = {
         'client': 'local',
         'tgt': 'saltServer',
@@ -98,8 +98,10 @@ def switch_ip(old_ip, new_ip):
     }
     ret = requests.post(url, post_data, headers=headers, verify=False)
 
+
     # 下发配置文件
-    cmd = "salt 'saltServer' cmd.run 'salt 'zhuanfaji' state.sls zhugeleida_dev'"
+    cmd = "/usr/bin/salt 'saltServer' cmd.run 'salt 'zhuanfaji' state.sls zhugeleida_dev'"
+    print('cmd -->', cmd)
     post_data = {
         'client': 'local',
         'tgt': 'saltServer',
@@ -109,7 +111,8 @@ def switch_ip(old_ip, new_ip):
     ret = requests.post(url, post_data, headers=headers, verify=False)
 
     # 重启nginx
-    cmd = "salt 'zhuanfaji' cmd.run '/data/application/nginx-1.10.3/sbin/nginx -s reload'"
+    cmd = "/usr/bin/salt 'zhuanfaji' cmd.run '/data/application/nginx-1.10.3/sbin/nginx -s reload'"
+    print('cmd -->', cmd)
     post_data = {
         'client': 'local',
         'tgt': 'saltServer',
