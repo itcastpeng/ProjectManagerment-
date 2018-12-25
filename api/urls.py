@@ -3,7 +3,7 @@ from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
     permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile, \
-    configurationManagementHOST, huidu_ip_switch, switch_nginx_huidu_ip
+    configurationManagementHOST, switch_nginx_huidu_ip
 
 
 urlpatterns = [
