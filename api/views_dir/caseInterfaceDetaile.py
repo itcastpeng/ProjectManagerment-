@@ -33,9 +33,9 @@ pcRequestHeader = [
 ]
 
 # 分组  树状图
-def testCaseGroupTree(talkProject_id, operUser_id, pid=None):
+def testCaseGroupTree(talk_project_id, operUser_id, pid=None):
     result_data = []
-    objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talkProject_id=talkProject_id).filter(parensGroupName_id=pid)
+    objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talk_project_id=talk_project_id).filter(parensGroupName_id=pid)
     for obj in objs:
         current_data = {
             'title': obj.groupName,
@@ -43,7 +43,7 @@ def testCaseGroupTree(talkProject_id, operUser_id, pid=None):
             'id': obj.id,
             'checked': False
         }
-        children_data = testCaseGroupTree(talkProject_id, operUser_id, obj.id)
+        children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
         current_data['children'] = children_data
         result_data.append(current_data)
     return result_data
@@ -75,7 +75,6 @@ def testCaseDetaile(request):
             ownershipGroup_id = request.GET.get('ownershipGroup_id')                  # 分组
             field_dict = {
                 'id': '',
-                # 'ownershipGroup_id': '',
                 'url': '',
                 'caseName': '__contains',
             }
@@ -89,7 +88,7 @@ def testCaseDetaile(request):
                 q.add(Q(ownershipGroup_id__in=resultList), Q.AND)
 
             print('q -->', q)
-            objs =  models.caseInterfaceDetaile.objects.filter(ownershipGroup__talkProject_id=beforeTaskId).filter(q).order_by(order)
+            objs =  models.caseInterfaceDetaile.objects.filter(ownershipGroup__talk_project_id=beforeTaskId).filter(q).order_by(order)
             count = objs.count()
             if length != 0:
                 start_line = (current_page - 1) * length
@@ -131,9 +130,9 @@ def testCaseDetaileOper(request, oper_type, o_id):
     response = Response.ResponseObj()
     form_data = {
         'o_id':o_id,
-        'url': request.POST.get('url'),                   # url
-        'user_id': request.GET.get('user_id'),                   # 操作人
-        'ownershipGroup_id': request.POST.get('ownershipGroup_id'),     # 分组名称
+        'url': request.POST.get('url'),                             # url
+        'user_id': request.GET.get('user_id'),                      # 操作人
+        'ownershipGroup_id': request.POST.get('ownershipGroup_id'), # 分组名称
         'hostManage_id': request.POST.get('hostManage_id'),         # host
         'requestType': request.POST.get('requestType'),             # 请求类型 1 GET 2 POST
         'caseName': request.POST.get('caseName'),                   # 接口名称
@@ -323,9 +322,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                     return JsonResponse(response.__dict__)
                     else:
                         print("验证不通过")
-                        # print(forms_obj.errors)
                         response.code = 301
-                        # print(forms_obj.errors.as_json())
                         response.msg = json.loads(forms_obj.errors.as_json())
                 else:
                     response.code = 200
@@ -338,6 +335,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.msg = '请输入URL！'
                 response.data = ''
             return JsonResponse(response.__dict__)
+
     else:
         # 获取 项目名称
         if oper_type == 'getTaskName':
@@ -413,13 +411,11 @@ def startTestCase(request):
         user_id = request.GET.get('user_id')
         talkProject_id = request.POST.get('talkProject_id')
         if talkProject_id:
-            # print('talkProject_id========> ',talkProject_id, user_id)
             objs = models.caseInterfaceDetaile.objects.select_related(
                 'ownershipGroup__talkProject',
                 'ownershipGroup__operUser'
             ).filter(
                 ownershipGroup__talkProject_id=talkProject_id,
-                # ownershipGroup__operUser_id=user_id
             ).order_by('create_date')               # 按时间正序排列
             if objs:
                 flag = 0

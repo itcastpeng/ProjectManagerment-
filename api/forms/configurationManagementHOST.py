@@ -24,7 +24,7 @@ class AddForm(forms.Form):
             'required': '描述不能为空'
         }
     )
-    talkProject_id = forms.IntegerField(
+    talk_project_id = forms.IntegerField(
         required=True,
         error_messages={
             'required': '所属产品项目不能为空'
@@ -51,7 +51,7 @@ class UpdateForm(forms.Form):
             'required': '描述不能为空'
         }
     )
-    talkProject_id = forms.IntegerField(
+    talk_project_id = forms.IntegerField(
         required=True,
         error_messages={
             'required': '所属产品项目不能为空'

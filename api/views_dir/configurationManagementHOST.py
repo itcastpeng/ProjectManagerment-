@@ -32,7 +32,7 @@ def configurationHost(request):
                 'hostName': '__contains',
                 'hostUrl': '',
                 'userProfile_id': '__contains',
-                'talkProject_id':'',
+                'talk_project_id':'',
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
@@ -54,6 +54,8 @@ def configurationHost(request):
                     'name': obj.hostName,
                     'url':obj.hostUrl,
                     'username': obj.userProfile.username,
+                    'talk_project_id': obj.talk_project_id,
+                    'talk_project__name': obj.talk_project.name,
                     'user_id': obj.userProfile.id,
                     'describe_id': obj.describe,
                     'describe': obj.get_describe_display(),
@@ -85,7 +87,7 @@ def configurationHostOper(request, oper_type, o_id):
         'hostName': request.POST.get('hostName'),                   # 操作人
         'hostUrl': request.POST.get('hostUrl'),                  # 分组名称
         'describe': request.POST.get('describe'),
-        'talkProject_id': request.POST.get('talkProject_id')
+        'talk_project_id': request.POST.get('talk_project_id')
     }
     print('form_data========>', form_data)
     userObjs = models.configurationManagementHOST.objects
@@ -104,7 +106,7 @@ def configurationHostOper(request, oper_type, o_id):
                         userProfile_id=form_data.get('user_id'),
                         create_date=now_date,
                         describe=formResult.get('describe'),
-                        talkProject_id=formResult.get('talkProject_id')
+                        talk_project_id=formResult.get('talk_project_id')
                     )
                     response.code = 200
                     response.msg = "添加成功"
@@ -128,7 +130,7 @@ def configurationHostOper(request, oper_type, o_id):
                         hostUrl=formResult.get('hostUrl'),
                         userProfile_id=form_data.get('user_id'),
                         describe=formResult.get('describe'),
-                        talkProject_id=formResult.get('talkProject_id')
+                        talk_project_id=formResult.get('talk_project_id')
                     )
                     response.code = 200
                     response.msg = '修改成功'

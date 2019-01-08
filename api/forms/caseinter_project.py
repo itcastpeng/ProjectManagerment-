@@ -2,29 +2,11 @@ from django import forms
 
 from api import models
 from publicFunc import account
-import datetime
+import time
 
 
 # 添加
 class AddForm(forms.Form):
-    name = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "权限名称不能为空"
-        }
-    )
-
-    title = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "权限标题不能为空"
-        }
-    )
-
-    pid_id = forms.CharField(
-        required=False
-    )
-
     oper_user_id = forms.IntegerField(
         required=True,
         error_messages={
@@ -32,52 +14,78 @@ class AddForm(forms.Form):
         }
     )
 
+    name = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "项目名称不能为空"
+        }
+    )
+    # principalList = forms.CharField(
+    #     required=True,
+    #     error_messages={
+    #         'required': "项目负责人不能为空"
+    #     }
+    # )
+
+    developerList = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "项目负责人不能为空"
+        }
+    )
+
     # 查询名称是否存在
     def clean_name(self):
         name = self.data['name']
-        objs = models.permissions.objects.filter(
+        objs = models.caseInterProject.objects.filter(
             name=name,
         )
         if objs:
-            self.add_error('name', '公司名称已存在')
+            self.add_error('name', '项目名称已存在')
         else:
             return name
 
 
 # 更新
 class UpdateForm(forms.Form):
-    name = forms.CharField(
-        required=True,
-        error_messages={
-            'required': '权限名称不能为空'
-        }
-    )
     o_id = forms.IntegerField(
         required=True,
         error_messages={
-            'required': '权限ID不能为空'
+            'required': '角色id不能为空'
         }
     )
-    title = forms.CharField(
+    name = forms.CharField(
         required=True,
         error_messages={
-            'required': "权限标题不能为空"
+            'required': "项目名称不能为空"
+        }
+    )
+    principalList = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "项目负责人不能为空"
         }
     )
 
-    pid_id = forms.CharField(
-        required=False
-    )
+    # developerList = forms.CharField(
+    #     required=True,
+    #     error_messages={
+    #         'required': "项目负责人不能为空"
+    #     }
+    # )
+
 
     # 判断名称是否存在
     def clean_name(self):
         o_id = self.data['o_id']
         name = self.data['name']
-        objs = models.permissions.objects.filter(
+        objs = models.caseInterProject.objects.filter(
             name=name,
-        ).exclude(id=o_id)
+        ).exclude(
+            id=o_id,
+        )
         if objs:
-            self.add_error('name', '公司名称已存在')
+            self.add_error('name', '项目名称已存在')
         else:
             return name
 
@@ -95,6 +103,19 @@ class SelectForm(forms.Form):
         required=False,
         error_messages={
             'required': "页显示数量类型错误"
+        }
+    )
+    company_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "公司ID不能为空"
+        }
+    )
+
+    role_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "角色ID不能为空"
         }
     )
 

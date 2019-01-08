@@ -94,6 +94,7 @@ class demand(models.Model):
         (4, '等待测试'),
         (5, '待上线'),
         (6, '开发完成'),
+        (8, '驳回,待评估'),
         # (10, '上线成功'),
         (11, '关闭需求'),
     )
@@ -123,9 +124,19 @@ class progress(models.Model):
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     create_user = models.ForeignKey('userprofile', verbose_name='创建需求日志的用户')
 
+# ----------------------------------------测试用例------------------------------------------------
+
+# 测试用例项目表
+class caseInterProject(models.Model):
+    name = models.CharField(verbose_name="项目名称", max_length=128)
+    # principal = models.ManyToManyField('userprofile', verbose_name='负责人', related_name='userprofile_principal')
+    developer = models.ManyToManyField('userprofile', verbose_name='开发人员', related_name='userprofile_developer')
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    oper_user = models.ForeignKey('userprofile', verbose_name="创建用户")
+
 # 测试用例接口分组
 class caseInterfaceGrouping(models.Model):
-    talkProject = models.ForeignKey(to='project', verbose_name="所属产品项目", null=True, blank=True)
+    talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
     operUser = models.ForeignKey(to='userprofile', verbose_name="创建用户", null=True, blank=True)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     parensGroupName = models.ForeignKey(to='self', verbose_name='父级分组', null=True, blank=True)
@@ -160,5 +171,22 @@ class configurationManagementHOST(models.Model):
         (2, '正式环境')
     )
     describe = models.SmallIntegerField(verbose_name='描述', choices=status_choices, default=1)
-    talkProject = models.ForeignKey(to='project', verbose_name="所属产品项目", null=True, blank=True)
+    talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
+
+# ------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

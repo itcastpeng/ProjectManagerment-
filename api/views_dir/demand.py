@@ -416,6 +416,29 @@ def demand_oper(request, oper_type, o_id):
             response.code = 200
             response.msg = "提交成功"
 
+        # 驳回开发 等待评估
+        elif oper_type == 'rejected':
+            remark = request.POST.get('remark')
+            oper_user_id = request.GET.get('user_id')
+            objs = models.demand.objects.select_related('oper_user').filter(id=o_id)
+            objs.update(
+                status=8
+            )
+            models.progress.objects.create(
+                demand=objs[0],
+                description="驳回完成, 重新评估",
+                create_user_id=oper_user_id,
+                remark=remark
+            )
+            userID = objs[0].oper_user.userid
+            msg = "您提交的需求 {id}-{name} 已开发完成，请进行测试".format(
+                id=objs[0].id,
+                name=objs[0].name
+            )
+            work_weixin_api_obj.message_send(userID, msg)
+            response.code = 200
+            response.msg = "提交成功"
+
         # 测试通过，需求交付
         elif oper_type == "jiaofu":
             remark = request.POST.get('remark')
@@ -468,6 +491,7 @@ def demand_oper(request, oper_type, o_id):
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
+
     else:
         if oper_type == "detail":
             result_data = []

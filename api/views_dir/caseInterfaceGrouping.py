@@ -19,22 +19,16 @@ def testCaseGroup(request):
         if forms_obj.is_valid():
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
-            print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
-            # taskName = request.GET.get('taskName')
-            print('order-------> ',order)
             field_dict = {
                 'id': '',
-                'talkProject_id': '',
+                'talk_project_id': '',
                 'parensGroupName': '',
                 'operUser_id': '',
                 'groupName': '__contains',
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            # q.add(Q(operUser_id=user_id), Q.AND)
-            # if taskName:
-            #     q.add(Q(talkProject_id=taskName), Q.AND)
             objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order).order_by('create_date')
             count = objs.count()
 
@@ -53,10 +47,10 @@ def testCaseGroup(request):
                     parensGroupName = obj.parensGroupName.groupName
                     parensGroupName_id = obj.parensGroupName.id
                 talkName = ''
-                talkProject_id = ''
-                if obj.talkProject:
-                    talkName = obj.talkProject.name
-                    talkProject_id = obj.talkProject.id
+                talk_project_id = ''
+                if obj.talk_project:
+                    talkName = obj.talk_project.name
+                    talk_project_id = obj.talk_project_id
                 ret_data.append({
                     'id': obj.id,
                     'groupName': obj.groupName,
@@ -64,7 +58,7 @@ def testCaseGroup(request):
                     'parensGroupName': parensGroupName,
                     'operUser': obj.operUser.username,
                     'operUser_id':obj.operUser.id,
-                    'talkProject_id':talkProject_id,
+                    'talk_project_id':talk_project_id,
                     'talkProject': talkName,
                     'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S')
                 })
@@ -82,9 +76,9 @@ def testCaseGroup(request):
     return JsonResponse(response.__dict__)
 
 # o_id 判断是否会关联自己 如果o_id 在 result_data里会return
-def updateInitData(result_data, talkProject_id, pid=None, o_id=None):
+def updateInitData(result_data, talk_project_id, pid=None, o_id=None):
     objs = models.caseInterfaceGrouping.objects.filter(
-        talkProject_id=talkProject_id,
+        talk_project_id=talk_project_id,
         id=pid,
     )
     for obj in objs:
@@ -93,7 +87,7 @@ def updateInitData(result_data, talkProject_id, pid=None, o_id=None):
         if o_id:
             if int(o_id) == int(obj.id):
                 return result_data
-        parent = updateInitData(result_data, talkProject_id, pid=obj.parensGroupName_id, o_id=o_id)
+        parent = updateInitData(result_data, talk_project_id, pid=obj.parensGroupName_id, o_id=o_id)
     return result_data
 
 
@@ -108,13 +102,14 @@ def testCaseGroupOper(request, oper_type, o_id):
         'operUser_id': request.GET.get('user_id'),                   # 操作人
         'groupName': request.POST.get('groupName'),                  # 分组名称
         'parensGroupName': request.POST.get('parensGroupName'),      # 父级分组名称
-        'talkProject_id': request.POST.get('talkProject_id'),        # 归属项目
+        'talk_project_id': request.POST.get('talk_project_id'),      # 归属项目
     }
     operUser_id = form_data.get('operUser_id')
-    projectObjs = models.project.objects.filter(developer=operUser_id)
-    print('form_data========>', form_data)
     userObjs = models.caseInterfaceGrouping.objects
+    projectObjs = models.caseInterProject.objects.filter(developer=operUser_id)
+    print('form_data========>', projectObjs)
     if request.method == "POST":
+
         if oper_type == "add":
             #  创建 form验证 实例（参数默认转成字典）
             forms_obj = AddForm(form_data)
@@ -136,7 +131,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                         groupName=formResult.get('groupName'),
                         parensGroupName_id=parensGroupName,
                         operUser_id=formResult.get('operUser_id'),
-                        talkProject_id=formResult.get('talkProject_id')
+                        talk_project_id=formResult.get('talk_project_id')
                     )
                     objs.filter(id=objsId.id).update(level=level)
                     response.code = 200
@@ -144,9 +139,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                     response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
-                # print(forms_obj.errors)
                 response.code = 301
-                # print(forms_obj.errors.as_json())
                 response.msg = json.loads(forms_obj.errors.as_json())
 
         elif oper_type == "update":
@@ -159,14 +152,14 @@ def testCaseGroupOper(request, oper_type, o_id):
                 objs = userObjs.filter(id=formResult.get('o_id'))
                 if objs:
                     result_data = []
-                    talkProject_id = formResult.get('talkProject_id')
+                    talk_project_id = formResult.get('talk_project_id')
                     if formResult.get('parensGroupName'):
                         if int(o_id) == int(formResult.get('parensGroupName')):
                             response.code = 301
                             response.msg = '不可关联自己'
                             return JsonResponse(response.__dict__)
                         parentObjs = userObjs.filter(id=formResult.get('parensGroupName'))
-                        parentData = updateInitData(result_data, talkProject_id, parentObjs[0].parensGroupName_id, o_id)
+                        parentData = updateInitData(result_data, talk_project_id, parentObjs[0].parensGroupName_id, o_id)
                         if int(o_id) in parentData:
                             response.code = 301
                             response.msg = '不可关联自己'
@@ -175,7 +168,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                         groupName=formResult.get('groupName'),
                         parensGroupName_id=formResult.get('parensGroupName'),
                         operUser_id=formResult.get('operUser_id'),
-                        talkProject_id=formResult.get('talkProject_id')
+                        talk_project_id=formResult.get('talk_project_id')
                     )
                     response.code = 200
                     response.msg = "修改成功"
@@ -185,10 +178,7 @@ def testCaseGroupOper(request, oper_type, o_id):
 
             else:
                 print("验证不通过")
-                # print(forms_obj.errors)
                 response.code = 301
-                # print(forms_obj.errors.as_json())
-                #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
 
         elif oper_type == "delete":
@@ -207,6 +197,7 @@ def testCaseGroupOper(request, oper_type, o_id):
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
+
     else:
 
         # 查询 当前登录人 全部项目
@@ -223,14 +214,13 @@ def testCaseGroupOper(request, oper_type, o_id):
                 'otherData':otherData
             }
 
-        # 查询当前登录
+        # 查询当前登录人 所有上级分组
         elif oper_type == 'superGroupName':
             talkIdList = [i['id'] for i in projectObjs.values('id')]
             print('talkIdList------> ',talkIdList)
-            objs = models.caseInterfaceGrouping.objects.filter(talkProject_id__in=talkIdList)
+            objs = models.caseInterfaceGrouping.objects.filter(talk_project_id__in=talkIdList)
             data_list = []
             for obj in objs:
-                print(obj.groupName)
                 data_list.append({
                     'id': obj.id,
                     'name':obj.groupName
@@ -238,6 +228,7 @@ def testCaseGroupOper(request, oper_type, o_id):
             response.code = 200
             response.msg = '查询成功'
             response.data = {'data_list':data_list}
+
         else:
             response.code = 402
             response.msg = "请求异常"
