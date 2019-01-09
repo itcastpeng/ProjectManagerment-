@@ -145,22 +145,30 @@ class caseInterfaceGrouping(models.Model):
 
 # 测试用例接口详情
 class caseInterfaceDetaile(models.Model):
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
     ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping',verbose_name='分组', null=True, blank=True)
+    caseName = models.CharField(verbose_name='接口名称', max_length=64)         # 接口名字 (别名)
+
     hostManage = models.ForeignKey(to='configurationManagementHOST',verbose_name='host配置管理', null=True, blank=True)
     url = models.TextField(verbose_name='url', null=True, blank=True)
-    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     status_choices = (
         (1,'GET'),
         (2,'POST')
     )
     requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, default=1)
-    caseName = models.CharField(verbose_name='接口名称', max_length=64)
-    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
     getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
     postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
-    isAdd = models.IntegerField(verbose_name='是否为添加', null=True, blank=True)
 
-# HOST 管理配置
+    type_status_choices = (
+        (1, '增加'),
+        (2, '修改'),
+        (3, '删除'),
+        (4, '查询')
+    )
+    type_status= models.IntegerField(verbose_name='请求类型', default=4, choices=type_status_choices)
+
+# # HOST 管理配置
 class configurationManagementHOST(models.Model):
     hostName = models.CharField(verbose_name='host名字', max_length=128)
     hostUrl = models.CharField(verbose_name='hostUrl', max_length=128)

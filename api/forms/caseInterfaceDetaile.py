@@ -6,12 +6,6 @@ import json
 
 # 添加
 class AddForm(forms.Form):
-    # url = forms.CharField(
-    #     required=True,
-    #     error_messages={
-    #         'required': "url不能为空"
-    #     }
-    # )
     ownershipGroup_id = forms.IntegerField(
         required=False,
         error_messages={

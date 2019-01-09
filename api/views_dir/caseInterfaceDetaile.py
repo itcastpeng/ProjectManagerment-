@@ -57,7 +57,9 @@ def selectCaseDetailGroup(ownershipGroup_id, resultData):
             selectCaseDetailGroup(obj.id, resultData)
     return resultData
 
-# cerf  token验证 用户展示模块
+
+
+# cerf  token验证 测试用例展示模块
 @csrf_exempt
 @account.is_token(models.userprofile)
 def testCaseDetaile(request):
@@ -70,8 +72,6 @@ def testCaseDetaile(request):
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
             beforeTaskId = request.GET.get('beforeTaskId')          # 最开始传来的项目ID
-            user_id = request.GET.get('user_id')                    # 用户ID
-            # caseName = request.GET.get('caseName')                  # 搜索条件
             ownershipGroup_id = request.GET.get('ownershipGroup_id')                  # 分组
             field_dict = {
                 'id': '',
@@ -108,12 +108,21 @@ def testCaseDetaile(request):
                    'requestType':obj.get_requestType_display(),
                    'jieKouName': obj.caseName,
                })
-            #  查询成功 返回200 状态码
+
+            type_status_choices = []
+            for i in models.caseInterfaceDetaile.type_status_choices:
+                type_status_choices.append({
+                    'id':i[0],
+                    'name':i[1]
+                })
+
+                #  查询成功 返回200 状态码
             response.code = 200
             response.msg = '查询成功'
             response.data = {
                 'ret_data': ret_data,
                 'data_count': count,
+                'type_status_choices':type_status_choices
             }
         else:
             response.code = 402
@@ -130,30 +139,37 @@ def testCaseDetaileOper(request, oper_type, o_id):
     response = Response.ResponseObj()
     form_data = {
         'o_id':o_id,
-        'url': request.POST.get('url'),                             # url
-        'user_id': request.GET.get('user_id'),                      # 操作人
+        'oper_user_id': request.GET.get('user_id'),                      # 操作人
+
         'ownershipGroup_id': request.POST.get('ownershipGroup_id'), # 分组名称
+        'caseName': request.POST.get('caseName'),                   # 接口名称
+
+        'url': request.POST.get('url'),                             # url
         'hostManage_id': request.POST.get('hostManage_id'),         # host
         'requestType': request.POST.get('requestType'),             # 请求类型 1 GET 2 POST
-        'caseName': request.POST.get('caseName'),                   # 接口名称
+        'type_status': request.POST.get('type_status'),             # 请求类型 (增删改查)
     }
     detaileObjs = models.caseInterfaceDetaile.objects
     print('form_data========>', form_data)
     if request.method == "POST":
+
+        # 增加测试用例
         if oper_type == "add":
             #  创建 form验证 实例（参数默认转成字典）
             forms_obj = AddForm(form_data)
             if forms_obj.is_valid():
                 print("验证通过")
                 formResult = forms_obj.cleaned_data
-                print("formResult.get('url')=========> ", formResult.get('url'))
+
                 obj = detaileObjs.create(
+                    caseName=formResult.get('caseName'),                        # 接口名称 (别名)
+                    ownershipGroup_id=formResult.get('ownershipGroup_id'),      # 分组名称
+                    userProfile_id=form_data.get('oper_user_id'),                    # 操作人
+
                     url=formResult.get('url'),
-                    ownershipGroup_id=formResult.get('ownershipGroup_id'),
-                    hostManage_id=formResult.get('hostManage_id'),
-                    requestType=formResult.get('requestType'),
-                    caseName=formResult.get('caseName'),
-                    userProfile_id=form_data.get('user_id')
+                    hostManage_id=formResult.get('hostManage_id'),              # host配置
+                    requestType=formResult.get('requestType'),                  # 请求类型（GET，POST）
+                    type_status=formResult.get('type_status'),                  # 请求类型（增删改查）
                 )
                 response.code = 200
                 response.msg = '添加成功'
@@ -161,13 +177,11 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
             else:
                 print("验证不通过")
-                # print(forms_obj.errors)
                 response.code = 301
-                # print(forms_obj.errors.as_json())
                 response.msg = json.loads(forms_obj.errors.as_json())
 
+        # 修改测试用例
         elif oper_type == "update":
-            # 获取需要修改的信息
             forms_obj = UpdateForm(form_data)
             if forms_obj.is_valid():
                 print("验证通过")
@@ -181,14 +195,11 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
             else:
                 print("验证不通过")
-                # print(forms_obj.errors)
                 response.code = 301
-                # print(forms_obj.errors.as_json())
-                #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
 
+        # 删除测试用例
         elif oper_type == "delete":
-            # 删除 ID
             objs = models.caseInterfaceDetaile.objects
             oidObjs = objs.filter(id=o_id)
             if oidObjs:
@@ -199,6 +210,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.code = 302
                 response.msg = '删除ID不存在'
 
+        # 发送请求
         elif oper_type == 'sendTheRequest':
             add = request.POST.get('add')
             requestType = request.POST.get('requestType')           # 请求类型
@@ -226,8 +238,10 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                 else:
                                     canshu += '?' + key + '=' +value
                             requestsURL = requestUrl + canshu
+                    print('requestsURL-------> ', requestsURL)
                     ret = requests.get(requestsURL, headers=headers)
                     ret.encoding = 'utf8'
+                    print(ret.text)
                     json_data = json.loads(ret.text)
 
                 else:
@@ -400,8 +414,6 @@ def testCaseDetaileOper(request, oper_type, o_id):
     return JsonResponse(response.__dict__)
 
 
-rc = redis.Redis(host='127.0.0.1', port=6379,db=0)
-
 # 启用测试用例
 @csrf_exempt
 @account.is_token(models.userprofile)
@@ -480,8 +492,6 @@ def startTestCase(request):
                         return JsonResponse(response.__dict__)
                 response.code = 200
                 response.msg = '通过'
-                # print('删除redis---------------------==============')
-                # rc.delete('caseId')
             else:
                 response.code = 301
                 response.msg = '无测试用例可运行'
