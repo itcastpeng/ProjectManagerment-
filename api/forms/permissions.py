@@ -77,7 +77,7 @@ class UpdateForm(forms.Form):
             name=name,
         ).exclude(id=o_id)
         if objs:
-            self.add_error('name', '公司名称已存在')
+            self.add_error('name', '权限名称已存在')
         else:
             return name
 
