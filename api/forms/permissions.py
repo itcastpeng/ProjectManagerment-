@@ -49,13 +49,13 @@ class UpdateForm(forms.Form):
     name = forms.CharField(
         required=True,
         error_messages={
-            'required': '公司名称不能为空'
+            'required': '权限名称不能为空'
         }
     )
     o_id = forms.IntegerField(
         required=True,
         error_messages={
-            'required': '公司id不能为空'
+            'required': '权限ID不能为空'
         }
     )
     title = forms.CharField(

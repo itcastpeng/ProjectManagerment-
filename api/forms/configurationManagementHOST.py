@@ -6,12 +6,12 @@ import json
 
 # 添加
 class AddForm(forms.Form):
-    hostName = forms.CharField(
-        required=True,
-        error_messages={
-            'required': "域名名称不能为空"
-        }
-    )
+    # hostName = forms.CharField(
+    #     required=True,
+    #     error_messages={
+    #         'required': "域名名称不能为空"
+    #     }
+    # )
     hostUrl = forms.CharField(
         required=True,
         error_messages={
@@ -24,19 +24,27 @@ class AddForm(forms.Form):
             'required': '描述不能为空'
         }
     )
-    talkProject_id = forms.IntegerField(
+    talk_project_id = forms.IntegerField(
         required=True,
         error_messages={
             'required': '所属产品项目不能为空'
         }
     )
+
+    def clean_hostUrl(self):
+        hostUrl = self.data.get('hostUrl')
+        objs = models.configurationManagementHOST.objects.filter(hostUrl=hostUrl)
+        if objs:
+            self.add_error('hostUrl', 'HOST名称已存在')
+        else:
+            return hostUrl
 
 # 更新
 class UpdateForm(forms.Form):
-    hostName = forms.CharField(
+    o_id = forms.IntegerField(
         required=True,
         error_messages={
-            'required': "域名名称不能为空"
+            'required': "修改ID不能为空"
         }
     )
     hostUrl = forms.CharField(
@@ -51,13 +59,21 @@ class UpdateForm(forms.Form):
             'required': '描述不能为空'
         }
     )
-    talkProject_id = forms.IntegerField(
+    talk_project_id = forms.IntegerField(
         required=True,
         error_messages={
             'required': '所属产品项目不能为空'
         }
     )
+    def clean_hostUrl(self):
+        hostUrl = self.data.get('hostUrl')
+        o_id = self.data.get('o_id')
 
+        objs = models.configurationManagementHOST.objects.filter(hostUrl=hostUrl).exclude(id=o_id)
+        if objs:
+            self.add_error('hostUrl', 'HOST名称已存在')
+        else:
+            return hostUrl
 
 # 判断是否是数字
 class SelectForm(forms.Form):

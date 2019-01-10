@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from api import models
 from publicFunc import Response
 from publicFunc import account
@@ -6,11 +5,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
 from api.forms.configurationManagementHOST import AddForm, UpdateForm, SelectForm
-from api.views_dir.permissions import init_data
-import json
-import time
-import datetime
+import datetime, json
 from django.db.models import Q
+
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
@@ -24,19 +21,16 @@ def configurationHost(request):
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
-            # order = request.GET.get('order', '-create_date')
-            taskName = request.GET.get('taskName')
-            # print('order-------> ',order)
+
             field_dict = {
                 'id': '',
                 'hostName': '__contains',
                 'hostUrl': '',
                 'userProfile_id': '__contains',
-                'talkProject_id':'',
+                'talk_project_id':'',
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            print('user_id--------->',user_id)
             objs = models.configurationManagementHOST.objects.filter(q)
             count = objs.count()
 
@@ -51,9 +45,10 @@ def configurationHost(request):
             for obj in objs:
                 ret_data.append({
                     'id': obj.id,
-                    'name': obj.hostName,
                     'url':obj.hostUrl,
                     'username': obj.userProfile.username,
+                    'talk_project_id': obj.talk_project_id,
+                    'talk_project__name': obj.talk_project.name,
                     'user_id': obj.userProfile.id,
                     'describe_id': obj.describe,
                     'describe': obj.get_describe_display(),
@@ -82,12 +77,11 @@ def configurationHostOper(request, oper_type, o_id):
     form_data = {
         'o_id':o_id,
         'user_id': request.GET.get('user_id'),                   # 操作人
-        'hostName': request.POST.get('hostName'),                   # 操作人
         'hostUrl': request.POST.get('hostUrl'),                  # 分组名称
         'describe': request.POST.get('describe'),
-        'talkProject_id': request.POST.get('talkProject_id')
+        'talk_project_id': request.POST.get('talk_project_id')
     }
-    print('form_data========>', form_data)
+    # print('form_data========>', form_data)
     userObjs = models.configurationManagementHOST.objects
     if request.method == "POST":
         if oper_type == "add":
@@ -99,21 +93,18 @@ def configurationHostOper(request, oper_type, o_id):
                 if userObjs:
                     formResult = forms_obj.cleaned_data
                     obj = userObjs.create(
-                        hostName=formResult.get('hostName'),
                         hostUrl=formResult.get('hostUrl'),
                         userProfile_id=form_data.get('user_id'),
                         create_date=now_date,
                         describe=formResult.get('describe'),
-                        talkProject_id=formResult.get('talkProject_id')
+                        talk_project_id=formResult.get('talk_project_id')
                     )
                     response.code = 200
                     response.msg = "添加成功"
                     response.data = {'testCase': obj.id}
             else:
                 print("验证不通过")
-                # print(forms_obj.errors)
                 response.code = 301
-                # print(forms_obj.errors.as_json())
                 response.msg = json.loads(forms_obj.errors.as_json())
 
         elif oper_type == "update":
@@ -124,11 +115,10 @@ def configurationHostOper(request, oper_type, o_id):
                 if oidObjs:
                     formResult = forms_obj.cleaned_data
                     userObjs.filter(id=o_id).update(
-                        hostName=formResult.get('hostName'),
                         hostUrl=formResult.get('hostUrl'),
                         userProfile_id=form_data.get('user_id'),
                         describe=formResult.get('describe'),
-                        talkProject_id=formResult.get('talkProject_id')
+                        talk_project_id=formResult.get('talk_project_id')
                     )
                     response.code = 200
                     response.msg = '修改成功'
@@ -137,10 +127,7 @@ def configurationHostOper(request, oper_type, o_id):
                     response.msg = '修改ID错误'
             else:
                 print("验证不通过")
-                # print(forms_obj.errors)
                 response.code = 301
-                # print(forms_obj.errors.as_json())
-                #  字符串转换 json 字符串
                 response.msg = json.loads(forms_obj.errors.as_json())
 
         elif oper_type == "delete":
@@ -153,6 +140,7 @@ def configurationHostOper(request, oper_type, o_id):
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
+
     else:
         if oper_type == 'miaoShuResult':
             objs = models.configurationManagementHOST.status_choices

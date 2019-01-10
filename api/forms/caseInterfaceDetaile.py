@@ -6,14 +6,8 @@ import json
 
 # 添加
 class AddForm(forms.Form):
-    # url = forms.CharField(
-    #     required=True,
-    #     error_messages={
-    #         'required': "url不能为空"
-    #     }
-    # )
     ownershipGroup_id = forms.IntegerField(
-        required=False,
+        required=True,
         error_messages={
             'required': '父级分组名称类型错误'
         }
@@ -25,18 +19,30 @@ class AddForm(forms.Form):
                 'required': '域名类型错误'
             }
         )
-    requestType  = forms.IntegerField(
-            required=True,
-            error_messages={
-                'required': '请求类型不能为空'
-            }
-        )
+    # requestType  = forms.IntegerField(
+    #         required=False,
+    #         error_messages={
+    #             'required': '请求类型类型错误'
+    #         }
+    #     )
     caseName = forms.CharField(
             required=True,
             error_messages={
-                'required': '接口名称不能为空'
+                'required': '接口名称类型错误'
             }
         )
+    type_status = forms.IntegerField(
+            required=True,
+            error_messages={
+                'required': '接口类型类型错误'
+            }
+        )
+    # xieyi_type = forms.IntegerField(
+    #     required=False,
+    #     error_messages={
+    #         'required': '协议类型类型错误'
+    #     }
+    # )
 
     def clean_ownershipGroup_id(self):
         ownershipGroup_id = self.data.get('ownershipGroup_id')
@@ -45,6 +51,7 @@ class AddForm(forms.Form):
             self.add_error('ownershipGroup_id', '无此分组')
         else:
             return ownershipGroup_id
+
 # 更新
 class UpdateForm(forms.Form):
     o_id = forms.IntegerField(
@@ -54,56 +61,116 @@ class UpdateForm(forms.Form):
         }
     )
 
-    caseName = forms.CharField(
-        required=True,
+    ownershipGroup_id = forms.IntegerField(
+        required=False,
         error_messages={
-            'required': "接口名称不能为空"
+            'required': '父级分组名称类型错误'
         }
     )
 
-    # url = forms.CharField(
-    #     required=True,
-    #     error_messages={
-    #         'required': "url不能为空"
-    #     }
-    # )
-    # ownershipGroup_id = forms.IntegerField(
-    #     required=False,
-    #     error_messages={
-    #         'required': '父级分组名称类型错误'
-    #     }
-    # )
+    hostManage_id = forms.IntegerField(
+        required=False,
+        error_messages={
+            'required': '域名类型错误'
+        }
+    )
+    requestType = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': '请求类型不能为空'
+        }
+    )
+    caseName = forms.CharField(
+        required=True,
+        error_messages={
+            'required': '接口名称不能为空'
+        }
+    )
+    type_status = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': '接口类型不能为空'
+        }
+    )
+    xieyi_type = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': '协议类型不能为空'
+        }
+    )
+    requestUrl = forms.CharField(
+        required=True,
+        error_messages={
+            'required': 'URL不能为空'
+        }
+    )
+    getRequest = forms.CharField(
+        required=True,
+        error_messages={
+            'required': 'GET参数类型错误'
+        }
+    )
+    postRequest = forms.CharField(
+        required=True,
+        error_messages={
+            'required': 'POST参数类型错误'
+        }
+    )
 
-    # def clean_ownershipGroup_id(self):
-    #     ownershipGroup_id = self.data.get('ownershipGroup_id')
-    #     objs = models.caseInterfaceGrouping.objects.filter(id=ownershipGroup_id)
-    #     if not objs:
-    #         self.add_error('ownershipGroup_id', '无此分组')
-    #     else:
-    #         return ownershipGroup_id
+    def clean_hostManage_id(self):
+        hostManage_id = self.data.get('hostManage_id')
+        objs = models.configurationManagementHOST.objects.filter(id=hostManage_id)
+        if objs:
+            hostUrl = objs[0].hostUrl
+            return hostManage_id, hostUrl
+        else:
+            self.add_error('hostManage_id', '权限不足')
+
+    def clean_ownershipGroup_id(self):
+        ownershipGroup_id = self.data.get('ownershipGroup_id')
+        objs = models.caseInterfaceGrouping.objects.filter(id=ownershipGroup_id)
+        if not objs:
+            self.add_error('ownershipGroup_id', '无此分组')
+        else:
+            return ownershipGroup_id
+
     def clean_o_id(self):
         o_id = self.data.get('o_id')
         objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
         if not objs:
-            self.add_error('o_id', '要修改详情ID有误')
+            self.add_error('o_id', '权限不足')
         else:
             return o_id
 
     # 判断名称是否存在
-    def clean_name(self):
+    def clean_caseName(self):
         o_id = self.data['o_id']
-        name = self.data['name']
-        objs = models.role.objects.filter(
-            name=name,
+        caseName = self.data['caseName']
+        objs = models.caseInterfaceDetaile.objects.filter(
+            caseName=caseName,
         ).exclude(id=o_id)
         if objs:
-            self.add_error('name', '角色名称已存在')
+            self.add_error('caseName', '接口名称已存在')
         else:
-            return name
+            return caseName
 
-    def clean_permissionsList(self):
-        permissionsList = self.data.get('permissionsList')
-        return json.loads(permissionsList)
+
+# 删除
+class DeleteForm(forms.Form):
+    o_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "删除ID不能为空"
+        }
+    )
+    def clean_o_id(self):
+        o_id = self.data.get('o_id')
+        objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
+        if objs:
+            return o_id
+        else:
+            self.add_error('o_id', '权限不足')
+
 
 # 判断是否是数字
 class SelectForm(forms.Form):

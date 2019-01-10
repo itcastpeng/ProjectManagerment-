@@ -3,7 +3,7 @@ from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
     permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile, \
-    configurationManagementHOST, switch_nginx_huidu_ip
+    configurationManagementHOST, switch_nginx_huidu_ip, caseinter_project
 
 
 urlpatterns = [
@@ -54,6 +54,12 @@ urlpatterns = [
     url(r'^code_online/(?P<oper_type>\w+)/(?P<o_id>\d+)', code_online.code_online_oper),
     url(r'^code_online', code_online.code_online),
 
+    # ------------------------------------------=测试用例=-----------------------------------------
+
+    # 测试用例 项目管理
+    url(r'^caseinter_project/(?P<oper_type>\w+)/(?P<o_id>\d+)$', caseinter_project.caseinter_project_oper),
+    url(r'^caseinter_project', caseinter_project.caseinter_project),
+
     # 测试用例 接口分组
     url(r'^testCaseGroup/(?P<oper_type>\w+)/(?P<o_id>\d+)$', caseInterfaceGrouping.testCaseGroupOper),
     url(r'^testCaseGroup$', caseInterfaceGrouping.testCaseGroup),
@@ -66,6 +72,8 @@ urlpatterns = [
     # 测试用例 host配置
     url(r'^configurationHost/(?P<oper_type>\w+)/(?P<o_id>\d+)$', configurationManagementHOST.configurationHostOper),
     url(r'^configurationHost$', configurationManagementHOST.configurationHost),
+
+    # --------------------------------------------------------------------------------------------
 
     # 更换nginx中的灰度ip
     url(r'^switch_nginx_huidu_ip/(?P<oper_type>\w+)', switch_nginx_huidu_ip.switch_nginx_huidu_ip_oper),
