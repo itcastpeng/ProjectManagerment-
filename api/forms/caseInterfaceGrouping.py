@@ -37,6 +37,7 @@ class AddForm(forms.Form):
             self.add_error('talk_project_id', '无此项目')
         else:
             return talk_project_id
+
 # 更新
 class UpdateForm(forms.Form):
     o_id = forms.IntegerField(
@@ -99,6 +100,31 @@ class UpdateForm(forms.Form):
         permissionsList = self.data.get('permissionsList')
         return json.loads(permissionsList)
 
+# 删除
+class DeleteForm(forms.Form):
+
+    o_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "删除ID不能为空"
+        }
+    )
+
+    def clean_o_id(self):
+        o_id = self.data.get('o_id')
+        objs = models.caseInterfaceGrouping.objects.filter(id=o_id)
+        if objs:
+            if objs.filter(parensGroupName_id=o_id).count() > 0:
+                self.add_error('o_id', '含有子级数据,请先删除或转移子级数据')
+            else:
+                detailObj = models.caseInterfaceDetaile.objects.filter(ownershipGroup_id=o_id)
+                if detailObj:
+                    self.add_error('o_id', '含有子级数据,请先删除或转移子级数据')
+                else:
+                    return o_id
+        else:
+            self.add_error('o_id', '权限不足')
+
 # 判断是否是数字
 class SelectForm(forms.Form):
     current_page = forms.IntegerField(
@@ -128,3 +154,4 @@ class SelectForm(forms.Form):
         else:
             length = int(self.data['length'])
         return length
+

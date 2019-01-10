@@ -69,16 +69,21 @@ def caseinter_project(request):
                     # 'principal_list': ','.join(principal_list),
                     # 'principal_id_list': principal_id_list,
                     'developer_list': ','.join(developer_list),
+                    'language_type_id': obj.language_type,              # 语言类型 区分请求结果
+                    'language_type': obj.get_language_type_display(),   # 语言类型 区分请求结果
+
                     'developer_id_list': developer_id_list,
                     'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     'oper_user__username': oper_user_username,
                 })
+
             #  查询成功 返回200 状态码
             response.code = 200
             response.msg = '查询成功'
             response.data = {
                 'ret_data': ret_data,
                 'data_count': count,
+                'language_type':models.caseInterProject.language_type_choices
             }
         else:
             response.code = 402
@@ -96,25 +101,26 @@ def caseinter_project_oper(request, oper_type, o_id):
     user_id = request.GET.get('user_id')
     if request.method == "POST":
 
+        # 添加测试用例项目
         if oper_type == "add":
             form_data = {
                 'oper_user_id': request.GET.get('user_id'),
                 'name': request.POST.get('name'),                       # 项目名称
-                # 'principalList': request.POST.get('principalList'),     # 负责人
                 'developerList': request.POST.get('developerList'),     # 开发人员
+                'language_type': request.POST.get('language_type'),     # 语言类型  区分请求结果
             }
             #  创建 form验证 实例（参数默认转成字典）
             forms_obj = AddForm(form_data)
             if forms_obj.is_valid():
-                print("验证通过")
-                # print(forms_obj.cleaned_data)
-                #  添加数据库
                 print('forms_obj.cleaned_data-->',forms_obj.cleaned_data)
+
+                #  添加数据库
                 obj = caseInterProject_obj = models.caseInterProject.objects.create(
                     name=forms_obj.cleaned_data['name'],
-                    oper_user_id=forms_obj.cleaned_data['oper_user_id']
+                    oper_user_id=forms_obj.cleaned_data['oper_user_id'],
+                    language_type=forms_obj.cleaned_data['language_type'],
                 )
-                # caseInterProject_obj.principal = json.loads(forms_obj.cleaned_data['principalList'])
+
                 caseInterProject_obj.developer = json.loads(forms_obj.cleaned_data['developerList'])
                 response.code = 200
                 response.msg = "添加成功"
@@ -124,33 +130,11 @@ def caseinter_project_oper(request, oper_type, o_id):
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        elif oper_type == "delete":
-            # 删除 ID
-            host_obj = models.configurationManagementHOST.objects.filter(id=o_id)
-            if not host_obj:
-                group_obj = models.caseInterfaceGrouping.objects.filter(id=o_id)
-                if not group_obj:
-                    objs = models.caseInterProject.objects.filter(id=o_id)
-                    if objs:
-                        objs.delete()
-                        response.code = 200
-                        response.msg = "删除成功"
-                    else:
-                        response.code = 302
-                        response.msg = '删除ID不存在'
-                else:
-                    response.code = 301
-                    response.msg = '含有子级, 请先移除'
-            else:
-                response.code = 301
-                response.msg = '含有子级, 请先移除'
-
+        # 修改测试用例项目
         elif oper_type == "update":
-            # 获取需要修改的信息
             form_data = {
                 'o_id': o_id,
                 'name': request.POST.get('name'),
-                # 'principalList': request.POST.get('principalList'),
                 'developerList': request.POST.get('developerList'),
             }
 
@@ -177,6 +161,21 @@ def caseinter_project_oper(request, oper_type, o_id):
                     response.code = 303
                     response.msg = json.loads(forms_obj.errors.as_json())
 
+            else:
+                print("验证不通过")
+                response.code = 301
+                response.msg = json.loads(forms_obj.errors.as_json())
+
+        # 删除测试用例项目
+        elif oper_type == "delete":
+            form_data = {
+                'o_id':o_id
+            }
+            forms_obj = UpdateForm(form_data)
+            if forms_obj.is_valid():
+                models.caseInterProject.objects.filter(id=o_id).delete()
+                response.code = 200
+                response.msg = "删除成功"
             else:
                 print("验证不通过")
                 response.code = 301

@@ -20,17 +20,17 @@ class AddForm(forms.Form):
             'required': "项目名称不能为空"
         }
     )
-    # principalList = forms.CharField(
-    #     required=True,
-    #     error_messages={
-    #         'required': "项目负责人不能为空"
-    #     }
-    # )
+    language_type = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "语言类型不能为空"
+        }
+    )
 
     developerList = forms.CharField(
         required=True,
         error_messages={
-            'required': "项目负责人不能为空"
+            'required': "项目开发人不能为空"
         }
     )
 
@@ -60,20 +60,12 @@ class UpdateForm(forms.Form):
             'required': "项目名称不能为空"
         }
     )
-    principalList = forms.CharField(
+    developerList = forms.CharField(
         required=True,
         error_messages={
-            'required': "项目负责人不能为空"
+            'required': "项目开发人不能为空"
         }
     )
-
-    # developerList = forms.CharField(
-    #     required=True,
-    #     error_messages={
-    #         'required': "项目负责人不能为空"
-    #     }
-    # )
-
 
     # 判断名称是否存在
     def clean_name(self):
@@ -89,6 +81,30 @@ class UpdateForm(forms.Form):
         else:
             return name
 
+# 删除
+class DeleteForm(forms.Form):
+    o_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': '角色id不能为空'
+        }
+    )
+
+    def clean_o_id(self):
+        o_id = self.data.get('o_id')
+        host_obj = models.configurationManagementHOST.objects.filter(id=o_id)
+        if not host_obj:
+            group_obj = models.caseInterfaceGrouping.objects.filter(id=o_id)
+            if not group_obj:
+                objs = models.caseInterProject.objects.filter(id=o_id)
+                if objs:
+                    return o_id
+                else:
+                    self.add_error('o_id', '删除ID不存在')
+            else:
+                self.add_error('o_id', '含有子级, 请先移除')
+        else:
+            self.add_error('o_id', '含有子级, 请先移除')
 
 # 判断是否是数字
 class SelectForm(forms.Form):

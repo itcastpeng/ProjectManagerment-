@@ -129,10 +129,15 @@ class progress(models.Model):
 # 测试用例项目表
 class caseInterProject(models.Model):
     name = models.CharField(verbose_name="项目名称", max_length=128)
-    # principal = models.ManyToManyField('userprofile', verbose_name='负责人', related_name='userprofile_principal')
     developer = models.ManyToManyField('userprofile', verbose_name='开发人员', related_name='userprofile_developer')
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建用户")
+    language_type_choices = (
+        (1, 'python'),
+        (2, 'php')
+    )
+    language_type = models.SmallIntegerField(verbose_name='语言类型', choices=language_type_choices, default=1)  # 区分请求结果
+
 
 # 测试用例接口分组
 class caseInterfaceGrouping(models.Model):
@@ -149,37 +154,52 @@ class caseInterfaceDetaile(models.Model):
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
     ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping',verbose_name='分组', null=True, blank=True)
     caseName = models.CharField(verbose_name='接口名称', max_length=64)         # 接口名字 (别名)
+    hostManage = models.ForeignKey(to='configurationManagementHOST', verbose_name='host配置管理', null=True, blank=True)
 
-    hostManage = models.ForeignKey(to='configurationManagementHOST',verbose_name='host配置管理', null=True, blank=True)
     url = models.TextField(verbose_name='url', null=True, blank=True)
-    status_choices = (
-        (1,'GET'),
-        (2,'POST')
-    )
-    requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, default=1)
     getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
     postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
 
+    status_choices = (
+        (1,'GET'),
+        (2,'POST'),
+    )
+    requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, null=True, blank=True)
+    xieyi_type_choices = (
+        (1, 'http'),
+        (2, 'https'),
+    )
+    xieyi_type = models.SmallIntegerField(verbose_name='协议', choices=xieyi_type_choices, null=True, blank=True)
     type_status_choices = (
         (1, '增加'),
         (2, '修改'),
-        (3, '删除'),
-        (4, '查询')
+        (3, '查询'),
+        (4, '删除'),
     )
-    type_status= models.IntegerField(verbose_name='请求类型', default=4, choices=type_status_choices)
+    type_status= models.IntegerField(verbose_name='接口类型', default=4, choices=type_status_choices)
+    testCase = models.IntegerField(verbose_name='添加ID', null=True, blank=True)
 
-# # HOST 管理配置
+# # HOST管理配置
 class configurationManagementHOST(models.Model):
-    hostName = models.CharField(verbose_name='host名字', max_length=128)
-    hostUrl = models.CharField(verbose_name='hostUrl', max_length=128)
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    hostUrl = models.CharField(verbose_name='hostUrl', max_length=128)
     status_choices = (
         (1, '测试环境'),
         (2, '正式环境')
     )
     describe = models.SmallIntegerField(verbose_name='描述', choices=status_choices, default=1)
     talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
+
+# 请求结果保存
+class requestResultSave(models.Model):
+    case_inter =  models.ForeignKey(to='caseInterfaceDetaile', verbose_name='测试用例', null=True, blank=True)
+    url = models.CharField(verbose_name='请求url', max_length=256, null=True, blank=True)
+    getRequrst = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
+    postRequrst = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    result_data = models.TextField(verbose_name='返回结果', null=True, blank=True)
 
 # ------------------------------------------------------------------------------------------------------------------
 

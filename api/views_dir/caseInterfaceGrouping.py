@@ -4,7 +4,7 @@ from publicFunc import account
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
-from api.forms.caseInterfaceGrouping import AddForm, UpdateForm, SelectForm
+from api.forms.caseInterfaceGrouping import AddForm, UpdateForm, SelectForm, DeleteForm
 import json
 from django.db.models import Q
 
@@ -67,7 +67,7 @@ def testCaseGroup(request):
             response.msg = '查询成功'
             response.data = {
                 'ret_data': ret_data,
-                'data_count': count,
+                'count': count,
             }
         else:
             response.code = 402
@@ -107,7 +107,7 @@ def testCaseGroupOper(request, oper_type, o_id):
     operUser_id = form_data.get('operUser_id')
     userObjs = models.caseInterfaceGrouping.objects
     projectObjs = models.caseInterProject.objects.filter(developer=operUser_id)
-    print('form_data========>', projectObjs)
+    # print('form_data========>', projectObjs)
     if request.method == "POST":
 
         if oper_type == "add":
@@ -126,6 +126,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                             response.code = 402
                             response.msg = '无此父级分组'
                             return JsonResponse(response.__dict__)
+
                     objs = models.caseInterfaceGrouping.objects
                     obj = objsId = objs.create(
                         groupName=formResult.get('groupName'),
@@ -182,22 +183,16 @@ def testCaseGroupOper(request, oper_type, o_id):
                 response.msg = json.loads(forms_obj.errors.as_json())
 
         elif oper_type == "delete":
-            # 删除 ID
-            objs = models.caseInterfaceGrouping.objects
-
-            oidObjs = objs.filter(id=o_id)
-            if oidObjs:
-                if objs.filter(parensGroupName_id=o_id).count() > 0:
-                    response.code = 304
-                    response.msg = '含有子级数据,请先删除或转移子级数据'
-                else:
-                    oidObjs.delete()
-                    response.code = 200
-                    response.msg = "删除成功"
+            forms_obj = DeleteForm(form_data)
+            if forms_obj.is_valid():
+                # 删除 ID
+                models.caseInterfaceGrouping.objects.filter(id=o_id).delete()
+                response.code = 200
+                response.msg = "删除成功"
             else:
-                response.code = 302
-                response.msg = '删除ID不存在'
-
+                print("验证不通过")
+                response.code = 301
+                response.msg = json.loads(forms_obj.errors.as_json())
     else:
 
         # 查询 当前登录人 全部项目
