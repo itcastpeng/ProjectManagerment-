@@ -136,6 +136,7 @@ def role_oper(request, oper_type, o_id):
             else:
                 response.code = 302
                 response.msg = '删除ID不存在'
+
         elif oper_type == "update":
             # 获取需要修改的信息
             form_data = {
@@ -180,11 +181,13 @@ def role_oper(request, oper_type, o_id):
     else:
         # 获取角色对应的权限
         if oper_type == "get_rules":
-            objs = models.role.objects.filter(id=o_id)
+            user_id = request.GET.get('user_id')
+            user_obj = models.userprofile.objects.filter(id=user_id)
+            objs = models.role.objects.filter(id=user_obj[0].role_id)
             if objs:
                 obj = objs[0]
+                print('obj.id--> ', obj.id)
                 rules_list = [i['name'] for i in obj.permissions.values('name')]
-                print('dataList -->', rules_list)
                 response.data = {
                     'rules_list': rules_list
                 }
