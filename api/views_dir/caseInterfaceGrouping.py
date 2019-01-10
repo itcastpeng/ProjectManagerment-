@@ -139,7 +139,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                     response.msg = "添加成功"
                     response.data = {'testCase': obj.id}
             else:
-                print("验证不通过")
+                print("GROUP 添加 验证不通过")
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
@@ -178,7 +178,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                     response.msg = json.loads(forms_obj.errors.as_json())
 
             else:
-                print("验证不通过")
+                print("GROUP 修改 验证不通过")
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
@@ -190,7 +190,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                 response.code = 200
                 response.msg = "删除成功"
             else:
-                print("验证不通过")
+                print("GROUP 删除 验证不通过")
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
     else:

@@ -34,9 +34,9 @@ def is_token(table_obj):
             rand_str = request.GET.get('rand_str')
             timestamp = request.GET.get('timestamp', '')
             user_id = request.GET.get('user_id')
-            print('user_id -->', user_id)
-            print('timestamp -->', timestamp)
-            print('rand_str -->', rand_str)
+            # print('user_id -->', user_id)
+            # print('timestamp -->', timestamp)
+            # print('rand_str -->', rand_str)
             objs = table_obj.objects.filter(id=user_id)
             if objs:
                 obj = objs[0]

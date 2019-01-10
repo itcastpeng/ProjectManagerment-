@@ -70,8 +70,7 @@ def sendRequest(formResult, test=None):
     requestUrl = xieyi_type + '://' + hostUrl + url  # url
 
     # 修改 删除 查询
-    testCase = ''
-    if type_status and int(type_status) in [2, 3, 4]:
+    if type_status and int(type_status) in [2, 4]:
         print('-----------------> 修改 删除 查询')
         detail_objs = models.caseInterfaceDetaile.objects
         objs = detail_objs.filter(id=o_id)
@@ -80,18 +79,17 @@ def sendRequest(formResult, test=None):
             if group_obj:
                 testCase = group_obj[0].testCase
                 if testCase:
-                    if int(type_status) in [2, 4]:
-                        url = requestUrl.split('?')[0][:-1]
-                        canshu = requestUrl.split('?')[1]
-                        requestUrl = url + str(testCase) + '?' + canshu
+                    print('testCase---> ', testCase)
+                    url = requestUrl.split('?')[0][:-1]
+                    canshu = requestUrl.split('?')[1]
+                    requestUrl = url + str(testCase) + '?' + canshu
+                    print('requestUrl-----------> ', requestUrl)
                 else:
                     response.code = 301
                     response.msg = '未找到testCase'
             else:
                 response.code = 301
                 response.msg = '未找到添加接口, 无操作ID'
-
-
 
     # 判断 GET / POST 请求
     if requestType == 1:
@@ -103,7 +101,6 @@ def sendRequest(formResult, test=None):
         data = {}
         for i in postRequestParameters:
             data[i['key']] = i['value']
-        print('data------------> ',requestUrl,  data)
         ret = requests.post(requestUrl, data=data)
     flag = False  # 判断接口是否出错
     try:
@@ -140,13 +137,13 @@ def sendRequest(formResult, test=None):
         else:
             data['case_inter_id'] = o_id
             objs.create(**data)
-
     response.code = 200
     response.msg = '请求成功'
     response.data = {
         'ret_json':ret_json,
         'flag':flag
     }
+    print('response.data---------> ', response.data)
     return response
 
 
@@ -389,30 +386,30 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     response_data_code = response_data.data.get('ret_json').get('code')
                     if response_data_code and int(response_data_code) == 200:
                         response.msg = '测试/保存 成功'
-
-                        # 保存数据 -------------------------------------------------------
-                        formResult = forms_obj.cleaned_data
-                        hostManage_id, hostUrl = formResult.get('hostManage_id')
-                        detaileObjs.filter(id=o_id).update(
-                            caseName=formResult.get('caseName'),  # 接口名称 (别名)
-                            ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
-                            userProfile_id=form_data.get('oper_user_id'),  # 操作人
-
-                            hostManage_id=hostManage_id,  # host配置
-                            requestType=formResult.get('requestType'),  # 请求类型（GET，POST）
-                            type_status=formResult.get('type_status'),  # 接口类型（增删改查）
-                            xieyi_type=formResult.get('xieyi_type'),  # 协议类型（http:https）
-
-                            getRequestParameters=formResult.get('getRequest'),  # GET参数
-                            postRequestParameters=formResult.get('postRequest'),  # POST参数
-                            url=formResult.get('requestUrl'),  # URL
-                        )
-                    # ----------------------------------------------------------------------
-
                     else:
                         response.code = 200
-                        response.msg = '测试失败'
+                        response.msg = '测试失败 / 保存成功'
                     response.data = response_data.data.get('ret_json')
+
+
+                    # 保存数据 -------------------------------------------------------
+                    formResult = forms_obj.cleaned_data
+                    hostManage_id, hostUrl = formResult.get('hostManage_id')
+                    detaileObjs.filter(id=o_id).update(
+                        caseName=formResult.get('caseName'),  # 接口名称 (别名)
+                        ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
+                        userProfile_id=form_data.get('oper_user_id'),  # 操作人
+
+                        hostManage_id=hostManage_id,  # host配置
+                        requestType=formResult.get('requestType'),  # 请求类型（GET，POST）
+                        type_status=formResult.get('type_status'),  # 接口类型（增删改查）
+                        xieyi_type=formResult.get('xieyi_type'),  # 协议类型（http:https）
+
+                        getRequestParameters=formResult.get('getRequest'),  # GET参数
+                        postRequestParameters=formResult.get('postRequest'),  # POST参数
+                        url=formResult.get('requestUrl'),  # URL
+                    )
+                    # ----------------------------------------------------------------------
             else:
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
@@ -541,6 +538,7 @@ def startTestCase(request):
                     postRequest = obj.postRequestParameters
 
                     data = {
+                        'o_id':obj.id,
                         'xieyi_type':xieyi_type,
                         'hostManage_id':(hostManage_id, hostUrl),
                         'requestType':requestType,
@@ -551,15 +549,19 @@ def startTestCase(request):
                     }
 
                     response_data = sendRequest(data, test=1)
-                    code = response_data.data.get('code')
-
-                    if code and int(code) != 200:
-                        flag = True
-                        break
+                    if response_data.data.get('flag'):
+                        response.msg = '接口出错了'
+                        response.data = str(response_data.data.get('ret_json'))
+                        return JsonResponse(response.__dict__)
+                    else:
+                        code = response_data.data.get('ret_json').get('code')
+                        if code and int(code) != 200:
+                            flag = True
+                            break
 
         response.code = 200
         response.msg = '测试通过'
-        response.data = {}
+        response.data ={}
         if flag:
             response.code = 301
             response.msg = '测试失败'
