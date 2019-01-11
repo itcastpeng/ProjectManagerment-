@@ -10,10 +10,13 @@ from django.db.models import Q
 import datetime, requests, random, json, re
 
 
-# 分组  树状图
-def testCaseGroupTree(talk_project_id, operUser_id, pid=None):
+# 分组树状图（包含测试用例详情）
+def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
     result_data = []
-    objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talk_project_id=talk_project_id).filter(parensGroupName_id=pid)
+    if search_msg: # 搜索分组名称
+        objs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=pid, groupName__contains=search_msg)
+    else:
+        objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id, talk_project_id=talk_project_id, parensGroupName_id=pid)
     for obj in objs:
         current_data = {
             'title':obj.groupName,
@@ -22,9 +25,7 @@ def testCaseGroupTree(talk_project_id, operUser_id, pid=None):
             'checked': False,
             'file':True
         }
-
         children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
-
         detail_obj = models.caseInterfaceDetaile.objects.filter(ownershipGroup_id=obj.id)
         if detail_obj:
             for i in detail_obj:
@@ -33,14 +34,11 @@ def testCaseGroupTree(talk_project_id, operUser_id, pid=None):
                     'id': i.id,
                     'file': False
                 })
-
         current_data['children'] = children_data
-
-
         result_data.append(current_data)
     return result_data
 
-# 分组  树状图
+# 分组树状图（不包含测试用例详情）
 def GroupTree(talk_project_id, operUser_id, pid=None):
     result_data = []
     objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talk_project_id=talk_project_id).filter(parensGroupName_id=pid)
@@ -57,7 +55,7 @@ def GroupTree(talk_project_id, operUser_id, pid=None):
         result_data.append(current_data)
     return result_data
 
-# 查询当前分组 下所有详情数据
+# 查询当前分组下所有详情数据
 def selectCaseDetailGroup(ownershipGroup_id, resultData):
     groupObjs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=ownershipGroup_id)
     if groupObjs:
@@ -455,13 +453,17 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 左侧展示树状图（包含测试用例详情）
         elif oper_type == 'blockTree':
+            search_msg = request.GET.get('search_msg')      # 搜索分组名称
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
-            result = testCaseGroupTree(beforeTaskId, user_id)
+            if search_msg:# 搜索分组名称
+                result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
+            else:
+                result = testCaseGroupTree(beforeTaskId, user_id)
             response.code = 200
             response.msg = '查询成功'
             response.data = {'result': result}
 
-        # 左侧展示树状图（包含测试用例详情）
+        # 展示树状图（不包含测试用例详情）
         elif oper_type == 'treeGroup':
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
             result = GroupTree(beforeTaskId, user_id)

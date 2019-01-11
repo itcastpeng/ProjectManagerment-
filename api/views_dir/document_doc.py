@@ -23,10 +23,12 @@ def document(request):
                 'id': '',
                 'talk_project_id': '',
                 'jiekou_name': '__contains',
+                'interDetaile_id': '',
             }
+
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.requestDocumentDoc.objects.filter(q).order_by(order).order_by('create_date')
+            objs = models.requestDocumentDoc.objects.select_related('interDetaile').filter(q).order_by(order).order_by('create_date')
             count = objs.count()
 
             if length != 0:
