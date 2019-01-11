@@ -84,9 +84,9 @@ def sendRequest(formResult, test=None):
     # 拼接URL
     requestUrl = xieyi_type + '://' + hostUrl + url  # url
 
-    # 修改 删除 查询
+    # 修改 删除
     if type_status and int(type_status) in [2, 4]:
-        print('-----------------> 修改 删除 查询')
+        print('-----------------> 修改 删除')
         detail_objs = models.caseInterfaceDetaile.objects
         objs = detail_objs.filter(id=o_id)
         if objs:
@@ -94,9 +94,9 @@ def sendRequest(formResult, test=None):
             if group_obj:
                 testCase = group_obj[0].testCase
                 if testCase:
-                    url = requestUrl.split('?')[0][:-1]
-                    canshu = requestUrl.split('?')[1]
-                    requestUrl = url + str(testCase) + '?' + canshu
+                    num = re.sub(r'\?.*$', "", requestUrl)
+                    canshu = num[num.rfind('/'):]
+                    requestUrl = requestUrl.replace(canshu.strip(), '/' + str(testCase))
                 else:
                     response.code = 301
                     response.msg = '未找到testCase'
