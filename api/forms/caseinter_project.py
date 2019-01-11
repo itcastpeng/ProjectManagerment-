@@ -80,18 +80,18 @@ class UpdateForm(forms.Form):
     )
 
     # 判断名称是否存在
-    def clean_name(self):
-        o_id = self.data['o_id']
-        name = self.data['name']
-        objs = models.caseInterProject.objects.filter(
-            name=name,
-        ).exclude(
-            id=o_id,
-        )
-        if objs:
-            self.add_error('name', '项目名称已存在')
-        else:
-            return name
+    # def clean_name(self):
+    #     o_id = self.data['o_id']
+    #     name = self.data['name']
+    #     objs = models.caseInterProject.objects.filter(
+    #         name=name,
+    #     ).exclude(
+    #         id=o_id,
+    #     )
+    #     if objs:
+    #         self.add_error('name', '项目名称已存在')
+    #     else:
+    #         return name
 
 # 删除
 class DeleteForm(forms.Form):

@@ -1,21 +1,50 @@
 
+
+
+
+
+
+
+
+
+
 import re
+#
+# requestUrl = 'http://xmgl.zhugeyingxiao.com/api/testCaseGroup/update/6?user_id'
+#
+#
+#
+# get_canshu = requestUrl.split('?')[1]
+#
+# num = re.sub(r'\?.*$', "", requestUrl)
+# canshu = num[num.rfind('/'):]
+#
+# print('canshu--> ', canshu)
+#
+testCase = 56
+#
+# requestUrl = requestUrl.replace(canshu.strip(), testCase)
+#
+# print('requestUrl--> ', requestUrl)
 
-p = 'http://xmgl.zhugeyingxiao.com/api/testCaseGroup/update/6?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644'
+
+
+requestUrl = 'http://127.0.0.1:8001/api/testCaseDetaile/update/55555?beforeTaskId=2&rand_str=f2dd5cd6544a39a82d437bfa1bf8216a&timestamp=1547013904167&user_id=7'
 
 
 
-
-
-print()
-
-zuo = p.split('?')[0]
-you = p.split('?')[1]
-
-
-requestUrl = zuo.replace(zuo.split('/')[-1], '+++')
+num = re.sub(r'\?.*$', "", requestUrl)
+canshu = num[num.rfind('/'):]
+requestUrl = requestUrl.replace(canshu.strip(), '/' + str(testCase))
 
 
 print(requestUrl)
+
+
+
+
+
+
+
 
 
