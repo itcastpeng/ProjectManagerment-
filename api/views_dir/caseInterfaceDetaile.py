@@ -460,6 +460,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
                 else:
                     result = testCaseGroupTree(beforeTaskId, user_id)
+
                 response.code = 200
                 response.msg = '查询成功'
                 response.data = {'result': result}
