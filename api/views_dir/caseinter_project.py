@@ -5,7 +5,7 @@ from publicFunc import account
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
-from api.forms.caseinter_project import AddForm, UpdateForm, SelectForm
+from api.forms.caseinter_project import AddForm, UpdateForm, SelectForm, DeleteForm
 import json
 
 
@@ -50,40 +50,46 @@ def caseinter_project(request):
                     oper_user_username = obj.oper_user.username
                 else:
                     oper_user_username = ''
-                # print('oper_user_username -->', oper_user_username)
 
-                # 项目负责人列表
-                # principal_objs = obj.principal.values('username', 'id')
-                # principal_list = [i['username'] for i in principal_objs]
-                # principal_id_list = [i['id'] for i in principal_objs]
+                # 前端开发负责人列表
+                front_developer_objs = obj.front_developer.values('username', 'id')
+                front_developer_list = [i['username'] for i in front_developer_objs]
+                front_developer_id_list = [i['id'] for i in front_developer_objs]
 
-                # 开发负责人列表
-                developer_objs = obj.developer.values('username', 'id')
-                developer_list = [i['username'] for i in developer_objs]
-                developer_id_list = [i['id'] for i in developer_objs]
+                # 后端开发负责人列表
+                back_developer_objs = obj.back_developer.values('username', 'id')
+                back_developer_list = [i['username'] for i in back_developer_objs]
+                back_developer_id_list = [i['id'] for i in back_developer_objs]
 
-                # print('principal_list -->', principal_list)
                 ret_data.append({
                     'id': obj.id,
                     'name': obj.name,
-                    # 'principal_list': ','.join(principal_list),
-                    # 'principal_id_list': principal_id_list,
-                    'developer_list': ','.join(developer_list),
-                    'language_type_id': obj.language_type,              # 语言类型 区分请求结果
-                    'language_type': obj.get_language_type_display(),   # 语言类型 区分请求结果
 
-                    'developer_id_list': developer_id_list,
-                    'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'language_type_id': obj.language_type,                          # 语言类型 区分请求结果
+                    'language_type': obj.get_language_type_display(),               # 语言类型 区分请求结果
+
+                    'front_developer_id_list': front_developer_id_list,             # 前端
+                    'front_developer_list': ','.join(front_developer_list),         # 前端
+
+                    'back_developer_id_list': back_developer_id_list,               # 后端
+                    'back_developer_list': ','.join(back_developer_list),           # 后端
+
                     'oper_user__username': oper_user_username,
+                    'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                 })
-
+            language_type = []
+            for i in models.caseInterProject.language_type_choices:
+                language_type.append({
+                    'id':i[0],
+                    'name':i[1]
+                })
             #  查询成功 返回200 状态码
             response.code = 200
             response.msg = '查询成功'
             response.data = {
                 'ret_data': ret_data,
                 'data_count': count,
-                'language_type':models.caseInterProject.language_type_choices
+                'language_type':language_type
             }
         else:
             response.code = 402
@@ -106,8 +112,9 @@ def caseinter_project_oper(request, oper_type, o_id):
             form_data = {
                 'oper_user_id': request.GET.get('user_id'),
                 'name': request.POST.get('name'),                       # 项目名称
-                'developerList': request.POST.get('developerList'),     # 开发人员
                 'language_type': request.POST.get('language_type'),     # 语言类型  区分请求结果
+                'front_developer': request.POST.get('front_developer'), # 前端开发人员
+                'back_developer': request.POST.get('back_developer'),   # 后端开发人员
             }
             #  创建 form验证 实例（参数默认转成字典）
             forms_obj = AddForm(form_data)
@@ -121,7 +128,8 @@ def caseinter_project_oper(request, oper_type, o_id):
                     language_type=forms_obj.cleaned_data['language_type'],
                 )
 
-                caseInterProject_obj.developer = json.loads(forms_obj.cleaned_data['developerList'])
+                caseInterProject_obj.front_developer = json.loads(forms_obj.cleaned_data['front_developer'])
+                caseInterProject_obj.back_developer = json.loads(forms_obj.cleaned_data['back_developer'])
                 response.code = 200
                 response.msg = "添加成功"
                 response.data = {'testCase': obj.id}
@@ -135,7 +143,8 @@ def caseinter_project_oper(request, oper_type, o_id):
             form_data = {
                 'o_id': o_id,
                 'name': request.POST.get('name'),
-                'developerList': request.POST.get('developerList'),
+                'front_developer': request.POST.get('front_developer'),  # 前端
+                'back_developer': request.POST.get('back_developer'),    # 后端
             }
 
             forms_obj = UpdateForm(form_data)
@@ -152,9 +161,9 @@ def caseinter_project_oper(request, oper_type, o_id):
                 #  更新 数据
                 if objs:
                     objs.update(name=name)
-                    # objs[0].principal = json.loads(forms_obj.cleaned_data['principalList'])
-                    objs[0].developer = json.loads(forms_obj.cleaned_data['developerList'])
-
+                    objs[0].front_developer = json.loads(forms_obj.cleaned_data['front_developer'])
+                    objs[0].back_developer = json.loads(forms_obj.cleaned_data['back_developer'])
+                    objs[0].save()
                     response.code = 200
                     response.msg = "修改成功"
                 else:
@@ -171,7 +180,7 @@ def caseinter_project_oper(request, oper_type, o_id):
             form_data = {
                 'o_id':o_id
             }
-            forms_obj = UpdateForm(form_data)
+            forms_obj = DeleteForm(form_data)
             if forms_obj.is_valid():
                 models.caseInterProject.objects.filter(id=o_id).delete()
                 response.code = 200
@@ -184,7 +193,7 @@ def caseinter_project_oper(request, oper_type, o_id):
     else:
 
         if oper_type =='getTaskName':
-            objs = models.caseInterProject.objects.filter(developer=user_id)
+            objs = models.caseInterProject.objects.filter(back_developer=user_id)
             otherData = []
             for obj in objs:
                 otherData.append({

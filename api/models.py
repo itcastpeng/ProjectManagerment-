@@ -129,7 +129,8 @@ class progress(models.Model):
 # 测试用例项目表
 class caseInterProject(models.Model):
     name = models.CharField(verbose_name="项目名称", max_length=128)
-    developer = models.ManyToManyField('userprofile', verbose_name='开发人员', related_name='userprofile_developer')
+    front_developer = models.ManyToManyField('userprofile', verbose_name='前端开发人员', related_name='userprofile_front_developer')
+    back_developer = models.ManyToManyField('userprofile', verbose_name='后端开发人员', related_name='userprofile_back_developer')
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建用户")
     language_type_choices = (
@@ -141,7 +142,7 @@ class caseInterProject(models.Model):
 
 # 测试用例接口分组
 class caseInterfaceGrouping(models.Model):
-    talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
+    talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属项目", null=True, blank=True)
     operUser = models.ForeignKey(to='userprofile', verbose_name="创建用户", null=True, blank=True)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     parensGroupName = models.ForeignKey(to='self', verbose_name='父级分组', null=True, blank=True)
@@ -192,28 +193,29 @@ class configurationManagementHOST(models.Model):
     describe = models.SmallIntegerField(verbose_name='描述', choices=status_choices, default=1)
     talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
 
-# 请求结果保存
+# 请求结果保存 (历史请求)
 class requestResultSave(models.Model):
     case_inter =  models.ForeignKey(to='caseInterfaceDetaile', verbose_name='测试用例', null=True, blank=True)
     url = models.CharField(verbose_name='请求url', max_length=256, null=True, blank=True)
-    getRequrst = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
-    postRequrst = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     result_data = models.TextField(verbose_name='返回结果', null=True, blank=True)
 
+# 测试用例请求文档
+class requestDocumentDoc(models.Model):
+    create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
+    postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
+    url = models.TextField(verbose_name='url', null=True, blank=True)
+    jiekou_name = models.CharField(verbose_name='接口名称', max_length=64, null=True, blank=True)
+    talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
+    interDetaile = models.ForeignKey(to='caseInterfaceDetaile', verbose_name="所属测试用例", null=True, blank=True)
+    status_choices = (
+        (1, 'GET'),
+        (2, 'POST'),
+    )
+    requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, null=True, blank=True)
+    result_data = models.TextField(verbose_name='结果', null=True, blank=True)
 # ------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

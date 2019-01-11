@@ -10,8 +10,36 @@ from django.db.models import Q
 import datetime, requests, random, json, re
 
 
-# 分组  树状图
-def testCaseGroupTree(talk_project_id, operUser_id, pid=None):
+# 分组树状图（包含测试用例详情）
+def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
+    result_data = []
+    if search_msg: # 搜索分组名称
+        objs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=pid, groupName__contains=search_msg)
+    else:
+        objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id, talk_project_id=talk_project_id, parensGroupName_id=pid)
+    for obj in objs:
+        current_data = {
+            'title':obj.groupName,
+            'expand': True,
+            'id': obj.id,
+            'checked': False,
+            'file':True
+        }
+        children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
+        detail_obj = models.caseInterfaceDetaile.objects.filter(ownershipGroup_id=obj.id)
+        if detail_obj:
+            for i in detail_obj:
+                children_data.append({
+                    'title': i.caseName,
+                    'id': i.id,
+                    'file': False
+                })
+        current_data['children'] = children_data
+        result_data.append(current_data)
+    return result_data
+
+# 分组树状图（不包含测试用例详情）
+def GroupTree(talk_project_id, operUser_id, pid=None):
     result_data = []
     objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talk_project_id=talk_project_id).filter(parensGroupName_id=pid)
     for obj in objs:
@@ -22,25 +50,12 @@ def testCaseGroupTree(talk_project_id, operUser_id, pid=None):
             'checked': False,
             'file':True
         }
-
         children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
-
-        detail_obj = models.caseInterfaceDetaile.objects.filter(ownershipGroup_id=obj.id)
-        if detail_obj:
-            for i in detail_obj:
-                children_data.append({
-                    'title': i.caseName,
-                    'id': i.id,
-                    'file': False
-                })
-
         current_data['children'] = children_data
-
-
         result_data.append(current_data)
     return result_data
 
-# 查询当前分组 下所有详情数据
+# 查询当前分组下所有详情数据
 def selectCaseDetailGroup(ownershipGroup_id, resultData):
     groupObjs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=ownershipGroup_id)
     if groupObjs:
@@ -79,11 +94,9 @@ def sendRequest(formResult, test=None):
             if group_obj:
                 testCase = group_obj[0].testCase
                 if testCase:
-                    print('testCase---> ', testCase)
                     url = requestUrl.split('?')[0][:-1]
                     canshu = requestUrl.split('?')[1]
                     requestUrl = url + str(testCase) + '?' + canshu
-                    print('requestUrl-----------> ', requestUrl)
                 else:
                     response.code = 301
                     response.msg = '未找到testCase'
@@ -127,8 +140,6 @@ def sendRequest(formResult, test=None):
         objs = models.requestResultSave.objects.filter(case_inter_id=o_id)
         data = {
             'url':requestUrl,
-            'getRequrst': getRequestParameters,
-            'postRequrst': postRequestParameters,
             'result_data':ret_json
         }
         if objs:
@@ -141,9 +152,10 @@ def sendRequest(formResult, test=None):
     response.msg = '请求成功'
     response.data = {
         'ret_json':ret_json,
-        'flag':flag
+        'flag':flag,
+        'requestUrl':requestUrl
     }
-    print('response.data---------> ', response.data)
+    # print('response.data---------> ', response.data)
     return response
 
 
@@ -157,7 +169,6 @@ def testCaseDetaile(request):
         if forms_obj.is_valid():
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
-            # print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
             order = request.GET.get('order', '-create_date')
             beforeTaskId = request.GET.get('beforeTaskId')          # 最开始传来的项目ID
             ownershipGroup_id = request.GET.get('ownershipGroup_id')                  # 分组
@@ -186,7 +197,10 @@ def testCaseDetaile(request):
                 objs = objs[start_line: stop_line]
             # 返回的数据
             ret_data = []
-            for obj in objs:
+            history_date = {}
+            if objs:
+                obj = objs[0]
+
                 hostManage_id = ''
                 if obj.hostManage:
                     hostManage_id = obj.hostManage.id
@@ -221,6 +235,16 @@ def testCaseDetaile(request):
                 if obj.url:
                     requestUrl = obj.url
 
+                # =------------------------------------------历史请求------------------------
+                history_objs = models.requestResultSave.objects.filter(case_inter_id=obj.id)
+                if history_objs:
+                    history_obj = history_objs[0]
+                    history_date = {
+                        'url':history_obj.url,                          # 历史请求URL
+                        'result_data':history_obj.result_data,          # 历史请求 结果
+                        'create_date':history_obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    }
+
                 ret_data.append({
                    'id': obj.id,
 
@@ -247,7 +271,7 @@ def testCaseDetaile(request):
                     'type_status_id': type_status_id,                      # 接口类型   (增删改查)
                     'type_status': type_status,
 
-                    'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'), # 接口创建时间
                })
 
                 #  查询成功 返回200 状态码
@@ -256,13 +280,13 @@ def testCaseDetaile(request):
             response.data = {
                 'ret_data': ret_data,
                 'data_count': count,
+                'history_date':history_date
             }
         else:
             response.code = 402
             response.msg = "请求异常"
             response.data = json.loads(forms_obj.errors.as_json())
     return JsonResponse(response.__dict__)
-
 
 
 #  增删改
@@ -299,9 +323,6 @@ def testCaseDetaileOper(request, oper_type, o_id):
             if forms_obj.is_valid():
                 print("验证通过")
                 formResult = forms_obj.cleaned_data
-                url = formResult.get('url')
-                # print('url==============> ', url)
-
                 # 默认值  首次添加可为空
                 type_status = formResult.get('type_status')
                 if not formResult.get('type_status'):
@@ -327,42 +348,11 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        # 修改测试用例
-        # elif oper_type == "update":
-        #     forms_obj = UpdateForm(form_data)
-        #     if forms_obj.is_valid():
-        #         print("验证通过")
-        #         #  查询数据库用户id
-        #         formResult = forms_obj.cleaned_data
-        #
-        #         hostManage_id, hostUrl= formResult.get('hostManage_id')
-        #
-        #         detaileObjs.filter(id=o_id).update(
-        #             caseName=formResult.get('caseName'),                    # 接口名称 (别名)
-        #             ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
-        #             userProfile_id=form_data.get('oper_user_id'),           # 操作人
-        #
-        #             hostManage_id=hostManage_id,                            # host配置
-        #             requestType=formResult.get('requestType'),              # 请求类型（GET，POST）
-        #             type_status=formResult.get('type_status'),              # 接口类型（增删改查）
-        #             xieyi_type=formResult.get('xieyi_type'),                # 协议类型（http:https）
-        #
-        #             getRequestParameters=formResult.get('getRequest'),      # GET参数
-        #             postRequestParameters=formResult.get('postRequest'),    # POST参数
-        #             url=formResult.get('requestUrl'),                       # URL
-        #         )
-        #         response.code = 200
-        #         response.msg = "修改成功"
-        #
-        #     else:
-        #         print("验证不通过")
-        #         response.code = 301
-        #         response.msg = json.loads(forms_obj.errors.as_json())
-
         # 删除测试用例
         elif oper_type == "delete":
             forms_obj = DeleteForm(form_data)
             if forms_obj.is_valid():
+                models.requestDocumentDoc.objects.filter(interDetaile_id=o_id).delete()  # 删除文档
                 models.caseInterfaceDetaile.objects.filter(id=o_id).delete()
                 response.code = 200
                 response.msg = "删除成功"
@@ -371,7 +361,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        # 发送请求
+        # 发送请求 和 保存
         elif oper_type == 'sendTheRequest':
             print('---------------测试')
             forms_obj = UpdateForm(form_data)
@@ -416,7 +406,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             return JsonResponse(response.__dict__)
 
     else:
-        # 获取 项目名称
+        # 获取项目名称
         if oper_type == 'getTaskName':
             objs = models.project.objects.all()
             otherData = []
@@ -461,10 +451,22 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 'jiekouTypeData':jiekouTypeData,
             }
 
-        # 左侧展示树状图
+        # 左侧展示树状图（包含测试用例详情）
         elif oper_type == 'blockTree':
-            beforeTaskId = request.GET.get('beforeTaskId')  #
-            result = testCaseGroupTree(beforeTaskId, user_id)
+            search_msg = request.GET.get('search_msg')      # 搜索分组名称
+            beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
+            if search_msg:# 搜索分组名称
+                result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
+            else:
+                result = testCaseGroupTree(beforeTaskId, user_id)
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {'result': result}
+
+        # 展示树状图（不包含测试用例详情）
+        elif oper_type == 'treeGroup':
+            beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
+            result = GroupTree(beforeTaskId, user_id)
             response.code = 200
             response.msg = '查询成功'
             response.data = {'result': result}
@@ -503,73 +505,82 @@ def startTestCase(request):
     response = Response.ResponseObj()
     if request.method == 'POST':
         user_id = request.GET.get('user_id')
-        talk_project_id = request.POST.get('talk_project_id')
-        if not talk_project_id:
-            response.code = 301
-            response.msg = '无项目ID'
-            return JsonResponse(response.__dict__)
+        is_generate = request.POST.get('is_generate')           # 是否生成开发文档
+        talk_project_id = request.POST.get('talk_project_id')   # 项目ID
+        case_id_list = request.POST.get('case_id_list')         # 选择分组 传递分组ID列表
+        if talk_project_id and case_id_list:
+            case_id_list = json.loads(case_id_list)
+            flag = False
+            result_data = ''
+            for i in case_id_list:
+                objs = models.caseInterfaceDetaile.objects.filter(
+                    ownershipGroup_id=i
+                ).order_by('type_status')           # 按接口类型正序排列
+                for obj in objs:                    # 遍历接口
+                    id = obj.id                     # ID
+                    requestUrl = obj.url            # URL
+                    xieyi_type = obj.xieyi_type     # 协议 (HTTP)
+                    hostManage = obj.hostManage     # HOST
+                    requestType = obj.requestType   # 请求类型 (GET/POST)
+                    type_status = obj.type_status   # 接口类型 (增删改查)
+                    if id and requestUrl and xieyi_type and hostManage and type_status and requestType:
+                        hostManage_id = obj.hostManage_id
+                        hostUrl = obj.hostManage.hostUrl
+                        getRequest = obj.getRequestParameters
+                        postRequest = obj.postRequestParameters
 
-        flag = False
-        response_data = ''
-        # 查询所有该项目下分组
-        group_obj = models.caseInterfaceGrouping.objects.filter(talk_project_id=talk_project_id)
-        group_id_list = []
-        for i in group_obj:
-            group_id_list.append(i.id)
+                        data = {
+                            'o_id':obj.id,
+                            'xieyi_type':xieyi_type,
+                            'hostManage_id':(hostManage_id, hostUrl),
+                            'requestType':requestType,
+                            'getRequest':getRequest,
+                            'postRequest':postRequest,
+                            'requestUrl':requestUrl,
+                            'type_status':type_status,
+                        }
 
-        # 遍历 所有分组 请求所有接口
-        for i in group_id_list:
-            objs = models.caseInterfaceDetaile.objects.filter(
-                ownershipGroup_id=i
-            ).order_by('type_status')# 按接口类型正序排列
-
-            for obj in objs:  # 遍历接口
-                id = obj.id
-                requestUrl = obj.url        # URL
-                xieyi_type = obj.xieyi_type # 协议 (HTTP)
-                hostManage = obj.hostManage # HOST
-
-                requestType = obj.requestType  # 请求类型 (GET/POST)
-                type_status = obj.type_status  # 接口类型 (增删改查)
-                if id and requestUrl and xieyi_type and hostManage and type_status and requestType:
-                    hostManage_id = obj.hostManage_id
-                    hostUrl = obj.hostManage.hostUrl
-                    getRequest = obj.getRequestParameters
-                    postRequest = obj.postRequestParameters
-
-                    data = {
-                        'o_id':obj.id,
-                        'xieyi_type':xieyi_type,
-                        'hostManage_id':(hostManage_id, hostUrl),
-                        'requestType':requestType,
-                        'getRequest':getRequest,
-                        'postRequest':postRequest,
-                        'requestUrl':requestUrl,
-                        'type_status':type_status,
-                    }
-
-                    response_data = sendRequest(data, test=1)
-                    if response_data.data.get('flag'):
-                        response.msg = '接口出错了'
-                        response.data = str(response_data.data.get('ret_json'))
-                        return JsonResponse(response.__dict__)
-                    else:
-                        code = response_data.data.get('ret_json').get('code')
-                        if code and int(code) != 200:
+                        response_data = sendRequest(data, test=1)
+                        if response_data.data.get('flag'):
+                            result_data = str(response_data.data.get('ret_json'))
                             flag = True
-                            break
+                        else:
+                            code = response_data.data.get('ret_json').get('code')
+                            result_data = response_data.data.get('ret_json')
+                            if code and int(code) != 200:
+                                flag = True
+                                break
+                        if is_generate:
+                            # 生成开发文档
+                            data = {
+                                'getRequestParameters': getRequest,
+                                'postRequestParameters': postRequest,
+                                'url':response_data.data.get('requestUrl'),
+                                'jiekou_name':obj.caseName,
+                                'talk_project_id':talk_project_id,
+                                'requestType':requestType,
+                                'result_data':json.dumps(result_data),
+                            }
+                            doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=obj.id)
+                            if doc_obj:
+                                doc_obj.update(**data)
+                            else:
+                                data['interDetaile_id'] = obj.id
+                                doc_obj.create(**data)
 
-        response.code = 200
-        response.msg = '测试通过'
-        response.data ={}
-        if flag:
+            response.code = 200
+            response.msg = '测试通过'
+            response.data ={}
+            if flag:
+                response.code = 301
+                response.msg = '测试失败'
+                response.data = result_data
+
+        else:
             response.code = 301
-            response.msg = '测试失败'
-            response.data = response_data.data
+            response.msg = '参数错误'
     else:
         response.code = 402
         response.msg = '请求异常'
     return JsonResponse(response.__dict__)
-
-
 
