@@ -453,15 +453,16 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 左侧展示树状图（包含测试用例详情）
         elif oper_type == 'blockTree':
-            search_msg = request.GET.get('search_msg')      # 搜索分组名称
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
-            if search_msg:# 搜索分组名称
-                result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
-            else:
-                result = testCaseGroupTree(beforeTaskId, user_id)
-            response.code = 200
-            response.msg = '查询成功'
-            response.data = {'result': result}
+            if beforeTaskId:
+                search_msg = request.GET.get('search_msg')      # 搜索分组名称
+                if search_msg:# 搜索分组名称
+                    result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
+                else:
+                    result = testCaseGroupTree(beforeTaskId, user_id)
+                response.code = 200
+                response.msg = '查询成功'
+                response.data = {'result': result}
 
         # 展示树状图（不包含测试用例详情）
         elif oper_type == 'treeGroup':
