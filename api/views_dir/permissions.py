@@ -33,7 +33,7 @@ def init_data(pid=None, selected_list=None):
             current_data['children'] = children_data
         result_data.append(current_data)
 
-    print('result_data -->', result_data)
+    # print('result_data -->', result_data)
     return result_data
 
 

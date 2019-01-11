@@ -106,8 +106,9 @@ def testCaseGroupOper(request, oper_type, o_id):
     }
     operUser_id = form_data.get('operUser_id')
     userObjs = models.caseInterfaceGrouping.objects
-    projectObjs = models.caseInterProject.objects.filter(developer=operUser_id)
-    # print('form_data========>', projectObjs)
+
+    projectObjs = models.caseInterProject.objects.filter(back_developer=operUser_id)
+
     if request.method == "POST":
 
         if oper_type == "add":
@@ -193,6 +194,7 @@ def testCaseGroupOper(request, oper_type, o_id):
                 print("GROUP 删除 验证不通过")
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
+
     else:
 
         # 查询 当前登录人 全部项目

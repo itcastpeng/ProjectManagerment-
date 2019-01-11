@@ -3,7 +3,7 @@ from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
     permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile, \
-    configurationManagementHOST, switch_nginx_huidu_ip, caseinter_project
+    configurationManagementHOST, switch_nginx_huidu_ip, caseinter_project, document_doc
 
 
 urlpatterns = [
@@ -73,6 +73,8 @@ urlpatterns = [
     url(r'^configurationHost/(?P<oper_type>\w+)/(?P<o_id>\d+)$', configurationManagementHOST.configurationHostOper),
     url(r'^configurationHost$', configurationManagementHOST.configurationHost),
 
+    # 开发文档
+    url(r'^document', document_doc.document),
     # --------------------------------------------------------------------------------------------
 
     # 更换nginx中的灰度ip

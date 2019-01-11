@@ -27,10 +27,16 @@ class AddForm(forms.Form):
         }
     )
 
-    developerList = forms.CharField(
+    front_developer = forms.CharField(
         required=True,
         error_messages={
-            'required': "项目开发人不能为空"
+            'required': "前端开发人不能为空"
+        }
+    )
+    back_developer = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "前端开发人不能为空"
         }
     )
 
@@ -60,10 +66,16 @@ class UpdateForm(forms.Form):
             'required': "项目名称不能为空"
         }
     )
-    developerList = forms.CharField(
+    front_developer = forms.CharField(
         required=True,
         error_messages={
-            'required': "项目开发人不能为空"
+            'required': "前端开发人不能为空"
+        }
+    )
+    back_developer = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "前端开发人不能为空"
         }
     )
 
@@ -86,7 +98,7 @@ class DeleteForm(forms.Form):
     o_id = forms.IntegerField(
         required=True,
         error_messages={
-            'required': '角色id不能为空'
+            'required': '修改id不能为空'
         }
     )
 
@@ -121,19 +133,7 @@ class SelectForm(forms.Form):
             'required': "页显示数量类型错误"
         }
     )
-    company_id = forms.IntegerField(
-        required=True,
-        error_messages={
-            'required': "公司ID不能为空"
-        }
-    )
 
-    role_id = forms.IntegerField(
-        required=True,
-        error_messages={
-            'required': "角色ID不能为空"
-        }
-    )
 
     def clean_current_page(self):
         if 'current_page' not in self.data:
