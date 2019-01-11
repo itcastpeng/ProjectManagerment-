@@ -509,9 +509,11 @@ def startTestCase(request):
         is_generate = request.POST.get('is_generate')           # 是否生成开发文档
         talk_project_id = request.POST.get('talk_project_id')   # 项目ID
         case_id_list = request.POST.get('case_id_list')         # 选择分组 传递分组ID列表
+        num = 0   # 测试 总数
+        error_num = 0 # 测试失败总数
+        error_data = []
         if talk_project_id and case_id_list:
             case_id_list = json.loads(case_id_list)
-            flag = False
             result_data = ''
             for i in case_id_list:
                 objs = models.caseInterfaceDetaile.objects.filter(
@@ -549,8 +551,9 @@ def startTestCase(request):
                             code = response_data.data.get('ret_json').get('code')
                             result_data = response_data.data.get('ret_json')
                             if code and int(code) != 200:
-                                flag = True
-                                break
+                                error_num += 1
+                                error_data.append(result_data)
+
                         if is_generate:
                             # 生成开发文档
                             data = {
@@ -568,14 +571,17 @@ def startTestCase(request):
                             else:
                                 data['interDetaile_id'] = obj.id
                                 doc_obj.create(**data)
+                    num += 1
 
+            success_num = num - error_num  # 正确
             response.code = 200
-            response.msg = '测试通过'
-            response.data ={}
-            if flag:
-                response.code = 301
-                response.msg = '测试失败'
-                response.data = result_data
+            response.msg = '测试完成'
+            response.data = {
+                'error_num':error_num,
+                'num':num,
+                'success_num':success_num,
+                'error_data':error_data,
+            }
 
         else:
             response.code = 301
