@@ -215,6 +215,14 @@ class requestDocumentDoc(models.Model):
     )
     requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, null=True, blank=True)
     result_data = models.TextField(verbose_name='结果', null=True, blank=True)
+
+# 请求文档定时刷新
+class requestDoc(models.Model):
+    name = models.CharField(verbose_name='测试用例名称', max_length=64, null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    if_success = models.IntegerField(verbose_name='是否成功', null=True, blank=True)
+    result_data = models.TextField(verbose_name='结果', null=True, blank=True)
+    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
 # ------------------------------------------------------------------------------------------------------------------
 
 

@@ -193,8 +193,7 @@ def caseinter_project_oper(request, oper_type, o_id):
     else:
 
         if oper_type =='getTaskName':
-            user_obj = models.userprofile.objects.filter(id=user_id)
-            if user_obj and int(user_obj[0].role_id) == 8:
+            if user_id in [11, 12]:  # 前端
                 objs = models.caseInterProject.objects.filter(front_developer=user_id)
             else:
                 objs = models.caseInterProject.objects.filter(back_developer=user_id)
