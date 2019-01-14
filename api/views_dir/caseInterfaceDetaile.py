@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
 from api.forms.caseInterfaceDetaile import AddForm, UpdateForm, SelectForm, DeleteForm
 from django.db.models import Q
-import datetime, requests, random, json, re
+import datetime, requests, random, json, re, redis
 
 
 # 分组树状图（包含测试用例详情）
@@ -140,7 +140,7 @@ def sendRequest(formResult, test=None):
         objs = models.requestResultSave.objects.filter(case_inter_id=o_id)
         data = {
             'url':requestUrl,
-            'result_data':ret_json
+            'result_data':json.dumps(ret_json)
         }
         if objs:
             data['create_date'] = datetime.datetime.now()
@@ -240,8 +240,8 @@ def testCaseDetaile(request):
                 if history_objs:
                     history_obj = history_objs[0]
                     history_date = {
-                        'url':history_obj.url,                          # 历史请求URL
-                        'result_data':history_obj.result_data,          # 历史请求 结果
+                        'url':history_obj.url,                                  # 历史请求URL
+                        'result_data':json.loads(history_obj.result_data),      # 历史请求 结果
                         'create_date':history_obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     }
 
@@ -255,20 +255,20 @@ def testCaseDetaile(request):
                     'oper_user__username': obj.userProfile.username,
 
                     'requestUrl':requestUrl,
-                    'caseName': obj.caseName,                                # 接口名称
+                    'caseName': obj.caseName,                               # 接口名称
 
-                    'hostManage_id': hostManage_id,                          # host
+                    'hostManage_id': hostManage_id,                         # host
 
-                    'getRequestParameters': getRequestParameters,        # GET参数
-                    'postRequestParameters': postRequestParameters,      # POST参数
+                    'getRequestParameters': getRequestParameters,           # GET参数
+                    'postRequestParameters': postRequestParameters,         # POST参数
 
                     'requestType_id': requestType_id,                       # 请求类型  (GET/POST)
                     'requestType': requestType,
 
-                    'xieyi_type_id': xieyi_type_id,                        # 协议类型   (HTTP)
+                    'xieyi_type_id': xieyi_type_id,                         # 协议类型   (HTTP)
                     'xieyi_type': xieyi_type,
 
-                    'type_status_id': type_status_id,                      # 接口类型   (增删改查)
+                    'type_status_id': type_status_id,                       # 接口类型   (增删改查)
                     'type_status': type_status,
 
                     'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'), # 接口创建时间
@@ -380,7 +380,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                         response.code = 200
                         response.msg = '测试失败 / 保存成功'
                     response.data = response_data.data.get('ret_json')
-
+                    print('response_data--> ', response_data.data.get('ret_json'))
 
                     # 保存数据 -------------------------------------------------------
                     formResult = forms_obj.cleaned_data
@@ -460,6 +460,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
                 else:
                     result = testCaseGroupTree(beforeTaskId, user_id)
+
                 response.code = 200
                 response.msg = '查询成功'
                 response.data = {'result': result}
@@ -492,6 +493,33 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.msg = '查询成功'
             response.data = {'otherData': otherData}
 
+        # 查询测试用例 (成功数量, 失败数量, 总数量)数据是否请求成功
+        elif oper_type == 'get_redis_result':
+            rc = redis.Redis(host='redis_host', port=6379, db=0)
+            get_keys = rc.hmget('testcase', 'num', 'error_num', 'success_num')
+            success_num = int(get_keys[2].decode())
+            objs = models.requestDoc.objects.filter(
+                userProfile_id=user_id, create_date__isnull=False
+            ).order_by('-create_date')[:success_num]
+            data_list = []
+            for obj in objs:
+                data_list.append({
+                    'name':obj.name,
+                    'if_success':obj.if_success,
+                    'result_data':json.loads(obj.result_data),
+                    'userProfile_id':obj.userProfile_id,
+                    'userProfile__name':obj.userProfile.username,
+                    'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                })
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {
+                'data_list':data_list,
+                'num': int(get_keys[0].decode()),  # 总数
+                'error_num': int(get_keys[1].decode()),  # 错误
+                'success_num': success_num,
+            }
+
         else:
             response.code = 402
             response.msg = "请求异常"
@@ -503,15 +531,21 @@ def testCaseDetaileOper(request, oper_type, o_id):
 @csrf_exempt
 @account.is_token(models.userprofile)
 def startTestCase(request):
+    rc = redis.Redis(host='redis_host', port=6379, db=0)
     response = Response.ResponseObj()
+    response.code = 200
+    response.data = []
     if request.method == 'POST':
         user_id = request.GET.get('user_id')
         is_generate = request.POST.get('is_generate')           # 是否生成开发文档
         talk_project_id = request.POST.get('talk_project_id')   # 项目ID
         case_id_list = request.POST.get('case_id_list')         # 选择分组 传递分组ID列表
-        num = 0   # 测试 总数
-        error_num = 0 # 测试失败总数
+        num = 0         # 测试 总数
+        error_num = 0   # 测试失败总数
         error_data = []
+        success_num = 0
+        flag = False        # 判断该接口是否有问题
+
         if talk_project_id and case_id_list:
             case_id_list = json.loads(case_id_list)
             result_data = ''
@@ -553,6 +587,19 @@ def startTestCase(request):
                             if code and int(code) != 200:
                                 error_num += 1
                                 error_data.append(result_data)
+                            else:
+                                success_num += 1
+
+                        # 创建测试用例日志
+                        if_success = 1
+                        if flag:
+                            if_success = 0
+                        models.requestDoc.objects.create(**{
+                            'name':obj.caseName,
+                            'if_success':if_success,
+                            'result_data':json.dumps(result_data),
+                            'userProfile_id':obj.userProfile_id,
+                        })
 
                         if is_generate:
                             # 生成开发文档
@@ -564,6 +611,7 @@ def startTestCase(request):
                                 'talk_project_id':talk_project_id,
                                 'requestType':requestType,
                                 'result_data':json.dumps(result_data),
+                                'create_date':datetime.datetime.now()
                             }
                             doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=obj.id)
                             if doc_obj:
@@ -572,20 +620,19 @@ def startTestCase(request):
                                 data['interDetaile_id'] = obj.id
                                 doc_obj.create(**data)
                     num += 1
+                    redis_dict = {
+                        'num':num,
+                        'error_num':error_num,
+                        'success_num':success_num
+                    }
+                    rc.hmset('testcase', redis_dict)
 
-            success_num = num - error_num  # 正确
-            response.code = 200
             response.msg = '测试完成'
-            response.data = {
-                'error_num':error_num,
-                'num':num,
-                'success_num':success_num,
-                'error_data':error_data,
-            }
 
         else:
             response.code = 301
             response.msg = '参数错误'
+
     else:
         response.code = 402
         response.msg = '请求异常'
