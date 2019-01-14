@@ -29,7 +29,10 @@ def testCaseGroup(request):
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.caseInterfaceGrouping.objects.filter(q).order_by(order).order_by('create_date')
+            objs = models.caseInterfaceGrouping.objects.filter(
+                q,
+                operUser_id=user_id
+            ).order_by(order).order_by('create_date')
             count = objs.count()
 
             if length != 0:

@@ -140,7 +140,7 @@ def sendRequest(formResult, test=None):
         objs = models.requestResultSave.objects.filter(case_inter_id=o_id)
         data = {
             'url':requestUrl,
-            'result_data':ret_json
+            'result_data':json.dumps(ret_json)
         }
         if objs:
             data['create_date'] = datetime.datetime.now()
