@@ -113,7 +113,7 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
     }
 
     print(lineNum, tgt, logPath, filterKeyWorld)
-    cmd = "cat /var/log/ProjectManagerment_uwsgi.log | wc -l"
+    cmd = "cat {logPath} | wc -l".format(logPath=logPath)
 
     post_data = {
         'client': 'local',
