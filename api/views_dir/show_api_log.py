@@ -12,6 +12,8 @@ import json
 from django.db.models import Q
 import requests
 
+from publicFunc.saltOper import SaltOper
+
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
@@ -93,40 +95,18 @@ def show_api_log_oper(request, oper_type, o_id):
     return JsonResponse(response.__dict__)
 
 
+
 # # 通过salt获取api日志
 def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
     # 先登录获取token
-    url = 'https://192.168.10.110:8001/login'
-    headers = {
-        'Accept': 'application/json',
-    }
-    post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
-
-    ret = requests.post(url, post_data, headers=headers, verify=False)
-    print('login_ret  -->', ret.json())
-    token = ret.json()['return'][0]['token']
-
-    url = 'https://192.168.10.110:8001/'
-    headers = {
-        'Accept': 'application/json',
-        'X-Auth-Token': token,
-    }
+    saltObj = SaltOper()
 
     print(lineNum, tgt, logPath, filterKeyWorld)
     cmd = "cat {logPath} | wc -l".format(logPath=logPath)
 
-    post_data = {
-        'client': 'local',
-        'tgt': tgt,
-        'fun': 'cmd.run',
-        'arg': cmd,
-    }
-
-    print('post_data -->', post_data)
-    ret = requests.post(url, post_data, headers=headers, verify=False)
-    print('zhixing  -->', ret.json())
-    # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
-    return ret.json()
+    result = saltObj.cmdRun(tgt, cmd)
+    lastLinuNum = result['return'][0][tgt]
+    print('lastLinuNum -->', lastLinuNum)
 
 
 # # 通过 salt 执行代码上线
