@@ -70,13 +70,13 @@ def show_api_log_oper(request, oper_type, o_id):
                     obj = objs[0]
                     tgt = obj.tgt
                     logPath = obj.logPath
-                    salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld)
+                    response.data = salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld)
 
-                    lineNum += 10
-                    response.data = {
-                        'lineNum': lineNum,
-                        'logData': ['{lineNum}fdsafdafdas'.format(lineNum=lineNum)]
-                    }
+                    # lineNum += 10
+                    # response.data = {
+                    #     'lineNum': lineNum,
+                    #     'logData': ['{lineNum}fdsafdafdas'.format(lineNum=lineNum)]
+                    # }
                     response.code = 200
                     response.msg = "查询成功"
 
@@ -94,7 +94,6 @@ def show_api_log_oper(request, oper_type, o_id):
         response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
-
 
 
 # # 通过salt获取api日志
