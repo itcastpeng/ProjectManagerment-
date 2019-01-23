@@ -116,8 +116,8 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
     if lineNum == 0:        # 首次获取
         return result_data
     else:
-        if lastLinuNum - lineNum > 100:     # 如果新日志大于100条，则只取100条
-            result_data['lineNum'] = lineNum + 100
+        if lastLinuNum - lineNum > 10:     # 如果新日志大于100条，则只取100条
+            result_data['lineNum'] = lineNum + 10
         else:
             result_data['lineNum'] = lastLinuNum
 
@@ -127,8 +127,9 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
             logPath=logPath
         )
         result = saltObj.cmdRun(tgt, cmd)
-        print('cmd -->', cmd)
+        # print('cmd -->', cmd)
         print('result -->', result)
+
         return result_data
 
 
