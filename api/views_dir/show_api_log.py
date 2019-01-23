@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import time
 import datetime
 from publicFunc.condition_com import conditionCom
-from api.forms.project import AddForm, UpdateForm, SelectForm
+from api.forms.showApiLog import ShowLogForm
 import json
 from django.db.models import Q
 import requests
@@ -48,15 +48,31 @@ def show_api_log_oper(request, oper_type, o_id):
     if request.method == "GET":
         if oper_type == "showLog":
             # o_id 要获取的项目id
-            lineNum = request.GET.get('lineNum', 0)        # 表示要获取从多少行开始的数据，如果该值为0，则表示首次获取
+            lineNum = request.GET.get('lineNum')        # 表示要获取从多少行开始的数据，如果该值为0，则表示首次获取
             filterKeyWorld = request.GET.get('filterKeyWorld')     # 匹配过滤条件
-            lineNum += 10
-            response.data = {
-                'lineNum': lineNum,
-                'logData': '{lineNum}fdsafdafdas'.format(lineNum=lineNum)
+            form_data = {
+                "lineNum": lineNum,
+                "filterKeyWorld": filterKeyWorld
             }
-            response.code = 200
-            response.msg = "查询成功"
+
+            # form 验证
+            forms_obj = ShowLogForm(form_data)
+            if forms_obj.is_valid():
+                lineNum = forms_obj.cleaned_data.get('lineNum')
+                filterKeyWorld = forms_obj.cleaned_data.get('filterKeyWorld')
+                lineNum += 10
+                response.data = {
+                    'lineNum': lineNum,
+                    'logData': '{lineNum}fdsafdafdas'.format(lineNum=lineNum)
+                }
+                response.code = 200
+                response.msg = "查询成功"
+            else:
+                print("验证不通过")
+                # print(forms_obj.errors)
+                response.code = 301
+                # print(forms_obj.errors.as_json())
+                response.msg = json.loads(forms_obj.errors.as_json())
     else:
         response.code = 402
         response.msg = "请求异常"
