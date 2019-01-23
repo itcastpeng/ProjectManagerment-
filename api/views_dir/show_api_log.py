@@ -44,7 +44,7 @@ def show_api_log(request):
 #  增删改
 #  csrf  token验证
 @csrf_exempt
-@account.is_token(models.userprofile)
+# @account.is_token(models.userprofile)
 def show_api_log_oper(request, oper_type, o_id):
     response = Response.ResponseObj()
     if request.method == "GET":
@@ -128,7 +128,14 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
         result = saltObj.cmdRun(tgt, cmd)
         print('cmd -->', cmd)
         # print('result -->', result)
-        result_data['logData'] = result['return'][0][tgt].split('\n')
+        logDataList = result['return'][0][tgt].split('\n')
+        logLineNum = lineNum
+        for log in logDataList:
+            result_data['logData'].append({
+                'lineNum': logLineNum,
+                'data': log
+            })
+            logLineNum += 1
         return result_data
 
 
