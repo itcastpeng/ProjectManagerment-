@@ -67,6 +67,7 @@ def show_api_log_oper(request, oper_type, o_id):
                     obj = objs[0]
                     tgt = obj.tgt
                     logPath = obj.logPath
+                    salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld)
 
                     lineNum += 10
                     response.data = {
@@ -91,8 +92,41 @@ def show_api_log_oper(request, oper_type, o_id):
 
     return JsonResponse(response.__dict__)
 
+
 # # 通过salt获取api日志
-# def salt_api_showApiLog():
+def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
+    # 先登录获取token
+    url = 'https://192.168.10.110:8001/login'
+    headers = {
+        'Accept': 'application/json',
+    }
+    post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
+
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    print('login_ret  -->', ret.json())
+    token = ret.json()['return'][0]['token']
+
+    url = 'https://192.168.10.110:8001/'
+    headers = {
+        'Accept': 'application/json',
+        'X-Auth-Token': token,
+    }
+
+    print(lineNum, tgt, logPath, filterKeyWorld)
+    cmd = "cat /var/log/ProjectManagerment_uwsgi.log | wc -l"
+
+    post_data = {
+        'client': 'local',
+        'tgt': tgt,
+        'fun': 'cmd.run',
+        'arg': cmd,
+    }
+
+    print('post_data -->', post_data)
+    ret = requests.post(url, post_data, headers=headers, verify=False)
+    print('zhixing  -->', ret.json())
+    # {'return': [{'minions': ['huidu-web-03'], 'jid': '20180904143828065729'}]}
+    return ret.json()
 
 
 # # 通过 salt 执行代码上线
