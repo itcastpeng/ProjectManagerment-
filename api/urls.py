@@ -3,7 +3,7 @@ from django.conf.urls import url
 
 from api.views_dir import login, company, role, user, project, action, demand, img_upload, \
     permissions, project_env_switch, code_online, updatePwd, caseInterfaceGrouping, caseInterfaceDetaile, \
-    configurationManagementHOST, switch_nginx_huidu_ip, caseinter_project, document_doc
+    configurationManagementHOST, switch_nginx_huidu_ip, caseinter_project, document_doc, show_api_log
 
 
 urlpatterns = [
@@ -53,6 +53,10 @@ urlpatterns = [
     # 项目代码上线
     url(r'^code_online/(?P<oper_type>\w+)/(?P<o_id>\d+)', code_online.code_online_oper),
     url(r'^code_online', code_online.code_online),
+
+    # 在线实时查看API日志
+    url(r'^show_api_log/(?P<oper_type>\w+)/(?P<o_id>\d+)', show_api_log.show_api_log_oper),
+    url(r'^show_api_log', show_api_log.show_api_log),
 
     # ------------------------------------------=测试用例=-----------------------------------------
 
