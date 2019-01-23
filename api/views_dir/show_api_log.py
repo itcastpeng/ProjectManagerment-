@@ -62,7 +62,7 @@ def show_api_log_oper(request, oper_type, o_id):
             if forms_obj.is_valid():
                 lineNum = forms_obj.cleaned_data.get('lineNum')
                 filterKeyWorld = forms_obj.cleaned_data.get('filterKeyWorld')
-                print("lineNum --->", type(lineNum))
+                # print("lineNum --->", type(lineNum))
 
                 objs = models.showApiLog.objects.filter(id=o_id)
                 if objs:
@@ -106,7 +106,7 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
     cmd = "cat {logPath} | wc -l".format(logPath=logPath)
 
     result = saltObj.cmdRun(tgt, cmd)
-    lastLinuNum = result['return'][0][tgt]
+    lastLinuNum = int(result['return'][0][tgt])
     # print('lastLinuNum -->', lastLinuNum)
 
     result_data = {
