@@ -127,6 +127,7 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
             logPath=logPath
         )
         result = saltObj.cmdRun(tgt, cmd)
+        print('cmd -->', cmd)
         print('result -->', result)
         return result_data
 

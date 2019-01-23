@@ -16,7 +16,7 @@ class SaltOper:
         post_data = {'username': 'saltapi', 'password': 'saltapi@2018', 'eauth': 'pam'}
 
         ret = requests.post(url, post_data, headers=headers, verify=False)
-        print('login_ret  -->', ret.json())
+        # print('login_ret  -->', ret.json())
         self.token = ret.json()['return'][0]['token']
 
     def cmdRun(self, tgt, cmd):
