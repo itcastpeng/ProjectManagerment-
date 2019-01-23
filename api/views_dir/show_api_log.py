@@ -60,13 +60,25 @@ def show_api_log_oper(request, oper_type, o_id):
             if forms_obj.is_valid():
                 lineNum = forms_obj.cleaned_data.get('lineNum')
                 filterKeyWorld = forms_obj.cleaned_data.get('filterKeyWorld')
-                lineNum += 10
-                response.data = {
-                    'lineNum': lineNum,
-                    'logData': '{lineNum}fdsafdafdas'.format(lineNum=lineNum)
-                }
-                response.code = 200
-                response.msg = "查询成功"
+
+                objs = models.showApiLog.objects.filter(id=o_id)
+                if objs:
+
+                    obj = objs[0]
+                    tgt = obj.tgt
+                    logPath = obj.logPath
+
+                    lineNum += 10
+                    response.data = {
+                        'lineNum': lineNum,
+                        'logData': ['{lineNum}fdsafdafdas'.format(lineNum=lineNum)]
+                    }
+                    response.code = 200
+                    response.msg = "查询成功"
+
+                else:
+                    response.code = 302
+                    response.msg = "查询ID不存在"
             else:
                 print("验证不通过")
                 # print(forms_obj.errors)
@@ -78,6 +90,9 @@ def show_api_log_oper(request, oper_type, o_id):
         response.msg = "请求异常"
 
     return JsonResponse(response.__dict__)
+
+# # 通过salt获取api日志
+# def salt_api_showApiLog():
 
 
 # # 通过 salt 执行代码上线
