@@ -62,6 +62,7 @@ def show_api_log_oper(request, oper_type, o_id):
             if forms_obj.is_valid():
                 lineNum = forms_obj.cleaned_data.get('lineNum')
                 filterKeyWorld = forms_obj.cleaned_data.get('filterKeyWorld')
+                print("lineNum --->", type(lineNum))
 
                 objs = models.showApiLog.objects.filter(id=o_id)
                 if objs:
