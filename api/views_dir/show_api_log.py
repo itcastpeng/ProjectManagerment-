@@ -15,7 +15,7 @@ import requests
 
 # cerf  token验证 用户展示模块
 @csrf_exempt
-# @account.is_token(models.userprofile)
+@account.is_token(models.userprofile)
 def show_api_log(request):
     response = Response.ResponseObj()
     if request.method == "GET":
@@ -42,7 +42,7 @@ def show_api_log(request):
 #  增删改
 #  csrf  token验证
 @csrf_exempt
-# @account.is_token(models.userprofile)
+@account.is_token(models.userprofile)
 def show_api_log_oper(request, oper_type, o_id):
     response = Response.ResponseObj()
     if request.method == "GET":
