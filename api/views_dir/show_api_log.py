@@ -114,8 +114,10 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
     }
     if lineNum == 0:        # 首次获取
         return result_data
+    elif lineNum > lastLinuNum:        # 没有出现新的日志
+        return result_data
     else:
-        if lastLinuNum - lineNum > 10:     # 如果新日志大于100条，则只取100条
+        if lastLinuNum - lineNum > 10:     # 如果新日志大于10条，则只取10条
             result_data['lineNum'] = lineNum + 10
         else:
             result_data['lineNum'] = lastLinuNum
@@ -136,6 +138,7 @@ def salt_api_showApiLog(lineNum, tgt, logPath, filterKeyWorld):
                 'data': log
             })
             logLineNum += 1
+        result_data['lineNum'] += 1
         return result_data
 
 
