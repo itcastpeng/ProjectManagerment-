@@ -108,7 +108,7 @@ def sendRequest(formResult, test=None):
 
     # 判断 GET / POST 请求
     if requestType == 1:
-        print('GET-------------请求')
+        # print('GET-------------请求')
         ret = requests.get(requestUrl)
     else:
         print('POST-------------请求')
@@ -770,10 +770,8 @@ def startTestCase(request):
         case_id_list = request.POST.get('case_id_list')             # 选择分组传递分组ID列表
         num = 0         # 测试 总数
         error_num = 0   # 测试失败总数
-        error_data = []
+        # error_data = []
         success_num = 0
-        flag = False        # 判断该接口是否有问题
-
         automatic_test = 2
         if is_automatic_test:
             automatic_test = 1
@@ -786,6 +784,7 @@ def startTestCase(request):
                     ownershipGroup_id=i
                 ).order_by('type_status')           # 按接口类型正序排列
                 for obj in objs:                    # 遍历接口
+                    flag = False  # 判断该接口是否有问题
                     id = obj.id                     # ID
                     requestUrl = obj.url            # URL
                     xieyi_type = obj.xieyi_type     # 协议 (HTTP)
@@ -813,15 +812,17 @@ def startTestCase(request):
                         if response_data.data.get('flag'):
                             result_data = str(response_data.data.get('ret_json'))
                             flag = True
+                            error_num += 1
                         else:
                             code = response_data.data.get('ret_json').get('code')
                             result_data = response_data.data.get('ret_json')
-                            if code and int(code) != 200:
+                            print('code--> ', code)
+                            if code and int(code) == 200:
+                                success_num += 1
+                            else:
                                 flag = True
                                 error_num += 1
-                                error_data.append(result_data)
-                            else:
-                                success_num += 1
+                                # error_data.append(result_data)
 
                         # 创建测试用例日志
                         if_success = 1
