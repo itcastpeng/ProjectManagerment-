@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
 from api.forms.caseinter_project import AddForm, UpdateForm, SelectForm, DeleteForm
+from django.db.models import Q
 import json
 
 
@@ -192,10 +193,9 @@ def caseinter_project_oper(request, oper_type, o_id):
 
     else:
         if oper_type =='getTaskName':
-            if int(user_id) in [11, 12]:  # 前端
-                objs = models.caseInterProject.objects.filter(front_developer=user_id)
-            else:
-                objs = models.caseInterProject.objects.filter(back_developer=user_id)
+            q = Q()
+            q.add(Q(back_developer=user_id) | Q(front_developer=user_id), Q.AND)
+            objs = models.caseInterProject.objects.filter(q).distinct()
             otherData = []
             for obj in objs:
                 otherData.append({

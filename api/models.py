@@ -129,15 +129,18 @@ class progress(models.Model):
 # 测试用例项目表
 class caseInterProject(models.Model):
     name = models.CharField(verbose_name="项目名称", max_length=128)
-    front_developer = models.ManyToManyField('userprofile', verbose_name='前端开发人员', related_name='userprofile_front_developer')
-    back_developer = models.ManyToManyField('userprofile', verbose_name='后端开发人员', related_name='userprofile_back_developer')
+    front_developer = models.ManyToManyField('userprofile', verbose_name='前端开发人员',
+        related_name='userprofile_front_developer')
+    back_developer = models.ManyToManyField('userprofile', verbose_name='后端开发人员',
+        related_name='userprofile_back_developer')
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建用户")
     language_type_choices = (
         (1, 'python'),
         (2, 'php')
     )
-    language_type = models.SmallIntegerField(verbose_name='语言类型', choices=language_type_choices, default=1)  # 区分请求结果
+    # 区分请求结果
+    language_type = models.SmallIntegerField(verbose_name='语言类型', choices=language_type_choices, default=1)
 
 
 # 测试用例接口分组
@@ -200,7 +203,7 @@ class requestResultSave(models.Model):
     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     result_data = models.TextField(verbose_name='返回结果', null=True, blank=True)
 
-# 测试用例请求文档
+# 测试用例请求文档(前端查看)
 class requestDocumentDoc(models.Model):
     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
@@ -216,13 +219,43 @@ class requestDocumentDoc(models.Model):
     requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, null=True, blank=True)
     result_data = models.TextField(verbose_name='结果', null=True, blank=True)
 
-# 请求文档定时刷新
+# 请求文档定时刷新(请求完成后 定时刷新结果)
 class requestDoc(models.Model):
     name = models.CharField(verbose_name='测试用例名称', max_length=64, null=True, blank=True)
     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     if_success = models.IntegerField(verbose_name='是否成功', null=True, blank=True)
     result_data = models.TextField(verbose_name='结果', null=True, blank=True)
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
+
+    is_automatic_test_choices = (
+        (1, '自动测试'),
+        (2, '手动测试')
+    )
+    is_automatic_test = models.SmallIntegerField(verbose_name='是否为机器测试', default=2)
+
+# selenium自动测试文档
+class selenium_test_doc(models.Model):
+    title = models.CharField(verbose_name='测试名称', max_length=64)
+    remak = models.CharField(verbose_name='备注', max_length=256, null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    if_success = models.IntegerField(verbose_name='是否成功', null=True, blank=True)    # 是否成功
+
+# 自动测试(创建定时测试定时跑测试用例)
+class timingCaseInter(models.Model):
+    create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    case_inter_result = models.CharField(verbose_name='测试的分组', max_length=256)
+    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='操作人')
+    run_time = models.DateTimeField(verbose_name='运行时间', null=True, blank=True)
+    run_type_choises = (
+        (1, '预计运行时间'),
+        (2, '间隔时间运行')
+    )
+    run_type = models.SmallIntegerField(verbose_name='运行类型', choices=run_type_choises, default=1)
+    expect_run_time = models.CharField(verbose_name='预计运行时间', max_length=128, null=True, blank=True)
+    expect_time = models.CharField(verbose_name='时间段运行(多长时间执行一次)', max_length=128, null=True, blank=True)
+
+
+
 # ------------------------------------------------------------------------------------------------------------------
 
 

@@ -21,13 +21,19 @@ CELERYD_FORCE_EXECV = True           # 非常重要,有些情况下可以防止�
 CELERYD_MAX_TASKS_PER_CHILD = 100    # 每个worker最多执行万100个任务就会被销毁，可防止内存泄露
 app.conf.beat_schedule = {
 
-# 每天早上九点到十一点 每隔1小时执行一次
- 'pushMessageToWeChat':{
+    # 每天早上九点到十一点 每隔1小时执行一次
+    'pushMessageToWeChat':{
         'task':'projectmanage_celery.tasks.pushMessageToWeChat',
         # 'schedule':30                                   # 单独设置  秒
         # 'schedule': crontab(hour=8, minute=30),
         'schedule': crontab('0', '9', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
     },
+
+    'automatic_test':{
+    'task':'projectmanage_celery.tasks.automatic_test',
+    'schedule': crontab(minute=1),
+    }
+
 }
 app.conf.update(
     result_expires=3600,
