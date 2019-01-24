@@ -244,11 +244,11 @@ class requestDoc(models.Model):
     is_automatic_test = models.SmallIntegerField(verbose_name='是否为机器测试', default=2)
 
 # selenium自动测试文档
-# class selenium_test_doc(models.Model):
-#     title = models.CharField(verbose_name='测试名称', max_length=64)
-#     remak = models.CharField(verbose_name='备注', max_length=256, null=True, blank=True)
-#     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
-#     if_success = models.IntegerField(verbose_name='是否成功', null=True, blank=True)    # 是否成功
+class selenium_test_doc(models.Model):
+    title = models.CharField(verbose_name='测试名称', max_length=64)
+    remak = models.CharField(verbose_name='备注', max_length=256, null=True, blank=True)
+    create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    if_success = models.IntegerField(verbose_name='是否成功', null=True, blank=True)    # 是否成功
 
 # 自动测试(创建定时测试定时跑测试用例)
 class timingCaseInter(models.Model):
