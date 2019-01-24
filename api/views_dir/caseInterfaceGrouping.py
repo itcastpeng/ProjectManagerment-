@@ -27,6 +27,8 @@ def testCaseGroup(request):
                 'operUser_id': '',
                 'groupName': '__contains',
             }
+
+            print('=--=--')
             q = conditionCom(request, field_dict)
             print('q -->', q)
             objs = models.caseInterfaceGrouping.objects.filter(
