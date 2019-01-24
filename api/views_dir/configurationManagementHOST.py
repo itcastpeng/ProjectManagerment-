@@ -31,7 +31,7 @@ def configurationHost(request):
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.configurationManagementHOST.objects.filter(q, userProfile_id=user_id)
+            objs = models.configurationManagementHOST.objects.filter(q)
             count = objs.count()
 
             if length != 0:
