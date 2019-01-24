@@ -30,8 +30,7 @@ def testCaseGroup(request):
             q = conditionCom(request, field_dict)
             print('q -->', q)
             objs = models.caseInterfaceGrouping.objects.filter(
-                q,
-                operUser_id=user_id
+                q
             ).order_by(order).order_by('create_date')
             count = objs.count()
 
@@ -109,8 +108,9 @@ def testCaseGroupOper(request, oper_type, o_id):
     }
     operUser_id = form_data.get('operUser_id')
     userObjs = models.caseInterfaceGrouping.objects
-
-    projectObjs = models.caseInterProject.objects.filter(back_developer=operUser_id)
+    q = Q()
+    q.add(Q(front_developer=operUser_id) | Q(back_developer=operUser_id), Q.AND)
+    projectObjs = models.caseInterProject.objects.filter(q)
 
     if request.method == "POST":
 
@@ -216,9 +216,9 @@ def testCaseGroupOper(request, oper_type, o_id):
 
         # 查询当前登录人 所有上级分组
         elif oper_type == 'superGroupName':
-            talkIdList = [i['id'] for i in projectObjs.values('id')]
-            print('talkIdList------> ',talkIdList)
-            objs = models.caseInterfaceGrouping.objects.filter(talk_project_id__in=talkIdList)
+            # talkIdList = [i['id'] for i in projectObjs.values('id')]
+            # print('talkIdList------> ',talkIdList)
+            objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id)
             data_list = []
             for obj in objs:
                 data_list.append({

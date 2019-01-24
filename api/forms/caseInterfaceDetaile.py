@@ -201,3 +201,94 @@ class SelectForm(forms.Form):
         else:
             length = int(self.data['length'])
         return length
+
+
+# 添加自动测试
+class AddTimingCase(forms.Form):
+    user_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required': "操作人不能为空"
+        }
+    )
+    case_inter_result = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "要运行的分组ID列表不能为空"
+        }
+    )
+    run_type =forms.IntegerField(
+        required=True,
+        error_messages={
+            'required':'运行类型不能为空'
+        }
+    )
+    expect_run_time = forms.CharField(
+        required=False,
+        error_messages={
+            'required': '预计运行时间类型错误'
+        }
+    )
+    expect_time = forms.CharField(
+        required=False,
+        error_messages={
+            'required': '时间段运行时(多久运行一次)不能为空'
+        }
+    )
+
+    def clean_run_type(self):
+        run_type = self.data.get('run_type')
+        expect_run_time = self.data.get('expect_run_time')
+        expect_time = self.data.get('expect_time')
+        if int(run_type) == 1 and not expect_run_time:
+            self.add_error('run_type', '请选择预计运行时间')
+        elif int(run_type) == 2 and not expect_time:
+            self.add_error('run_type', '请选择时间段运行(分钟为单位)')
+        else:
+            if int(run_type) == 1:
+                expect_time = ''
+            else:
+                expect_run_time = ''
+            return run_type, expect_run_time, expect_time
+
+    def clean_case_inter_result(self):
+        case_inter_result = self.data.get('case_inter_result')
+        user_id = self.data.get('user_id')
+        print('user_id--> ', user_id)
+        for i in json.loads(case_inter_result):
+            obj = models.caseInterfaceGrouping.objects.filter(id=i, operUser_id=user_id)
+            if not obj:
+                self.add_error('case_inter_result', '请选择正确分组')
+
+        return json.loads(case_inter_result)
+
+# 删除自动测试
+class DeleteTimingCase(forms.Form):
+
+    user_id = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "要运行的分组ID列表不能为空"
+        }
+    )
+    o_id = forms.CharField(
+        required=True,
+        error_messages={
+            'required': "要运行的分组ID列表不能为空"
+        }
+    )
+
+    def clean_o_id(self):
+        o_id = self.data.get('o_id')
+        user_id = self.data.get('user_id')
+
+        objs = models.timingCaseInter.objects.filter(id=o_id)
+        if objs:
+            if int(user_id) == int(objs[0].userProfile_id):
+                return o_id
+            else:
+                self.add_error('o_id', '权限不足')
+        else:
+            self.add_error('o_id', '删除数据不存在')
+
+

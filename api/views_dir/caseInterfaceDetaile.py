@@ -5,9 +5,10 @@ from publicFunc.userAgente.user_agente import pcRequestHeader
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from publicFunc.condition_com import conditionCom
-from api.forms.caseInterfaceDetaile import AddForm, UpdateForm, SelectForm, DeleteForm
+from api.forms.caseInterfaceDetaile import AddForm, UpdateForm, SelectForm, DeleteForm, AddTimingCase, DeleteTimingCase
 from django.db.models import Q
 import datetime, requests, random, json, re, redis
+from api import  setting
 
 
 # 分组树状图（包含测试用例详情）
@@ -16,6 +17,7 @@ def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
     if search_msg: # 搜索分组名称
         objs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=pid, groupName__contains=search_msg)
     else:
+        q = Q()
         objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id, talk_project_id=talk_project_id, parensGroupName_id=pid)
     for obj in objs:
         current_data = {
@@ -158,6 +160,19 @@ def sendRequest(formResult, test=None):
     # print('response.data---------> ', response.data)
     return response
 
+# 自动测试 发送请求
+def automaticTest(data_dict):
+    url = '{}/api/startTestCase?beforeTaskId=2&rand_str=f2dd5cd6544a39a82d437bfa1bf8216a&timestamp=1547013904167&user_id=7'.format(setting.host)
+    print("data_dict['case_inter_result']------------------> ", data_dict['case_inter_result'], type(data_dict['case_inter_result']))
+    data = {
+        'case_id_list':str(data_dict['case_inter_result']),         # 分组ID列表
+        'talk_project_id':data_dict['talk_project_id'],             # 项目ID
+        'is_generate':1,                                            # 是否生成文档
+        'is_automatic_test':1                                       # 是否为机器测试
+    }
+    print('data--> ', data)
+    requests.post(url, data=data)
+
 
 # cerf  token验证 测试用例展示模块
 @csrf_exempt
@@ -239,9 +254,12 @@ def testCaseDetaile(request):
                 history_objs = models.requestResultSave.objects.filter(case_inter_id=obj.id)
                 if history_objs:
                     history_obj = history_objs[0]
+                    result_data = ''
+                    if history_obj.result_data:
+                        result_data = json.loads(history_obj.result_data)
                     history_date = {
                         'url':history_obj.url,                                  # 历史请求URL
-                        'result_data':json.loads(history_obj.result_data),      # 历史请求 结果
+                        'result_data':result_data,                              # 历史请求 结果
                         'create_date':history_obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
                     }
 
@@ -283,9 +301,11 @@ def testCaseDetaile(request):
                 'history_date':history_date
             }
         else:
-            response.code = 402
-            response.msg = "请求异常"
-            response.data = json.loads(forms_obj.errors.as_json())
+            response.code = 301
+            response.msg = json.loads(forms_obj.errors.as_json())
+    else:
+        response.code = 402
+        response.msg = "请求异常"
     return JsonResponse(response.__dict__)
 
 
@@ -311,7 +331,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
         'getRequest': request.POST.get('getRequest'),               # GET  请求参数
         'postRequest': request.POST.get('postRequest'),             # POST 请求参数
     }
-    print('form_data--> ', form_data)
+    # print('form_data--> ', form_data)
     detaileObjs = models.caseInterfaceDetaile.objects
     user_id = request.GET.get('user_id')
     if request.method == "POST":
@@ -361,49 +381,126 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        # 发送请求 和 保存
+        # 发送请求和保存
         elif oper_type == 'sendTheRequest':
             print('---------------测试')
             forms_obj = UpdateForm(form_data)
             if forms_obj.is_valid():
                 formResult = forms_obj.cleaned_data
-                response_data = sendRequest(formResult)
-                response.code = 200
-                if response_data.data.get('flag'):
-                    response.msg = '接口出错了'
-                    response.data = str(response_data.data.get('ret_json'))
-                else:
-                    response_data_code = response_data.data.get('ret_json').get('code')
-                    if response_data_code and int(response_data_code) == 200:
-                        response.msg = '测试/保存 成功'
+                try:
+                    response_data = sendRequest(formResult)
+
+                    if response_data.data.get('flag'):
+                        response.msg = '接口出错了'
+                        response.data = str(response_data.data.get('ret_json'))
                     else:
-                        response.code = 200
-                        response.msg = '测试失败 / 保存成功'
-                    response.data = response_data.data.get('ret_json')
-                    print('response_data--> ', response_data.data.get('ret_json'))
+                        response_data_code = response_data.data.get('ret_json').get('code')
+                        if response_data_code and int(response_data_code) == 200:
+                            response.msg = '测试/保存 成功'
+                        else:
+                            response.code = 200
+                            response.msg = '测试失败 / 保存成功'
+                        response.data = response_data.data.get('ret_json')
+                        print('response_data--> ', response_data.data.get('ret_json'))
 
-                    # 保存数据 -------------------------------------------------------
-                    formResult = forms_obj.cleaned_data
-                    hostManage_id, hostUrl = formResult.get('hostManage_id')
-                    detaileObjs.filter(id=o_id).update(
-                        caseName=formResult.get('caseName'),  # 接口名称 (别名)
-                        ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
-                        userProfile_id=form_data.get('oper_user_id'),  # 操作人
+                        # 保存数据 -------------------------------------------------------
+                        formResult = forms_obj.cleaned_data
+                        hostManage_id, hostUrl = formResult.get('hostManage_id')
+                        detaileObjs.filter(id=o_id).update(
+                            caseName=formResult.get('caseName'),  # 接口名称 (别名)
+                            ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
+                            userProfile_id=form_data.get('oper_user_id'),  # 操作人
 
-                        hostManage_id=hostManage_id,  # host配置
-                        requestType=formResult.get('requestType'),  # 请求类型（GET，POST）
-                        type_status=formResult.get('type_status'),  # 接口类型（增删改查）
-                        xieyi_type=formResult.get('xieyi_type'),  # 协议类型（http:https）
+                            hostManage_id=hostManage_id,  # host配置
+                            requestType=formResult.get('requestType'),  # 请求类型（GET，POST）
+                            type_status=formResult.get('type_status'),  # 接口类型（增删改查）
+                            xieyi_type=formResult.get('xieyi_type'),  # 协议类型（http:https）
 
-                        getRequestParameters=formResult.get('getRequest'),  # GET参数
-                        postRequestParameters=formResult.get('postRequest'),  # POST参数
-                        url=formResult.get('requestUrl'),  # URL
-                    )
-                    # ----------------------------------------------------------------------
+                            getRequestParameters=formResult.get('getRequest'),  # GET参数
+                            postRequestParameters=formResult.get('postRequest'),  # POST参数
+                            url=formResult.get('requestUrl'),  # URL
+                        )
+                        # ----------------------------------------------------------------------
+
+                except Exception:
+                    response.msg = '请求错误'
+                response.code = 200
+
             else:
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
             return JsonResponse(response.__dict__)
+
+        # 添加定时运行测试用例(自动测试)
+        elif oper_type == 'add_timing_case':
+            case_inter_result = request.POST.get('case_inter_result')   # 要运行的分组ID列表
+            run_type = request.POST.get('run_type')
+            expect_run_time = request.POST.get('expect_run_time')       # 预计运行时间 (每天几点执行)
+            expect_time = request.POST.get('expect_time')               # 时间段运行 (多久执行一次)
+
+            form_data = {
+                'user_id':user_id,
+                'case_inter_result': case_inter_result,
+                'run_type': run_type,
+                'expect_run_time': expect_run_time,     # 预计运行时间 (每天几点执行)
+                'expect_time': expect_time,             # 时间段运行 (多久执行一次)
+            }
+            forms_obj = AddTimingCase(form_data)
+            if forms_obj.is_valid():
+                form_data = forms_obj.cleaned_data
+                print("验证通过")
+
+                run_type, expect_run_time, expect_time = form_data.get('run_type')
+                case_inter_result = form_data.get('case_inter_result')
+
+                models.timingCaseInter.objects.create(**{
+                    'run_type':run_type,
+                    'expect_run_time':expect_run_time,
+                    'expect_time':expect_time,
+                    'case_inter_result':case_inter_result,
+                    'userProfile_id':user_id,
+                })
+                response.code = 200
+                response.msg = '添加成功'
+            else:
+                response.code = 301
+                response.msg = json.loads(forms_obj.errors.as_json())
+
+        # 删除定时运行测试用例(自动测试)
+        elif oper_type == 'delete_timing_case':
+            form_data = {
+                'user_id':user_id,
+                'o_id':o_id,
+            }
+            forms_obj = DeleteTimingCase(form_data)
+            if forms_obj.is_valid():
+                print('验证通过')
+                models.timingCaseInter.objects.filter(id=o_id).delete()
+                response.code = 200
+                response.msg = '删除成功'
+            else:
+                response.code = 301
+                response.msg = json.loads(forms_obj.errors.as_json())
+
+        # selenium 测试 添加日志
+        elif oper_type == 'selenium_log_add':
+            title = request.POST.get('title')
+            remak = request.POST.get('remak')
+            if_success = request.POST.get('if_success')
+            if title and remak:
+                success = 0
+                if if_success and int(if_success) == 1:
+                    success = 1
+                models.selenium_test_doc.objects.create(**{
+                    'title':title,
+                    'remak':remak,
+                    'if_success':success
+                })
+                response.code = 200
+                response.msg = '添加成功'
+            else:
+                response.code = 301
+                response.msg = '添加失败'
 
     else:
         # 获取项目名称
@@ -465,7 +562,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 response.msg = '查询成功'
                 response.data = {'result': result}
 
-        # 展示树状图（不包含测试用例详情）
+        # 展示树状图（不包含测试用例详情）(供自动测试选择)
         elif oper_type == 'treeGroup':
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
             result = GroupTree(beforeTaskId, user_id)
@@ -473,7 +570,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.msg = '查询成功'
             response.data = {'result': result}
 
-        # 查询 host 展示
+        # 查询host展示
         elif oper_type == 'getHostYuMing':
             formalOrTest = request.GET.get('formalOrTest')
             q = Q()
@@ -493,7 +590,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.msg = '查询成功'
             response.data = {'otherData': otherData}
 
-        # 查询测试用例 (成功数量, 失败数量, 总数量)数据是否请求成功
+        # 查询测试用例(成功数量, 失败数量, 总数量)数据是否请求成功 结果说明
         elif oper_type == 'get_redis_result':
             rc = redis.Redis(host='redis_host', port=6379, db=0)
             get_keys = rc.hmget('testcase', 'num', 'error_num', 'success_num')
@@ -520,6 +617,133 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 'success_num': success_num,
             }
 
+        # 查询测试用例 展示全部(同 selenium 测试 展示 统计)
+        elif oper_type == 'get_test_result':
+            forms_obj = SelectForm(request.GET)
+            if not forms_obj.is_valid():
+                response.code = 301
+                response.msg = json.loads(forms_obj.errors.as_json())
+            else:
+                current_page = forms_obj.cleaned_data['current_page']
+                length = forms_obj.cleaned_data['length']
+                order = request.GET.get('order', '-create_date')
+                field_dict = {
+                    'id': '',
+                    'url': '',
+                    'if_success': '',
+                    'is_automatic_test': '',
+                    'userProfile_id': '',
+                    'create_date': '__contains',
+                }
+                q = conditionCom(request, field_dict)
+                objs = models.requestDoc.objects.filter(q).order_by(order)
+
+                if length != 0:
+                    start_line = (current_page - 1) * length
+                    stop_line = start_line + length
+                    objs = objs[start_line: stop_line]
+                data_list = []
+
+                for obj in objs:
+                    data_list.append({
+                        'name':obj.name,
+                        'if_success':obj.if_success,
+                        'result_data':json.loads(obj.result_data),
+
+                        'userProfile_id':obj.userProfile_id,
+                        'userProfile':obj.userProfile.username,
+                        'is_automatic_test_id':obj.is_automatic_test,
+                        'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    })
+                response.code = 200
+                response.msg = '查询成功'
+                response.data = {
+                    'data_list':data_list,
+                    'is_automatic_test_choices':models.requestDoc.is_automatic_test_choices
+                }
+
+        # 查看自动测试数据
+        elif oper_type == 'get_timing_case_result':
+            objs = models.timingCaseInter.objects.filter(userProfile_id=user_id).order_by('-create_date')
+            data_list = []
+            for obj in objs:
+                run_time = ''
+                if obj.run_time:
+                    run_time = obj.run_time.strftime('%Y-%m-%d %H:%M:%S')
+
+                data_list.append({
+                    'case_inter_result':json.loads(obj.case_inter_result),
+
+                    'run_type_id':obj.run_type,
+                    'run_type':obj.get_run_type_display(),
+
+                    'expect_time':obj.expect_time,              # 时间段运行
+                    'expect_run_time':obj.expect_run_time,      # 预计运行时间
+
+                    'run_time':run_time,
+                    'create_date': obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                })
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = {
+                'data_list':data_list,
+                'run_type_choises':models.timingCaseInter.run_type_choises
+            }
+
+        # 异步执行任务(自动测试)(celery调用)
+        elif oper_type == 'automatic_test':
+            objs = models.timingCaseInter.objects.filter(create_date__isnull=False, run_type__isnull=False)
+            for obj in objs:
+                now = datetime.datetime.now()
+                case_inter_result = json.loads(obj.case_inter_result)
+                group_obj = models.caseInterfaceGrouping.objects.filter(id=case_inter_result[0])
+                talk_project_id = group_obj[0].talk_project_id
+                data_dict = {
+                    'talk_project_id':talk_project_id,
+                    'case_inter_result':case_inter_result,
+                }
+
+                if not obj.run_time:
+                    automaticTest(data_dict)
+                    obj.run_time = (now + datetime.timedelta(days=1))
+                    obj.save()
+                else:
+
+                    if int(obj.run_type) == 1 and obj.expect_run_time:
+                        expect_run_time = datetime.datetime.strptime(obj.expect_run_time, '%H:%M:%S')
+                        run_time = datetime.datetime.strptime(obj.run_time.strftime('%Y-%m-%d'), '%Y-%m-%d')
+                        if run_time <= now and expect_run_time <= now:
+                            automaticTest(data_dict)
+                            obj.run_time = (now + datetime.timedelta(days=1))
+                            obj.save()
+
+                    elif int(obj.run_type) == 2 and obj.expect_time:
+                        run_time = (obj.run_time + datetime.timedelta(minutes=int(obj.expect_time)))
+                        if run_time <= now :
+                            automaticTest(data_dict)
+                            obj.run_time = now
+                            obj.save()
+
+                    else:
+                        print('-----------执行错误')
+            response.code = 200
+            response.msg = '执行完成'
+
+        # selenium 日志 查询
+        elif oper_type == 'selenium_get':
+            objs= models.selenium_test_doc.objects.filter(create_date__isnull=False)
+            data_list = []
+            for obj in objs:
+                data_list.append({
+                    'title':obj.title,
+                    'remak':obj.remak,
+                    'if_success':obj.if_success,
+                    'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                })
+            response.code = 200
+            response.msg = '查询成功'
+            response.data = data_list
+
         else:
             response.code = 402
             response.msg = "请求异常"
@@ -537,14 +761,19 @@ def startTestCase(request):
     response.data = []
     if request.method == 'POST':
         user_id = request.GET.get('user_id')
-        is_generate = request.POST.get('is_generate')           # 是否生成开发文档
-        talk_project_id = request.POST.get('talk_project_id')   # 项目ID
-        case_id_list = request.POST.get('case_id_list')         # 选择分组 传递分组ID列表
+        is_generate = request.POST.get('is_generate')               # 是否生成开发文档
+        talk_project_id = request.POST.get('talk_project_id')       # 项目ID
+        is_automatic_test = request.POST.get('is_automatic_test')   # 是否为机器测试
+        case_id_list = request.POST.get('case_id_list')             # 选择分组传递分组ID列表
         num = 0         # 测试 总数
         error_num = 0   # 测试失败总数
         error_data = []
         success_num = 0
         flag = False        # 判断该接口是否有问题
+
+        automatic_test = 2
+        if is_automatic_test:
+            automatic_test = 1
 
         if talk_project_id and case_id_list:
             case_id_list = json.loads(case_id_list)
@@ -599,6 +828,7 @@ def startTestCase(request):
                             'if_success':if_success,
                             'result_data':json.dumps(result_data),
                             'userProfile_id':obj.userProfile_id,
+                            'is_automatic_test':automatic_test
                         })
 
                         if is_generate:

@@ -31,7 +31,7 @@ def configurationHost(request):
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.configurationManagementHOST.objects.filter(q)
+            objs = models.configurationManagementHOST.objects.filter(q, userProfile_id=user_id)
             count = objs.count()
 
             if length != 0:
@@ -74,9 +74,10 @@ def configurationHost(request):
 @account.is_token(models.userprofile)
 def configurationHostOper(request, oper_type, o_id):
     response = Response.ResponseObj()
+    user_id = request.GET.get('user_id')
     form_data = {
         'o_id':o_id,
-        'user_id': request.GET.get('user_id'),                   # 操作人
+        'user_id': user_id,                   # 操作人
         'hostUrl': request.POST.get('hostUrl'),                  # 分组名称
         'describe': request.POST.get('describe'),
         'talk_project_id': request.POST.get('talk_project_id')
@@ -113,15 +114,19 @@ def configurationHostOper(request, oper_type, o_id):
             if forms_obj.is_valid():
                 oidObjs = userObjs.filter(id=o_id)
                 if oidObjs:
-                    formResult = forms_obj.cleaned_data
-                    userObjs.filter(id=o_id).update(
-                        hostUrl=formResult.get('hostUrl'),
-                        userProfile_id=form_data.get('user_id'),
-                        describe=formResult.get('describe'),
-                        talk_project_id=formResult.get('talk_project_id')
-                    )
-                    response.code = 200
-                    response.msg = '修改成功'
+                    if int(oidObjs[0].userProfile_id) == int(user_id):
+                        formResult = forms_obj.cleaned_data
+                        userObjs.filter(id=o_id).update(
+                            hostUrl=formResult.get('hostUrl'),
+                            userProfile_id=form_data.get('user_id'),
+                            describe=formResult.get('describe'),
+                            talk_project_id=formResult.get('talk_project_id')
+                        )
+                        response.code = 200
+                        response.msg = '修改成功'
+                    else:
+                        response.code = 301
+                        response.msg = '权限不足'
                 else:
                     response.code = 402
                     response.msg = '修改ID错误'
