@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # Create your models here.
 
 
@@ -32,7 +33,8 @@ class userprofile(models.Model):
     username = models.CharField(verbose_name="用户账号", max_length=128)
     password = models.CharField(verbose_name="用户密码", max_length=128)
     token = models.CharField(verbose_name="token值", max_length=128)
-    oper_user = models.ForeignKey('userprofile', verbose_name="创建用户", related_name='userprofile_self', null=True, blank=True)
+    oper_user = models.ForeignKey('userprofile', verbose_name="创建用户", related_name='userprofile_self', null=True,
+                                  blank=True)
 
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
@@ -43,8 +45,9 @@ class userprofile(models.Model):
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=1)
 
     role = models.ForeignKey('role', verbose_name='所属角色', null=True, blank=True)
-    company = models.ForeignKey('company', verbose_name='所属公司', null=True, blank=True)      # 超级管理员没有所属公司
-    set_avator = models.CharField(verbose_name='头像', default='http://api.zhugeyingxiao.com/statics/imgs/setAvator.jpg', max_length=128)
+    company = models.ForeignKey('company', verbose_name='所属公司', null=True, blank=True)  # 超级管理员没有所属公司
+    set_avator = models.CharField(verbose_name='头像', default='http://api.zhugeyingxiao.com/statics/imgs/setAvator.jpg',
+                                  max_length=128)
 
     userid = models.CharField(verbose_name="企业微信id", max_length=64, null=True, blank=True)
 
@@ -120,9 +123,10 @@ class progress(models.Model):
     demand = models.ForeignKey('demand', verbose_name="需求名称")
     description = models.TextField(verbose_name="描述", null=True, blank=True)
     remark = models.TextField(verbose_name="备注信息", null=True, blank=True)
-    img_list = models.TextField(verbose_name="进展图片", null=True, blank=True)    # 测试结果中需要用到
+    img_list = models.TextField(verbose_name="进展图片", null=True, blank=True)  # 测试结果中需要用到
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     create_user = models.ForeignKey('userprofile', verbose_name='创建需求日志的用户')
+
 
 # ----------------------------------------测试用例------------------------------------------------
 
@@ -133,6 +137,7 @@ class caseInterProject(models.Model):
         related_name='userprofile_front_developer')
     back_developer = models.ManyToManyField('userprofile', verbose_name='后端开发人员',
         related_name='userprofile_back_developer')
+
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     oper_user = models.ForeignKey('userprofile', verbose_name="创建用户")
     language_type_choices = (
@@ -152,12 +157,13 @@ class caseInterfaceGrouping(models.Model):
     groupName = models.CharField(verbose_name='分组名称', max_length=64)
     level = models.IntegerField(verbose_name='分类等级', default=1)
 
+
 # 测试用例接口详情
 class caseInterfaceDetaile(models.Model):
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
-    ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping',verbose_name='分组', null=True, blank=True)
-    caseName = models.CharField(verbose_name='接口名称', max_length=64)         # 接口名字 (别名)
+    ownershipGroup = models.ForeignKey(to='caseInterfaceGrouping', verbose_name='分组', null=True, blank=True)
+    caseName = models.CharField(verbose_name='接口名称', max_length=64)  # 接口名字 (别名)
     hostManage = models.ForeignKey(to='configurationManagementHOST', verbose_name='host配置管理', null=True, blank=True)
 
     url = models.TextField(verbose_name='url', null=True, blank=True)
@@ -165,8 +171,8 @@ class caseInterfaceDetaile(models.Model):
     postRequestParameters = models.TextField(verbose_name='POST请求参数', null=True, blank=True)
 
     status_choices = (
-        (1,'GET'),
-        (2,'POST'),
+        (1, 'GET'),
+        (2, 'POST'),
     )
     requestType = models.SmallIntegerField(verbose_name='请求类型', choices=status_choices, null=True, blank=True)
     xieyi_type_choices = (
@@ -180,8 +186,9 @@ class caseInterfaceDetaile(models.Model):
         (3, '查询'),
         (4, '删除'),
     )
-    type_status= models.IntegerField(verbose_name='接口类型', default=4, choices=type_status_choices)
+    type_status = models.IntegerField(verbose_name='接口类型', default=4, choices=type_status_choices)
     testCase = models.IntegerField(verbose_name='添加ID', null=True, blank=True)
+
 
 # # HOST管理配置
 class configurationManagementHOST(models.Model):
@@ -196,14 +203,16 @@ class configurationManagementHOST(models.Model):
     describe = models.SmallIntegerField(verbose_name='描述', choices=status_choices, default=1)
     talk_project = models.ForeignKey(to='caseInterProject', verbose_name="所属产品项目", null=True, blank=True)
 
+
 # 请求结果保存 (历史请求)
 class requestResultSave(models.Model):
-    case_inter =  models.ForeignKey(to='caseInterfaceDetaile', verbose_name='测试用例', null=True, blank=True)
+    case_inter = models.ForeignKey(to='caseInterfaceDetaile', verbose_name='测试用例', null=True, blank=True)
     url = models.CharField(verbose_name='请求url', max_length=256, null=True, blank=True)
     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     result_data = models.TextField(verbose_name='返回结果', null=True, blank=True)
 
-# 测试用例请求文档(前端查看)
+
+# 测试用例请求文档
 class requestDocumentDoc(models.Model):
     create_date = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     getRequestParameters = models.TextField(verbose_name='GET请求参数', null=True, blank=True)
@@ -226,6 +235,7 @@ class requestDoc(models.Model):
     if_success = models.IntegerField(verbose_name='是否成功', null=True, blank=True)
     result_data = models.TextField(verbose_name='结果', null=True, blank=True)
     userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='创建人')
+
 
     is_automatic_test_choices = (
         (1, '自动测试'),
@@ -260,4 +270,10 @@ class timingCaseInter(models.Model):
 
 
 
-
+# 实时查看api日志
+class showApiLog(models.Model):
+    name = models.CharField(verbose_name="项目名称", max_length=128)
+    tgt = models.CharField(verbose_name="salt客户端key", max_length=128)
+    logPath = models.CharField(verbose_name="日志绝对路径", max_length=256)
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+# ------------------------------------------------------------------------------------------------------------------

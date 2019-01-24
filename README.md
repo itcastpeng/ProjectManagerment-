@@ -419,6 +419,48 @@ http请求url： http://127.0.0.1:8000/api/configurationHostShow?user_id=10&rand
 }
 ```
 
+#### 查看api日志 - 获取项目名称
+``` 
+http请求： GET
+http请求url： http://127.0.0.1:8801/api/show_api_log?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "查询成功",
+    "data": {
+        "ret_data": [
+            {
+                "id": 1,                            # 要查看日志的项目id
+                "name": "项目管理平台"              # 要查看日志的项目名称
+            }
+        ]
+    }
+}
+```
+
+
+#### 查看api日志 - 获取实时日志
+``` 
+http请求： GET
+http请求url： http://127.0.0.1:8801/api/show_api_log/showLog/:ID?user_id=10&rand_str=2be6ba2fa87950c7fb15c5c358722408&timestamp=1534157927644
+参数   				请求方式		        是否必须            说明
+:ID                 URL参数                   是               项目ID
+lineNum             GET                       是               获取日志的最后行数，首次传0
+filterKeyWorld      GET                       否                 匹配过滤条件，非必传
+
+
+返回说明 （正常时返回的json数据 示例）
+{
+    "code": 200,
+    "msg": "查询成功",
+    "data": {
+        "lineNum": 10,                      # 下次获取日志要提交的行号
+        "logData": "10fdsafdafdas"          # 本次获取到的日志,该值为空不操作
+    }
+}
+```
 
 
 
