@@ -817,6 +817,7 @@ def startTestCase(request):
                             code = response_data.data.get('ret_json').get('code')
                             result_data = response_data.data.get('ret_json')
                             if code and int(code) != 200:
+                                flag = True
                                 error_num += 1
                                 error_data.append(result_data)
                             else:
