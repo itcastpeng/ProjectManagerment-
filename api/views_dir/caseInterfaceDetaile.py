@@ -12,13 +12,13 @@ from api import  setting
 
 
 # 分组树状图（包含测试用例详情）
-def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
+def testCaseGroupTree(talk_project_id, pid=None, search_msg=None):
     result_data = []
     if search_msg: # 搜索分组名称
         objs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=pid, groupName__contains=search_msg)
     else:
         q = Q()
-        objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id, talk_project_id=talk_project_id, parensGroupName_id=pid)
+        objs = models.caseInterfaceGrouping.objects.filter(talk_project_id=talk_project_id, parensGroupName_id=pid)
     for obj in objs:
         current_data = {
             'title':obj.groupName,
@@ -27,7 +27,7 @@ def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
             'checked': False,
             'file':True
         }
-        children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
+        children_data = testCaseGroupTree(talk_project_id, obj.id)
         detail_obj = models.caseInterfaceDetaile.objects.filter(ownershipGroup_id=obj.id)
         if detail_obj:
             for i in detail_obj:
@@ -256,7 +256,7 @@ def testCaseDetaile(request):
                     history_obj = history_objs[0]
                     result_data = ''
                     if history_obj.result_data:
-                        result_data = json.loads(history_obj.result_data)
+                        result_data = history_obj.result_data
                     history_date = {
                         'url':history_obj.url,                                  # 历史请求URL
                         'result_data':result_data,                              # 历史请求 结果
@@ -554,9 +554,9 @@ def testCaseDetaileOper(request, oper_type, o_id):
             if beforeTaskId:
                 search_msg = request.GET.get('search_msg')      # 搜索分组名称
                 if search_msg:# 搜索分组名称
-                    result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
+                    result = testCaseGroupTree(beforeTaskId, search_msg=search_msg)
                 else:
-                    result = testCaseGroupTree(beforeTaskId, user_id)
+                    result = testCaseGroupTree(beforeTaskId)
 
                 response.code = 200
                 response.msg = '查询成功'
