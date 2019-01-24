@@ -770,7 +770,7 @@ def startTestCase(request):
         case_id_list = request.POST.get('case_id_list')             # 选择分组传递分组ID列表
         num = 0         # 测试 总数
         error_num = 0   # 测试失败总数
-        error_data = []
+        # error_data = []
         success_num = 0
         flag = False        # 判断该接口是否有问题
 
@@ -813,15 +813,16 @@ def startTestCase(request):
                         if response_data.data.get('flag'):
                             result_data = str(response_data.data.get('ret_json'))
                             flag = True
+                            error_num += 1
                         else:
                             code = response_data.data.get('ret_json').get('code')
                             result_data = response_data.data.get('ret_json')
-                            if code and int(code) != 200:
+                            if code and int(code) == 200:
+                                success_num += 1
+                            else:
                                 flag = True
                                 error_num += 1
-                                error_data.append(result_data)
-                            else:
-                                success_num += 1
+                                # error_data.append(result_data)
 
                         # 创建测试用例日志
                         if_success = 1
