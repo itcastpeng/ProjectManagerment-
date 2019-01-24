@@ -256,7 +256,10 @@ def testCaseDetaile(request):
                     history_obj = history_objs[0]
                     result_data = ''
                     if history_obj.result_data:
-                        result_data = history_obj.result_data
+                        try:
+                            result_data = json.loads(history_obj.result_data)
+                        except Exception:
+                            result_data = history_obj.result_data
                     history_date = {
                         'url':history_obj.url,                                  # 历史请求URL
                         'result_data':result_data,                              # 历史请求 结果
