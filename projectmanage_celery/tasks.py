@@ -7,6 +7,8 @@ from __future__ import absolute_import, unicode_literals
 from .celery import app
 import requests, datetime
 
+from publicFunc.gitlabApi import gitlabApi
+
 HOST = 'http://127.0.0.1:8001'
 
 @app.task
@@ -24,3 +26,11 @@ def automatic_test():
         'timestamp':'1534157927644',
     }
     requests.get(url, params=params)
+
+
+# 自动合并gitlab代码
+@app.task
+def merge_project_code():
+    obj = gitlabApi()
+    obj.get_projects()
+    obj.merge_requests()
