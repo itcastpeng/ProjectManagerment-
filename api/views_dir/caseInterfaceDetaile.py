@@ -12,13 +12,13 @@ from api import  setting
 
 
 # 分组树状图（包含测试用例详情）
-def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
+def testCaseGroupTree(talk_project_id, pid=None, search_msg=None):
     result_data = []
     if search_msg: # 搜索分组名称
         objs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=pid, groupName__contains=search_msg)
     else:
         q = Q()
-        objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id, talk_project_id=talk_project_id, parensGroupName_id=pid)
+        objs = models.caseInterfaceGrouping.objects.filter(talk_project_id=talk_project_id, parensGroupName_id=pid)
     for obj in objs:
         current_data = {
             'title':obj.groupName,
@@ -27,7 +27,7 @@ def testCaseGroupTree(talk_project_id, operUser_id, pid=None, search_msg=None):
             'checked': False,
             'file':True
         }
-        children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
+        children_data = testCaseGroupTree(talk_project_id, obj.id)
         detail_obj = models.caseInterfaceDetaile.objects.filter(ownershipGroup_id=obj.id)
         if detail_obj:
             for i in detail_obj:
@@ -108,7 +108,7 @@ def sendRequest(formResult, test=None):
 
     # 判断 GET / POST 请求
     if requestType == 1:
-        print('GET-------------请求')
+        # print('GET-------------请求')
         ret = requests.get(requestUrl)
     else:
         print('POST-------------请求')
@@ -256,7 +256,10 @@ def testCaseDetaile(request):
                     history_obj = history_objs[0]
                     result_data = ''
                     if history_obj.result_data:
-                        result_data = json.loads(history_obj.result_data)
+                        try:
+                            result_data = json.loads(history_obj.result_data)
+                        except Exception:
+                            result_data = history_obj.result_data
                     history_date = {
                         'url':history_obj.url,                                  # 历史请求URL
                         'result_data':result_data,                              # 历史请求 结果
@@ -554,9 +557,9 @@ def testCaseDetaileOper(request, oper_type, o_id):
             if beforeTaskId:
                 search_msg = request.GET.get('search_msg')      # 搜索分组名称
                 if search_msg:# 搜索分组名称
-                    result = testCaseGroupTree(beforeTaskId, user_id, search_msg=search_msg)
+                    result = testCaseGroupTree(beforeTaskId, search_msg=search_msg)
                 else:
-                    result = testCaseGroupTree(beforeTaskId, user_id)
+                    result = testCaseGroupTree(beforeTaskId)
 
                 response.code = 200
                 response.msg = '查询成功'
@@ -767,10 +770,8 @@ def startTestCase(request):
         case_id_list = request.POST.get('case_id_list')             # 选择分组传递分组ID列表
         num = 0         # 测试 总数
         error_num = 0   # 测试失败总数
-        error_data = []
+        # error_data = []
         success_num = 0
-        flag = False        # 判断该接口是否有问题
-
         automatic_test = 2
         if is_automatic_test:
             automatic_test = 1
@@ -783,6 +784,7 @@ def startTestCase(request):
                     ownershipGroup_id=i
                 ).order_by('type_status')           # 按接口类型正序排列
                 for obj in objs:                    # 遍历接口
+                    flag = False  # 判断该接口是否有问题
                     id = obj.id                     # ID
                     requestUrl = obj.url            # URL
                     xieyi_type = obj.xieyi_type     # 协议 (HTTP)
@@ -810,14 +812,17 @@ def startTestCase(request):
                         if response_data.data.get('flag'):
                             result_data = str(response_data.data.get('ret_json'))
                             flag = True
+                            error_num += 1
                         else:
                             code = response_data.data.get('ret_json').get('code')
                             result_data = response_data.data.get('ret_json')
-                            if code and int(code) != 200:
-                                error_num += 1
-                                error_data.append(result_data)
-                            else:
+                            print('code--> ', code)
+                            if code and int(code) == 200:
                                 success_num += 1
+                            else:
+                                flag = True
+                                error_num += 1
+                                # error_data.append(result_data)
 
                         # 创建测试用例日志
                         if_success = 1
