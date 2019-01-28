@@ -235,6 +235,12 @@ class AddTimingCase(forms.Form):
             'required': '时间段运行时(多久运行一次)不能为空'
         }
     )
+    talk_project_id = forms.IntegerField(
+        required=True,
+        error_messages={
+            'required':'归属项目不能为空'
+        }
+    )
 
     def clean_run_type(self):
         run_type = self.data.get('run_type')
@@ -261,6 +267,14 @@ class AddTimingCase(forms.Form):
                 self.add_error('case_inter_result', '请选择正确分组')
 
         return json.loads(case_inter_result)
+
+    def clean_talk_project_id(self):
+        talk_project_id = self.data.get('talk_project_id')
+        objs = models.project.objects.filter(id=talk_project_id)
+        if objs:
+            return talk_project_id
+        else:
+            self.add_error('talk_project_id', '该项目不存在')
 
 # 删除自动测试
 class DeleteTimingCase(forms.Form):
