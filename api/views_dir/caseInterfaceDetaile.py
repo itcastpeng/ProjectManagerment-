@@ -41,9 +41,9 @@ def testCaseGroupTree(talk_project_id, pid=None, search_msg=None):
     return result_data
 
 # 分组树状图（不包含测试用例详情）
-def GroupTree(talk_project_id, operUser_id, pid=None):
+def GroupTree(talk_project_id, pid=None):
     result_data = []
-    objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id).filter(talk_project_id=talk_project_id).filter(parensGroupName_id=pid)
+    objs = models.caseInterfaceGrouping.objects.filter(talk_project_id=talk_project_id).filter(parensGroupName_id=pid)
     for obj in objs:
         current_data = {
             'title':obj.groupName,
@@ -52,7 +52,7 @@ def GroupTree(talk_project_id, operUser_id, pid=None):
             'checked': False,
             'file':True
         }
-        children_data = testCaseGroupTree(talk_project_id, operUser_id, obj.id)
+        children_data = testCaseGroupTree(talk_project_id, obj.id)
         current_data['children'] = children_data
         result_data.append(current_data)
     return result_data
@@ -108,7 +108,6 @@ def sendRequest(formResult, test=None):
 
     # 判断 GET / POST 请求
     if requestType == 1:
-        # print('GET-------------请求')
         ret = requests.get(requestUrl)
     else:
         print('POST-------------请求')
@@ -137,6 +136,12 @@ def sendRequest(formResult, test=None):
         flag = True
         ret_json = ret.text
 
+    note = False            # 判断查询接口 是否有note
+    if type_status and int(type_status) in [3]:
+        if ret_json.get('note'):
+            note = True
+
+
     # 创建日志  (每个接口只记录最后一次请求数据)
     if not test:
         objs = models.requestResultSave.objects.filter(case_inter_id=o_id)
@@ -155,7 +160,8 @@ def sendRequest(formResult, test=None):
     response.data = {
         'ret_json':ret_json,
         'flag':flag,
-        'requestUrl':requestUrl
+        'requestUrl':requestUrl,
+        'note':note
     }
     # print('response.data---------> ', response.data)
     return response
@@ -403,7 +409,10 @@ def testCaseDetaileOper(request, oper_type, o_id):
                         else:
                             response.code = 200
                             response.msg = '测试失败 / 保存成功'
-                        response.data = response_data.data.get('ret_json')
+                        response.data = {
+                            'ret_json':response_data.data.get('ret_json'),
+                            'note':response_data.data.get('note')
+                        }
                         print('response_data--> ', response_data.data.get('ret_json'))
 
                         # 保存数据 -------------------------------------------------------
@@ -440,6 +449,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             run_type = request.POST.get('run_type')
             expect_run_time = request.POST.get('expect_run_time')       # 预计运行时间 (每天几点执行)
             expect_time = request.POST.get('expect_time')               # 时间段运行 (多久执行一次)
+            talk_project_id = request.POST.get('talk_project_id')       # 项目ID
 
             form_data = {
                 'user_id':user_id,
@@ -447,22 +457,22 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 'run_type': run_type,
                 'expect_run_time': expect_run_time,     # 预计运行时间 (每天几点执行)
                 'expect_time': expect_time,             # 时间段运行 (多久执行一次)
+                'talk_project_id': talk_project_id,     # 项目ID
             }
             forms_obj = AddTimingCase(form_data)
             if forms_obj.is_valid():
                 form_data = forms_obj.cleaned_data
                 print("验证通过")
-
                 run_type, expect_run_time, expect_time = form_data.get('run_type')
-                case_inter_result = form_data.get('case_inter_result')
 
-                models.timingCaseInter.objects.create(**{
-                    'run_type':run_type,
-                    'expect_run_time':expect_run_time,
-                    'expect_time':expect_time,
-                    'case_inter_result':case_inter_result,
-                    'userProfile_id':user_id,
-                })
+                for i in form_data.get('case_inter_result'):
+                    models.timingCaseInter.objects.create(**{
+                        'run_type':run_type,
+                        'expect_run_time':expect_run_time,
+                        'expect_time':expect_time,
+                        'case_inter_result':i,
+                        'userProfile_id':user_id,
+                    })
                 response.code = 200
                 response.msg = '添加成功'
             else:
@@ -478,14 +488,14 @@ def testCaseDetaileOper(request, oper_type, o_id):
             forms_obj = DeleteTimingCase(form_data)
             if forms_obj.is_valid():
                 print('验证通过')
-                models.timingCaseInter.objects.filter(id=o_id).delete()
+                models.timingCaseInter.objects.filter(case_inter_result=o_id).delete()
                 response.code = 200
                 response.msg = '删除成功'
             else:
                 response.code = 301
                 response.msg = json.loads(forms_obj.errors.as_json())
 
-        # selenium 测试 添加日志
+        # selenium 测试添加日志
         elif oper_type == 'selenium_log_add':
             title = request.POST.get('title')
             remak = request.POST.get('remak')
@@ -568,7 +578,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
         # 展示树状图（不包含测试用例详情）(供自动测试选择)
         elif oper_type == 'treeGroup':
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
-            result = GroupTree(beforeTaskId, user_id)
+            result = GroupTree(beforeTaskId)
             response.code = 200
             response.msg = '查询成功'
             response.data = {'result': result}
@@ -605,6 +615,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
             for obj in objs:
                 data_list.append({
                     'name':obj.name,
+                    'note':obj.note,            # 判断查询接口是否有 日志
                     'if_success':obj.if_success,
                     'result_data':json.loads(obj.result_data),
                     'userProfile_id':obj.userProfile_id,
@@ -665,9 +676,10 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     'is_automatic_test_choices':models.requestDoc.is_automatic_test_choices
                 }
 
-        # 查看自动测试数据
+        # 查看自动测试数据(自动测试)
         elif oper_type == 'get_timing_case_result':
-            objs = models.timingCaseInter.objects.filter(userProfile_id=user_id).order_by('-create_date')
+            talk_project_id = requests.get('talk_project_id')
+            objs = models.timingCaseInter.objects.filter(talk_project_id=talk_project_id).order_by('-create_date')
             data_list = []
             for obj in objs:
                 run_time = ''
@@ -807,8 +819,10 @@ def startTestCase(request):
                             'requestUrl':requestUrl,
                             'type_status':type_status,
                         }
-
                         response_data = sendRequest(data, test=1)
+                        note = 0
+                        if response_data.data.get('note'):
+                            note = 1
                         if response_data.data.get('flag'):
                             result_data = str(response_data.data.get('ret_json'))
                             flag = True
@@ -833,11 +847,12 @@ def startTestCase(request):
                             'if_success':if_success,
                             'result_data':json.dumps(result_data),
                             'userProfile_id':obj.userProfile_id,
-                            'is_automatic_test':automatic_test
+                            'is_automatic_test':automatic_test,
+                            'note':note     # 判断查询接口是有日志
                         })
 
+                        # 生成开发文档
                         if is_generate:
-                            # 生成开发文档
                             data = {
                                 'getRequestParameters': getRequest,
                                 'postRequestParameters': postRequest,

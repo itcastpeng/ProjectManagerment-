@@ -242,6 +242,7 @@ class requestDoc(models.Model):
         (2, '手动测试')
     )
     is_automatic_test = models.SmallIntegerField(verbose_name='是否为机器测试', default=2)
+    note = models.IntegerField(verbose_name='查询接口是否有日志', default=0)
 
 # selenium自动测试文档
 class selenium_test_doc(models.Model):
@@ -263,7 +264,7 @@ class timingCaseInter(models.Model):
     run_type = models.SmallIntegerField(verbose_name='运行类型', choices=run_type_choises, default=1)
     expect_run_time = models.CharField(verbose_name='预计运行时间', max_length=128, null=True, blank=True)
     expect_time = models.CharField(verbose_name='时间段运行(多长时间执行一次)', max_length=128, null=True, blank=True)
-
+    talk_project = models.ForeignKey(to='project', verbose_name='归属项目', null=True, blank=True)
 
 
 # ------------------------------------------------------------------------------------------------------------------
