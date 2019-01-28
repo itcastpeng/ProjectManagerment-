@@ -21,7 +21,7 @@ def configurationHost(request):
             current_page = forms_obj.cleaned_data['current_page']
             length = forms_obj.cleaned_data['length']
             print('forms_obj.cleaned_data -->', forms_obj.cleaned_data)
-
+            order = request.GET.get('order', '-create_date')
             field_dict = {
                 'id': '',
                 'hostName': '__contains',
@@ -31,7 +31,10 @@ def configurationHost(request):
             }
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.configurationManagementHOST.objects.filter(q)
+            objs = models.configurationManagementHOST.objects.select_related('talk_project').filter(
+                q,
+                talk_project__back_developer=user_id
+            ).order_by(order)
             count = objs.count()
 
             if length != 0:

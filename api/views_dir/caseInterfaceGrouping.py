@@ -31,8 +31,9 @@ def testCaseGroup(request):
             print('=--=--')
             q = conditionCom(request, field_dict)
             print('q -->', q)
-            objs = models.caseInterfaceGrouping.objects.filter(
-                q
+            objs = models.caseInterfaceGrouping.objects.select_related('talk_project').filter(
+                q,
+                talk_project__back_developer=user_id
             ).order_by(order).order_by('create_date')
             count = objs.count()
 
