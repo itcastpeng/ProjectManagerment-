@@ -12,13 +12,12 @@ from api import  setting
 
 
 # 分组树状图（包含测试用例详情）
-def testCaseGroupTree(talk_project_id, pid=None, search_msg=None):
+def testCaseGroupTree(talk_project_id, pid=None):
     result_data = []
-    if search_msg: # 搜索分组名称
-        objs = models.caseInterfaceGrouping.objects.filter(parensGroupName_id=pid, groupName__contains=search_msg)
-    else:
-        q = Q()
-        objs = models.caseInterfaceGrouping.objects.filter(talk_project_id=talk_project_id, parensGroupName_id=pid)
+    q = Q()
+    q.add(Q(parensGroupName_id=pid) & Q(talk_project_id=talk_project_id), Q.AND)
+
+    objs = models.caseInterfaceGrouping.objects.filter(q)
     for obj in objs:
         current_data = {
             'title':obj.groupName,
@@ -565,9 +564,21 @@ def testCaseDetaileOper(request, oper_type, o_id):
         elif oper_type == 'blockTree':
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
             if beforeTaskId:
+
+                result = []
                 search_msg = request.GET.get('search_msg')      # 搜索分组名称
                 if search_msg:# 搜索分组名称
-                    result = testCaseGroupTree(beforeTaskId, search_msg=search_msg)
+                    objs = models.caseInterfaceDetaile.objects.filter(caseName__contains=search_msg)
+                    if objs:
+                        obj = objs[0]
+                        result.append({
+                            'title': obj.caseName,
+                            'expand': True,
+                            'id': obj.id,
+                            'checked': False,
+                            'file': False
+                        })
+
                 else:
                     result = testCaseGroupTree(beforeTaskId)
 
