@@ -37,7 +37,8 @@ def user(request):
 
             get_role_id = request.GET.get('get_role_id')
             if get_role_id:
-                q.add(Q(**{'role_id': get_role_id}), Q.AND)
+                get_role_id = [4, 9]
+                q.add(Q(**{'role_id__in': get_role_id}), Q.AND)
 
 
             print('q -->', q)
