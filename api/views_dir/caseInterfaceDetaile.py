@@ -162,7 +162,7 @@ def sendRequest(formResult, test=None):
         'requestUrl':requestUrl,
         'note':note
     }
-    # print('response.data---------> ', response.data)
+    print('response.data---------> ', response.data)
     return response
 
 # 自动测试 发送请求
@@ -413,7 +413,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                                 'jiekou_name': formResult.get('caseName'),
                                 'talk_project_id': talk_project_id,
                                 'requestType': formResult.get('requestType'),
-                                'result_data': json.dumps(formResult.get('ret_json')),
+                                'result_data': json.dumps(response_data.data.get('ret_json')),
                                 'create_date': datetime.datetime.now()
                             }
                             doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=o_id)
