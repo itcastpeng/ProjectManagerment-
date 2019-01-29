@@ -217,11 +217,12 @@ def testCaseGroupOper(request, oper_type, o_id):
                 'otherData':otherData
             }
 
-        # 查询当前登录人 所有上级分组
+        # 查询当前项目 所有上级分组
         elif oper_type == 'superGroupName':
+            talk_project_id = request.GET.get('talk_project_id')
             # talkIdList = [i['id'] for i in projectObjs.values('id')]
             # print('talkIdList------> ',talkIdList)
-            objs = models.caseInterfaceGrouping.objects.filter(operUser_id=operUser_id)
+            objs = models.caseInterfaceGrouping.objects.filter(talk_project_id=talk_project_id)
             data_list = []
             for obj in objs:
                 data_list.append({

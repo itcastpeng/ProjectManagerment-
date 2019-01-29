@@ -31,7 +31,7 @@ def testCaseGroupTree(talk_project_id, pid=None):
         if detail_obj:
             for i in detail_obj:
                 children_data.append({
-                    'title': i.caseName,
+                    'title': i.caseName + '(' + i.get_type_status_display() + ')',
                     'id': i.id,
                     'file': False
                 })
@@ -571,7 +571,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     objs = models.caseInterfaceDetaile.objects.filter(caseName__contains=search_msg)
                     for obj in objs:
                         result.append({
-                            'title': obj.caseName,
+                            'title': obj.caseName + '(' + obj.get_type_status_display() + ')',
                             'expand': True,
                             'id': obj.id,
                             'checked': False,
