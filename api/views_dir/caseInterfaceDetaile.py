@@ -339,7 +339,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
         'getRequest': request.POST.get('getRequest'),               # GET  请求参数
         'postRequest': request.POST.get('postRequest'),             # POST 请求参数
     }
-    # print('form_data--> ', form_data)
+    print('form_data--> ', form_data)
     detaileObjs = models.caseInterfaceDetaile.objects
     user_id = request.GET.get('user_id')
     if request.method == "POST":
@@ -391,7 +391,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 发送请求和保存
         elif oper_type == 'sendTheRequest':
-            print('---------------测试')
+            talk_project_id = request.POST.get('talk_project_id')
             forms_obj = UpdateForm(form_data)
             if forms_obj.is_valid():
                 formResult = forms_obj.cleaned_data
@@ -405,6 +405,23 @@ def testCaseDetaileOper(request, oper_type, o_id):
                         response_data_code = response_data.data.get('ret_json').get('code')
                         if response_data_code and int(response_data_code) == 200:
                             response.msg = '测试/保存 成功'
+                            # 生成开发文档
+                            data = {
+                                'getRequestParameters': formResult.get('getRequest'),
+                                'postRequestParameters': formResult.get('postRequest'),
+                                'url': response_data.data.get('requestUrl'),
+                                'jiekou_name': formResult.get('caseName'),
+                                'talk_project_id': talk_project_id,
+                                'requestType': formResult.get('requestType'),
+                                'result_data': json.dumps(formResult.get('ret_json')),
+                                'create_date': datetime.datetime.now()
+                            }
+                            doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=o_id)
+                            if doc_obj:
+                                doc_obj.update(**data)
+                            else:
+                                data['interDetaile_id'] = o_id
+                                doc_obj.create(**data)
                         else:
                             response.code = 200
                             response.msg = '测试失败 / 保存成功'
@@ -618,9 +635,10 @@ def testCaseDetaileOper(request, oper_type, o_id):
             rc = redis.Redis(host='redis_host', port=6379, db=0)
             get_keys = rc.hmget('testcase', 'num', 'error_num', 'success_num')
             success_num = int(get_keys[2].decode())
+            num = int(get_keys[0].decode())
             objs = models.requestDoc.objects.filter(
                 userProfile_id=user_id, create_date__isnull=False
-            ).order_by('-create_date')[:success_num]
+            ).order_by('-create_date')[:num]
             data_list = []
             for obj in objs:
                 data_list.append({
@@ -786,13 +804,11 @@ def startTestCase(request):
     response.data = []
     if request.method == 'POST':
         user_id = request.GET.get('user_id')
-        is_generate = request.POST.get('is_generate')               # 是否生成开发文档
         talk_project_id = request.POST.get('talk_project_id')       # 项目ID
         is_automatic_test = request.POST.get('is_automatic_test')   # 是否为机器测试
         case_id_list = request.POST.get('case_id_list')             # 选择分组传递分组ID列表
         num = 0         # 测试 总数
         error_num = 0   # 测试失败总数
-        # error_data = []
         success_num = 0
         automatic_test = 2
         if is_automatic_test:
@@ -800,7 +816,6 @@ def startTestCase(request):
 
         if talk_project_id and case_id_list:
             case_id_list = json.loads(case_id_list)
-            result_data = ''
             for i in case_id_list:
                 objs = models.caseInterfaceDetaile.objects.filter(
                     ownershipGroup_id=i
@@ -861,24 +876,6 @@ def startTestCase(request):
                             'note':note     # 判断查询接口是有日志
                         })
 
-                        # 生成开发文档
-                        if is_generate:
-                            data = {
-                                'getRequestParameters': getRequest,
-                                'postRequestParameters': postRequest,
-                                'url':response_data.data.get('requestUrl'),
-                                'jiekou_name':obj.caseName,
-                                'talk_project_id':talk_project_id,
-                                'requestType':requestType,
-                                'result_data':json.dumps(result_data),
-                                'create_date':datetime.datetime.now()
-                            }
-                            doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=obj.id)
-                            if doc_obj:
-                                doc_obj.update(**data)
-                            else:
-                                data['interDetaile_id'] = obj.id
-                                doc_obj.create(**data)
                     num += 1
                     redis_dict = {
                         'num':num,
