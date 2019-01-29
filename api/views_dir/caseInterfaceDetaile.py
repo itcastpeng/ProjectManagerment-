@@ -569,8 +569,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 search_msg = request.GET.get('search_msg')      # 搜索分组名称
                 if search_msg:# 搜索分组名称
                     objs = models.caseInterfaceDetaile.objects.filter(caseName__contains=search_msg)
-                    if objs:
-                        obj = objs[0]
+                    for obj in objs:
                         result.append({
                             'title': obj.caseName,
                             'expand': True,
