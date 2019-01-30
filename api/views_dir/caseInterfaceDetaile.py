@@ -123,9 +123,9 @@ def sendRequest(formResult, test=None):
             })
 
         data = {}
-        for i in postRequestParameters:
+        for i in post_list:
             data[i['key']] = i['value']
-        ret = requests.post(requestUrl, data=post_list)
+        ret = requests.post(requestUrl, data=data)
     flag = False  # 判断接口是否出错
     try:
         # 获取请求结果和code
@@ -331,7 +331,7 @@ def testCaseDetaile(request):
 #  增删改
 #  csrf  token验证
 @csrf_exempt
-@account.is_token(models.userprofile)
+# @account.is_token(models.userprofile)
 def testCaseDetaileOper(request, oper_type, o_id):
     response = Response.ResponseObj()
     form_data = {
@@ -406,64 +406,66 @@ def testCaseDetaileOper(request, oper_type, o_id):
             forms_obj = UpdateForm(form_data)
             if forms_obj.is_valid():
                 formResult = forms_obj.cleaned_data
-                try:
-                    response_data = sendRequest(formResult)
+                # try:
+                response_data = sendRequest(formResult)
 
-                    if response_data.data.get('flag'):
-                        response.msg = '接口出错了'
-                        response.data = str(response_data.data.get('ret_json'))
-                    else:
-                        response_data_code = response_data.data.get('ret_json').get('code')
-                        if response_data_code and int(response_data_code) == 200:
-                            response.msg = '测试/保存 成功'
-                            # 生成开发文档
-                            data = {
-                                'getRequestParameters': formResult.get('getRequest'),
-                                'postRequestParameters': formResult.get('postRequest'),
-                                'url': response_data.data.get('requestUrl'),
-                                'jiekou_name': formResult.get('caseName'),
-                                'talk_project_id': talk_project_id,
-                                'requestType': formResult.get('requestType'),
-                                'result_data': json.dumps(response_data.data.get('ret_json')),
-                                'create_date': datetime.datetime.now()
-                            }
-                            doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=o_id)
-                            if doc_obj:
-                                doc_obj.update(**data)
-                            else:
-                                data['interDetaile_id'] = o_id
-                                doc_obj.create(**data)
-                        else:
-                            response.code = 200
-                            response.msg = '测试失败 / 保存成功'
-                        response.data = {
-                            'ret_json':response_data.data.get('ret_json'),
-                            'note':response_data.data.get('note')
+                if response_data.data.get('flag'):
+                    response.msg = '接口出错了'
+                    response.data = str(response_data.data.get('ret_json'))
+                else:
+                    response_data_code = response_data.data.get('ret_json').get('code')
+                    if response_data_code and int(response_data_code) == 200:
+                        response.msg = '测试/保存 成功'
+                        # 生成开发文档
+                        data = {
+                            'getRequestParameters': formResult.get('getRequest'),
+                            'postRequestParameters': formResult.get('postRequest'),
+                            'url': response_data.data.get('requestUrl'),
+                            'jiekou_name': formResult.get('caseName'),
+                            'talk_project_id': talk_project_id,
+                            'requestType': formResult.get('requestType'),
+                            'result_data': json.dumps(response_data.data.get('ret_json')),
+                            'create_date': datetime.datetime.now()
                         }
-                        print('response_data--> ', response_data.data.get('ret_json'))
+                        doc_obj = models.requestDocumentDoc.objects.filter(interDetaile_id=o_id)
+                        if doc_obj:
+                            doc_obj.update(**data)
+                        else:
+                            data['interDetaile_id'] = o_id
+                            doc_obj.create(**data)
+                    else:
+                        response.code = 200
+                        response.msg = '测试失败 / 保存成功'
+                    response.data = {
+                        'ret_json':response_data.data.get('ret_json'),
+                        'note':response_data.data.get('note')
+                    }
+                    print('response_data--> ', response_data.data.get('ret_json'))
 
-                        # 保存数据 -------------------------------------------------------
-                        formResult = forms_obj.cleaned_data
-                        hostManage_id, hostUrl = formResult.get('hostManage_id')
+                    # 保存数据 -------------------------------------------------------
+                    formResult = forms_obj.cleaned_data
+                    hostManage_id, hostUrl = formResult.get('hostManage_id')
 
-                        detaileObjs.filter(id=o_id).update(
-                            caseName=formResult.get('caseName'),            # 接口名称 (别名)
-                            ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
-                            userProfile_id=form_data.get('oper_user_id'),   # 操作人
+                    detaileObjs.filter(id=o_id).update(
+                        caseName=formResult.get('caseName'),            # 接口名称 (别名)
+                        ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
+                        userProfile_id=form_data.get('oper_user_id'),   # 操作人
 
-                            hostManage_id=hostManage_id,                    # host配置
-                            requestType=formResult.get('requestType'),      # 请求类型（GET，POST）
-                            type_status=formResult.get('type_status'),      # 接口类型（增删改查）
-                            xieyi_type=formResult.get('xieyi_type'),        # 协议类型（http:https）
+                        hostManage_id=hostManage_id,                    # host配置
+                        requestType=formResult.get('requestType'),      # 请求类型（GET，POST）
+                        type_status=formResult.get('type_status'),      # 接口类型（增删改查）
+                        xieyi_type=formResult.get('xieyi_type'),        # 协议类型（http:https）
 
-                            getRequestParameters=formResult.get('getRequest'),           # GET参数
-                            postRequestParameters=formResult.get('postRequest'),         # POST参数
-                            url=formResult.get('requestUrl'),               # URL
-                        )
+                        getRequestParameters=formResult.get('getRequest'),           # GET参数
+                        postRequestParameters=formResult.get('postRequest'),         # POST参数
+                        url=formResult.get('requestUrl'),               # URL
+                    )
                         # ----------------------------------------------------------------------
 
-                except Exception:
-                    response.msg = '请求错误'
+                # except Exception as e:
+                #     response.msg = '请求错误'
+                #     print(e)
+
                 response.code = 200
 
             else:
