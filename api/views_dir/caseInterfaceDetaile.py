@@ -111,10 +111,21 @@ def sendRequest(formResult, test=None):
     else:
         print('POST-------------请求')
         postRequestParameters = eval(postRequestParameters)
+        post_list = []
+        for i in postRequestParameters:
+            value = i['value']
+            if '[]' in i['key']:
+                value = eval(i['value'])
+            post_list.append({
+                'key':i['key'],
+                'value':value,
+                'describe':i['describe']
+            })
+
         data = {}
         for i in postRequestParameters:
             data[i['key']] = i['value']
-        ret = requests.post(requestUrl, data=data)
+        ret = requests.post(requestUrl, data=post_list)
     flag = False  # 判断接口是否出错
     try:
         # 获取请求结果和code
@@ -435,22 +446,6 @@ def testCaseDetaileOper(request, oper_type, o_id):
                         formResult = forms_obj.cleaned_data
                         hostManage_id, hostUrl = formResult.get('hostManage_id')
 
-                        getRequest_list = []
-                        for k,v in formResult.get('getRequest').iteams():
-                            if '[]' in k:
-                                v = eval(v)
-                            getRequest_list.append({
-                                k:v
-                            })
-
-                        postRequest_list = []
-                        for k,v in formResult.get('postRequest'):
-                            if '[]' in k:
-                                v = eval(v)
-                            postRequest_list.append({
-                                k,v
-                            })
-
                         detaileObjs.filter(id=o_id).update(
                             caseName=formResult.get('caseName'),            # 接口名称 (别名)
                             ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
@@ -461,8 +456,8 @@ def testCaseDetaileOper(request, oper_type, o_id):
                             type_status=formResult.get('type_status'),      # 接口类型（增删改查）
                             xieyi_type=formResult.get('xieyi_type'),        # 协议类型（http:https）
 
-                            getRequestParameters=getRequest_list,           # GET参数
-                            postRequestParameters=postRequest_list,         # POST参数
+                            getRequestParameters=formResult.get('getRequest'),           # GET参数
+                            postRequestParameters=formResult.get('postRequest'),         # POST参数
                             url=formResult.get('requestUrl'),               # URL
                         )
                         # ----------------------------------------------------------------------

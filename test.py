@@ -41,12 +41,24 @@ testCase = 56
 # print(requestUrl)
 
 
-import requests
-url = 'http://api.zhugeyingxiao.com/zhugeleida/public/myself_tools/monitor_send_gzh_template_msg'
-params_data = {
-    'title': '打开文章判断(是否为空/乱码)问题',
-    'content': '',
-    'remark': '赵欣鹏虚拟机运行, selenium测试'
-}
-requests.get(url, params=params_data)
+
+
+p = [{"key":"timestamp[]","value":"1545822031837","describe":""},{"key":"user_id","value":"1","describe":""},{"key":"rand_str","value":"7893210276cb01c39c073b2564edfb05","describe":""}]
+for i in p:
+    if '[]' in i['key']:
+        print('=========')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
