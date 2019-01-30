@@ -338,7 +338,7 @@ def testCaseDetaile(request):
 #  增删改
 #  csrf  token验证
 @csrf_exempt
-# @account.is_token(models.userprofile)
+@account.is_token(models.userprofile)
 def testCaseDetaileOper(request, oper_type, o_id):
     response = Response.ResponseObj()
     form_data = {
