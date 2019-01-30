@@ -93,7 +93,7 @@ def sendRequest(formResult, test=None):
         if objs:
             group_obj = detail_objs.filter(ownershipGroup_id=objs[0].ownershipGroup_id, type_status=1)
             if group_obj:
-                testCase = group_obj[0].caseName
+                testCase = group_obj[0].testCase
                 if testCase:
                     num = re.sub(r'\?.*$', "", requestUrl)
                     canshu = num[num.rfind('/'):]
@@ -649,7 +649,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 查询测试用例(成功数量, 失败数量, 总数量)数据是否请求成功 结果说明
         elif oper_type == 'get_redis_result':
-            rc = redis.Redis(host='redis_host', port=6379, db=0)
+            rc = redis.Redis(host='redis_host', port=6379, db=2)
             get_keys = rc.hmget('testcase', 'num', 'error_num', 'success_num')
             success_num = int(get_keys[2].decode())
             num = int(get_keys[0].decode())
@@ -815,7 +815,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
 @csrf_exempt
 @account.is_token(models.userprofile)
 def startTestCase(request):
-    rc = redis.Redis(host='redis_host', port=6379, db=0)
+    rc = redis.Redis(host='redis_host', port=6379, db=2)
     response = Response.ResponseObj()
     response.code = 200
     response.data = []
