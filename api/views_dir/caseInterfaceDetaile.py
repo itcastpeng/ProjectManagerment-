@@ -93,7 +93,7 @@ def sendRequest(formResult, test=None):
         if objs:
             group_obj = detail_objs.filter(ownershipGroup_id=objs[0].ownershipGroup_id, type_status=1)
             if group_obj:
-                testCase = group_obj[0].testCase
+                testCase = group_obj[0].caseName
                 if testCase:
                     num = re.sub(r'\?.*$', "", requestUrl)
                     canshu = num[num.rfind('/'):]
@@ -122,7 +122,7 @@ def sendRequest(formResult, test=None):
         # 添加
         if type_status and int(type_status) == 1:
             print('-----------------> 添加')
-            testCase = ret_json.get('data').get('testCase')  # 添加返回的ID
+            testCase = ret_json.get('data').get('id')  # 添加返回的ID
             if testCase:
                 objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
                 if objs:
@@ -369,7 +369,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 )
                 response.code = 200
                 response.msg = '添加成功'
-                response.data = {'testCase': obj.id}
+                response.data = {'id': obj.id}
 
             else:
                 print("验证不通过")
@@ -434,19 +434,36 @@ def testCaseDetaileOper(request, oper_type, o_id):
                         # 保存数据 -------------------------------------------------------
                         formResult = forms_obj.cleaned_data
                         hostManage_id, hostUrl = formResult.get('hostManage_id')
+
+                        getRequest_list = []
+                        for k,v in formResult.get('getRequest').iteams():
+                            if '[]' in k:
+                                v = eval(v)
+                            getRequest_list.append({
+                                k:v
+                            })
+
+                        postRequest_list = []
+                        for k,v in formResult.get('postRequest'):
+                            if '[]' in k:
+                                v = eval(v)
+                            postRequest_list.append({
+                                k,v
+                            })
+
                         detaileObjs.filter(id=o_id).update(
-                            caseName=formResult.get('caseName'),  # 接口名称 (别名)
+                            caseName=formResult.get('caseName'),            # 接口名称 (别名)
                             ownershipGroup_id=formResult.get('ownershipGroup_id'),  # 分组名称
-                            userProfile_id=form_data.get('oper_user_id'),  # 操作人
+                            userProfile_id=form_data.get('oper_user_id'),   # 操作人
 
-                            hostManage_id=hostManage_id,  # host配置
-                            requestType=formResult.get('requestType'),  # 请求类型（GET，POST）
-                            type_status=formResult.get('type_status'),  # 接口类型（增删改查）
-                            xieyi_type=formResult.get('xieyi_type'),  # 协议类型（http:https）
+                            hostManage_id=hostManage_id,                    # host配置
+                            requestType=formResult.get('requestType'),      # 请求类型（GET，POST）
+                            type_status=formResult.get('type_status'),      # 接口类型（增删改查）
+                            xieyi_type=formResult.get('xieyi_type'),        # 协议类型（http:https）
 
-                            getRequestParameters=formResult.get('getRequest'),  # GET参数
-                            postRequestParameters=formResult.get('postRequest'),  # POST参数
-                            url=formResult.get('requestUrl'),  # URL
+                            getRequestParameters=getRequest_list,           # GET参数
+                            postRequestParameters=postRequest_list,         # POST参数
+                            url=formResult.get('requestUrl'),               # URL
                         )
                         # ----------------------------------------------------------------------
 
