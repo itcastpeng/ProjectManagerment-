@@ -43,13 +43,15 @@ testCase = 56
 
 
 
-requestUrl = 'http://127.0.0.1:8008/api/posters/add/0?timestamp=1545822031837&user_id=1&rand_str=32a223a50f2262a9417a4d498ea3394f&time_stamp=1548659065'
+requestUrl = 'http://127.0.0.1:8008/api/posters/add/2?timestamp=1545822031837&user_id=1&rand_str=32a223a50f2262a9417a4d498ea3394f&time_stamp=1548659065'
 
 num = re.sub(r'\?.*$', "", requestUrl)
-canshu = num[num.rfind('/'):]
-print(canshu, num)
-print(canshu)
-requestUrl = requestUrl.replace(canshu.strip(), '/' + str(testCase))
+canshu = num[num.rfind('/'):]  # URL ID
+case = canshu
+print(case)
+if canshu == '/0':
+    case = '/' + str(testCase)
+requestUrl = requestUrl.replace(canshu.strip(), case)
 
 print(requestUrl)
 
