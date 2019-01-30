@@ -96,8 +96,11 @@ def sendRequest(formResult, test=None):
                 testCase = group_obj[0].testCase
                 if testCase:
                     num = re.sub(r'\?.*$', "", requestUrl)
-                    canshu = num[num.rfind('/'):]
-                    requestUrl = requestUrl.replace(canshu.strip(), '/' + str(testCase))
+                    canshu = num[num.rfind('/'):]   # URL ID
+                    case = canshu
+                    if canshu == '/0':
+                        case = '/' + str(testCase)
+                    requestUrl = requestUrl.replace(canshu.strip(), case)
                 else:
                     response.code = 301
                     response.msg = '未找到testCase'
