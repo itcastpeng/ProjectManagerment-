@@ -93,7 +93,7 @@ def sendRequest(formResult, test=None):
         if objs:
             group_obj = detail_objs.filter(ownershipGroup_id=objs[0].ownershipGroup_id, type_status=1)
             if group_obj:
-                testCase = group_obj[0].caseName
+                testCase = group_obj[0].testCase
                 if testCase:
                     num = re.sub(r'\?.*$', "", requestUrl)
                     canshu = num[num.rfind('/'):]
