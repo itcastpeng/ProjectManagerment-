@@ -43,14 +43,15 @@ testCase = 56
 
 
 
-p = [{"key":"timestamp[]","value":"1545822031837","describe":""},{"key":"user_id","value":"1","describe":""},{"key":"rand_str","value":"7893210276cb01c39c073b2564edfb05","describe":""}]
-for i in p:
-    if '[]' in i['key']:
-        print('=========')
+requestUrl = 'http://127.0.0.1:8008/api/posters/add/0?timestamp=1545822031837&user_id=1&rand_str=32a223a50f2262a9417a4d498ea3394f&time_stamp=1548659065'
 
+num = re.sub(r'\?.*$', "", requestUrl)
+canshu = num[num.rfind('/'):]
+print(canshu, num)
+print(canshu)
+requestUrl = requestUrl.replace(canshu.strip(), '/' + str(testCase))
 
-
-
+print(requestUrl)
 
 
 
