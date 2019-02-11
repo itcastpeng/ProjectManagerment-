@@ -9,7 +9,8 @@ import requests, datetime
 
 from publicFunc.gitlabApi import gitlabApi
 
-HOST = 'http://127.0.0.1:8001'
+# HOST = 'http://127.0.0.1:8001'
+HOST = 'http://xmgl.zhugeyingxiao.com'
 
 @app.task
 def pushMessageToWeChat():
