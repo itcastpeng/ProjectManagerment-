@@ -97,9 +97,13 @@ def sendRequest(formResult, test=None):
                 if testCase:
                     num = re.sub(r'\?.*$', "", requestUrl)
                     canshu = num[num.rfind('/'):]   # URL ID
-                    case = canshu
-                    if canshu == '/0':
+                    if not test:
+                        case = canshu
+                        if canshu == '/0':          # 如果不是0 则用以前的参数
+                            case = '/' + str(testCase)
+                    else:
                         case = '/' + str(testCase)
+
                     requestUrl = requestUrl.replace(canshu.strip(), case)
                 else:
                     response.code = 301
@@ -334,7 +338,7 @@ def testCaseDetaile(request):
 #  增删改
 #  csrf  token验证
 @csrf_exempt
-# @account.is_token(models.userprofile)
+@account.is_token(models.userprofile)
 def testCaseDetaileOper(request, oper_type, o_id):
     response = Response.ResponseObj()
     form_data = {
