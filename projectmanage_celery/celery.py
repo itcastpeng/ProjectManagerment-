@@ -30,9 +30,17 @@ app.conf.beat_schedule = {
     },
 
     'automatic_test':{
-    'task':'projectmanage_celery.tasks.automatic_test',
-    'schedule': crontab(minute=1),
-    }
+        'task':'projectmanage_celery.tasks.automatic_test',
+        'schedule': crontab(minute=1),
+    },
+
+    # 自动合并gitlab代码，每分钟一次
+    'merge_project_code':{
+        'task':'projectmanage_celery.tasks.merge_project_code',
+        # 'schedule':30                                   # 单独设置  秒
+        # 'schedule': crontab(hour=8, minute=30),
+        'schedule': crontab('*', '*', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
+    },
 
 }
 app.conf.update(
