@@ -633,14 +633,16 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 查询host展示
         elif oper_type == 'getHostYuMing':
-            formalOrTest = request.GET.get('formalOrTest')
+            formalOrTest = request.GET.get('formalOrTest')         # 是否为测试环境
+            talk_project_id = request.GET.get('talk_project_id')  # 项目区分
             q = Q()
-            objs = models.configurationManagementHOST.objects.filter(q)
             if formalOrTest:
                 if formalOrTest == 1:
                     q.add(Q(describe=1), Q.AND)
                 else:
                     q.add(Q(describe=2), Q.AND)
+            q.add(Q(talk_project_id=talk_project_id), Q.AND)
+            objs = models.configurationManagementHOST.objects.filter(q)
             otherData = []
             for obj in objs:
                 otherData.append({
