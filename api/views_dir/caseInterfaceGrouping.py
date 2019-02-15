@@ -34,7 +34,7 @@ def testCaseGroup(request):
             objs = models.caseInterfaceGrouping.objects.select_related('talk_project').filter(
                 q,
                 talk_project__back_developer=user_id
-            ).order_by(order).order_by('create_date')
+            ).order_by(order).order_by('-create_date')
             count = objs.count()
 
             if length != 0:
