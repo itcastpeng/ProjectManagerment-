@@ -32,8 +32,9 @@ class AddForm(forms.Form):
     )
 
     def clean_hostUrl(self):
+        talk_project_id = self.data.get('talk_project_id')
         hostUrl = self.data.get('hostUrl')
-        objs = models.configurationManagementHOST.objects.filter(hostUrl=hostUrl)
+        objs = models.configurationManagementHOST.objects.filter(hostUrl=hostUrl, talk_project_id=talk_project_id)
         if objs:
             self.add_error('hostUrl', 'HOST名称已存在')
         else:
@@ -68,8 +69,8 @@ class UpdateForm(forms.Form):
     def clean_hostUrl(self):
         hostUrl = self.data.get('hostUrl')
         o_id = self.data.get('o_id')
-
-        objs = models.configurationManagementHOST.objects.filter(hostUrl=hostUrl).exclude(id=o_id)
+        talk_project_id = self.data.get('talk_project_id')
+        objs = models.configurationManagementHOST.objects.filter(hostUrl=hostUrl, talk_project_id=talk_project_id).exclude(id=o_id)
         if objs:
             self.add_error('hostUrl', 'HOST名称已存在')
         else:
