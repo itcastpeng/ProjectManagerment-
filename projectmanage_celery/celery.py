@@ -15,10 +15,10 @@ app = Celery(
     include=['projectmanage_celery.tasks'],
 
 )
-app.conf.enable_utc = False
-app.conf.timezone = "Asia/Shanghai"
-CELERYD_FORCE_EXECV = True           # 非常重要,有些情况下可以防止死锁
-CELERYD_MAX_TASKS_PER_CHILD = 100    # 每个worker最多执行万100个任务就会被销毁，可防止内存泄露
+# app.conf.enable_utc = False
+# app.conf.timezone = "Asia/Shanghai"
+# CELERYD_FORCE_EXECV = True           # 非常重要,有些情况下可以防止死锁
+# CELERYD_MAX_TASKS_PER_CHILD = 100    # 每个worker最多执行万100个任务就会被销毁，可防止内存泄露
 app.conf.beat_schedule = {
 
     # 每天早上九点到十一点 每隔1小时执行一次
@@ -39,7 +39,7 @@ app.conf.beat_schedule = {
         'task':'projectmanage_celery.tasks.merge_project_code',
         # 'schedule':30                                   # 单独设置  秒
         # 'schedule': crontab(hour=8, minute=30),
-        'schedule': crontab('*', '*', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
+        'schedule': crontab('*/1', '*', '*', '*', '*'),  # 此处跟 linux 中 crontab 的格式一样
     },
 
 }
