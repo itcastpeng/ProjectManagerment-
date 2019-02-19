@@ -21,7 +21,7 @@ def testCaseGroupTree(talk_project_id, pid=None):
     for obj in objs:
         current_data = {
             'title':obj.groupName,
-            'expand': True,
+            'expand': False,
             'id': obj.id,
             'checked': False,
             'file':True
@@ -610,7 +610,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     for obj in objs:
                         result.append({
                             'title': obj.caseName + '(' + obj.get_type_status_display() + ')',
-                            'expand': True,
+                            'expand': False,
                             'id': obj.id,
                             'checked': False,
                             'file': False
