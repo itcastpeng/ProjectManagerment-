@@ -172,7 +172,7 @@ def demand_oper(request, oper_type, o_id):
                 project_obj = models.project.objects.get(id=project_id)
 
                 print(project_obj.principal.all().values('userid'))
-                userID = "|".join([i['userid'] for i in project_obj.principal.values('userid')])
+                userID = "|".join([i['userid'] for i in project_obj.principal.values('userid') if i['userid'] != None])
                 msg = "您的项目 {project_name} 有新的需求等待审核，请及时处理".format(
                     project_name=project_obj.name
                 )
