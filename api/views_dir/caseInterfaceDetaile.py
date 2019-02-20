@@ -9,7 +9,7 @@ from api.forms.caseInterfaceDetaile import AddForm, UpdateForm, SelectForm, Dele
 from django.db.models import Q
 import datetime, requests, random, json, re, redis
 from api import  setting
-
+from publicFunc.create_operation_log import create_operation_log
 
 # 分组树状图（包含测试用例详情）
 def testCaseGroupTree(talk_project_id, pid=None):
@@ -373,9 +373,9 @@ def testCaseDetaileOper(request, oper_type, o_id):
                 type_status = formResult.get('type_status')
                 if not formResult.get('type_status'):
                     type_status = 1
-
+                caseName = formResult.get('caseName')
                 obj = detaileObjs.create(
-                    caseName=formResult.get('caseName'),                        # 接口名称 (别名)
+                    caseName=caseName,                                          # 接口名称 (别名)
                     ownershipGroup_id=formResult.get('ownershipGroup_id'),      # 分组名称
                     userProfile_id=form_data.get('oper_user_id'),               # 操作人
                     hostManage_id=formResult.get('hostManage_id'),              # host配置
@@ -385,6 +385,12 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     type_status=type_status,                                    # 接口类型（增删改查）
 
                 )
+                data = {
+                    'casename': caseName,
+                    'interface_type': 1,
+                    'userProfile_id': user_id,
+                }
+                create_operation_log(data)  # 增加测试用例操作日志
                 response.code = 200
                 response.msg = '添加成功'
                 response.data = {'id': obj.id}
@@ -399,7 +405,14 @@ def testCaseDetaileOper(request, oper_type, o_id):
             forms_obj = DeleteForm(form_data)
             if forms_obj.is_valid():
                 models.requestDocumentDoc.objects.filter(interDetaile_id=o_id).delete()  # 删除文档
-                models.caseInterfaceDetaile.objects.filter(id=o_id).delete()
+                objs = models.caseInterfaceDetaile.objects.filter(id=o_id)
+                data = {
+                    'casename': objs[0].caseName,
+                    'interface_type': 3,
+                    'userProfile_id': user_id,
+                }
+                create_operation_log(data)  # 增加测试用例操作日志
+                objs.delete()
                 response.code = 200
                 response.msg = "删除成功"
             else:
@@ -423,12 +436,20 @@ def testCaseDetaileOper(request, oper_type, o_id):
                     response_data_code = response_data.data.get('ret_json').get('code')
                     if response_data_code and int(response_data_code) == 200:
                         response.msg = '测试/保存 成功'
+                        caseName = formResult.get('caseName')
+                        data = {
+                            'casename': caseName,
+                            'interface_type': 2,
+                            'userProfile_id': user_id,
+                        }
+                        create_operation_log(data)  # 增加测试用例操作日志
+
                         # 生成开发文档
                         data = {
                             'getRequestParameters': formResult.get('getRequest'),
                             'postRequestParameters': formResult.get('postRequest'),
                             'url': response_data.data.get('requestUrl'),
-                            'jiekou_name': formResult.get('caseName'),
+                            'jiekou_name': caseName,
                             'talk_project_id': talk_project_id,
                             'requestType': formResult.get('requestType'),
                             'result_data': json.dumps(response_data.data.get('ret_json')),
@@ -809,6 +830,60 @@ def testCaseDetaileOper(request, oper_type, o_id):
             response.code = 200
             response.msg = '查询成功'
             response.data = data_list
+
+        # 查询测试用例操作日志(谁添加什么测试用例 / 修改 / 删除)
+        elif oper_type == 'get_operation_log':
+            forms_obj = SelectForm(request.GET)
+            if forms_obj.is_valid():
+                current_page = forms_obj.cleaned_data['current_page']
+                length = forms_obj.cleaned_data['length']
+                order = request.GET.get('order', '-create_date')
+
+                field_dict = {
+                    'id': '',
+                    'userProfile_id': '',
+                    'userProfile__username': '__contains',
+                    'casename': '',
+                    'create_date': '',
+                }
+                q = conditionCom(request, field_dict)
+
+                objs = models.operation_test_log.objects.filter(q, create_date__isnull=False).order_by(order)
+                count = objs.count()
+                if length != 0:
+                    start_line = (current_page - 1) * length
+                    stop_line = start_line + length
+                    objs = objs[start_line: stop_line]
+
+                ret_data = []
+                for obj in objs:
+                    username = obj.userProfile.username
+                    interface_type = obj.get_interface_type_display()
+                    casename = obj.casename
+                    create_date = obj.create_date.strftime('%Y-%m-%d %H:%M:%S')
+                    msg = '{}{}了<{}>, {}'.format(
+                        username,
+                        interface_type,
+                        casename,
+                        create_date
+                    )
+                    ret_data.append(msg)
+                    # ret_data.append({
+                    #     'id':obj.id,
+                    #     'casename':obj.casename,
+                    #     'interface_type_id':obj.interface_type,
+                    #     'interface_type':obj.get_interface_type_display(),
+                    #     'userProfile_id':obj.userProfile_id,
+                    #     'userProfile__username':obj.userProfile.username,
+                    #     'create_date':obj.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    # })
+
+                response.code = 200
+                response.msg = '查询成功'
+                response.data = {
+                    'ret_data':ret_data,
+                    'count':count,
+                }
 
         else:
             response.code = 402

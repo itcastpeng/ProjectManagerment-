@@ -266,15 +266,23 @@ class timingCaseInter(models.Model):
     expect_time = models.CharField(verbose_name='时间段运行(多长时间执行一次)', max_length=128, null=True, blank=True)
     talk_project = models.ForeignKey(to='project', verbose_name='归属项目', null=True, blank=True)
 
-
-# ------------------------------------------------------------------------------------------------------------------
-
-
-
 # 实时查看api日志
 class showApiLog(models.Model):
     name = models.CharField(verbose_name="项目名称", max_length=128)
     tgt = models.CharField(verbose_name="salt客户端key", max_length=128)
     logPath = models.CharField(verbose_name="日志绝对路径", max_length=256)
     create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+# 所有人操作测试用例文档 日志
+class operation_test_log(models.Model):
+    casename = models.CharField(verbose_name='测试用例名称', max_length=128, null=True, blank=True)
+    interface_type_choices = (
+        (1, '增加'),
+        (2, '修改'),
+        (3, '删除')
+    )
+    interface_type = models.SmallIntegerField(verbose_name='接口类型', choices=interface_type_choices, default=1)
+    userProfile = models.ForeignKey(to='userprofile', null=True, blank=True, verbose_name='操作人')
+    create_date = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
 # ------------------------------------------------------------------------------------------------------------------
