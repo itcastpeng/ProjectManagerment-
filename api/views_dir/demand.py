@@ -249,7 +249,7 @@ def demand_oper(request, oper_type, o_id):
                     )
 
                     project_obj = models.project.objects.get(id=project_id)
-                    userID = "|".join([i['userid'] for i in project_obj.principal.values('userid')])
+                    userID = "|".join([i['userid'] for i in project_obj.principal.values('userid') if i['userid'] != None])
                     msg = "您的项目 {project_name} 有需求被修改，等待审核中，请及时处理".format(
                         project_name=project_obj.name
                     )
@@ -308,7 +308,7 @@ def demand_oper(request, oper_type, o_id):
                     models.demand_to_userprofile.objects.bulk_create(query)
 
                     user_obj = models.userprofile.objects.filter(id__in=json.loads(developerList))
-                    userID = "|".join([i['userid'] for i in user_obj.values('userid')])
+                    userID = "|".join([i['userid'] for i in user_obj.values('userid') if i['userid'] != None])
                     msg = "项目 {project_name} 有新的需求等待开发，请及时处理".format(
                         project_name=obj.project.name
                     )
@@ -456,7 +456,7 @@ def demand_oper(request, oper_type, o_id):
             )
 
             project_obj = models.project.objects.get(id=objs[0].project_id)
-            userID = "|".join([i['userid'] for i in project_obj.principal.values('userid')])
+            userID = "|".join([i['userid'] for i in project_obj.principal.values('userid') if i['userid'] != None])
 
             msg = "需求 {id}-{name} 已测试完成，可进行上线操作，请及时处理".format(
                 id=objs[0].id,
