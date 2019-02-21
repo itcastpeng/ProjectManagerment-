@@ -750,7 +750,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 查看自动测试数据(自动测试)
         elif oper_type == 'get_timing_case_result':
-            talk_project_id = requests.get('talk_project_id')
+            talk_project_id = request.get('talk_project_id')
             objs = models.timingCaseInter.objects.filter(talk_project_id=talk_project_id).order_by('-create_date')
             data_list = []
             for obj in objs:
