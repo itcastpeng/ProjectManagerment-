@@ -21,7 +21,7 @@ def testCaseGroupTree(talk_project_id, pid=None):
     for obj in objs:
         current_data = {
             'title':obj.groupName,
-            'expand': False,
+            'expand': obj.expand,
             'id': obj.id,
             'checked': False,
             'file':True
@@ -51,7 +51,7 @@ def GroupTree(talk_project_id, pid=None):
             'checked': False,
             'file':True
         }
-        children_data = testCaseGroupTree(talk_project_id, obj.id)
+        children_data = GroupTree(talk_project_id, obj.id)
         current_data['children'] = children_data
         result_data.append(current_data)
     return result_data
@@ -622,7 +622,11 @@ def testCaseDetaileOper(request, oper_type, o_id):
         # 左侧展示树状图（包含测试用例详情）
         elif oper_type == 'blockTree':
             beforeTaskId = request.GET.get('beforeTaskId')  # 项目ID
+            get_expand = request.GET.get('get_expand', [])  # 上次查看的分组展开
             if beforeTaskId:
+                group_obj = models.caseInterfaceGrouping.objects.filter(talk_project_id=beforeTaskId)
+                group_obj.update(expand=False)
+                group_obj.filter(id__in=eval(get_expand)).update(expand=True)
 
                 result = []
                 search_msg = request.GET.get('search_msg')      # 搜索分组名称
@@ -750,7 +754,7 @@ def testCaseDetaileOper(request, oper_type, o_id):
 
         # 查看自动测试数据(自动测试)
         elif oper_type == 'get_timing_case_result':
-            talk_project_id = request.get('talk_project_id')
+            talk_project_id = request.GET.get('talk_project_id')
             objs = models.timingCaseInter.objects.filter(talk_project_id=talk_project_id).order_by('-create_date')
             data_list = []
             for obj in objs:
